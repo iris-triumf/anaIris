@@ -1,0 +1,212 @@
+38a39,40
+> #include "web_server.h" // = IRIS WebServer for IC =
+> 
+60a63,90
+>  // = IRIS WebServer for IC =
+> #define SIZE_OF_ODB_MSC_TABLE 2
+> #define NSPECS (SIZE_OF_ODB_MSC_TABLE)
+> // Declaration of the spectrum store
+> int spec_store_address[NSPECS];
+> int spec_store_type[NSPECS]; // 0=energy, 1=time, 2=waveform, 3=hitpattern
+> char spec_store_Ename[NSPECS][32];
+> char spec_store_Pname[NSPECS][32];
+> char spec_store_Wname[NSPECS][32];
+> char spec_store_Tname[NSPECS][32];
+> char spec_store_Zname[NSPECS][32]; // zero-crossing
+> char spec_store_Lname[NSPECS][32]; // cc_long
+> char spec_store_Sname[NSPECS][32]; // cc_short
+> int spec_store_Edata[NSPECS][SPEC_LENGTH];
+> int spec_store_Tdata[NSPECS][SPEC_LENGTH];
+> int spec_store_Wdata[NSPECS][SPEC_LENGTH];
+> int spec_store_Pdata[NSPECS][SPEC_LENGTH];
+> int spec_store_Zdata[NSPECS][SPEC_LENGTH]; // zero-crossing
+> int spec_store_Ldata[NSPECS][SPEC_LENGTH]; // cc_long
+> int spec_store_Sdata[NSPECS][SPEC_LENGTH]; // cc_short
+> int spec_store_hit_type[NHITS];
+> char spec_store_hit_name[NHITS][32];
+> int spec_store_hit_data[NHITS][SIZE_OF_ODB_MSC_TABLE];
+> char spec_store_sum_name[NHITS][32];
+> int spec_store_sum_data[NHITS][SPEC_LENGTH];
+>  // =========================
+> 
+> 
+69c99
+< 
+---
+> float ICnadc = 0;  
+123c153
+< float Sd1sGain[NSd1sChannels]={1.};
+---
+> float Sd1sGain[NSd1sChannels]={0.};
+147a178,180
+> int YdTChannel, YdTChannel2;
+> float Ydnadc = 0.;
+> int TYdChannel;
+222c255,259
+< 
+---
+> TH2F *YdCsI1adcPID = {NULL};
+> TH2F *YdCsI2adcPID = {NULL};
+> TH2F *hYdCsI2PID_forNa = {NULL};
+> TH2F *hYdCsI2PID_forMg = {NULL};
+> TH2F *hYdCsI2PID_uncalibrated = {NULL};
+232c269
+< float YdDistance = 120; // distance from target in mm
+---
+> float YdDistance = 90; // distance from target in mm
+236c273
+< float Sd1Distance =650, sSd2Distance= 660; //distance from target in mm
+---
+> float Sd1Distance =330, sSd2Distance= 340; //distance from target in mm
+241a279
+> float length = 0; //The length from target to each Yd strips Junki
+270a309
+>      length = 0;
+358c397
+< 
+---
+>  ICnadc = (float)vpeak; 
+362a402,403
+> 	    spec_store_Edata[0][(int)ICEnergy]++; // = IRIS WebServer for IC =
+> 	    
+364a406,409
+> 	      {
+> 		if( (ICnadc > 1600) && (ICnadc < 1930) ) //20Na IC gate
+> 		  {
+> 		    printf("IC channel number for SSB = %f \n",ICnadc); 
+367a413,414
+> 	      }
+> 	  }
+448c495
+< 	  
+---
+> 	    Ydnadc = (float)vpeak;
+657c704
+<     YdEnergy=0; YdChannel = -10000; YdEnergy2=0; YdChannel2 =-10000;
+---
+>     YdEnergy=0; YdChannel = -10000; YdEnergy2=0; YdChannel2 =-10000, YdTChannel = -10000, YdTChannel2 = -10000;
+662a710
+> 	   YdTChannel2 = YdTChannel;
+664a713
+> 	   YdTChannel = i - 128; //YdTChannel is the TDC channels which have max ADC 
+668a718
+> 	  YdTChannel2 = i-128;
+684a735,736
+>   length = YdDistance/cos(atan((Yd1r*(16.-YdChannel%16-0.5)+Yd2r*(YdChannel%16+0.5))/16./YdDistance));
+> //	 det->TYdLength= length;
+766a819,833
+> if(CsI1Channel>=0)
+>   YdCsI1adcPID->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+> 
+>        CsI1Energy = (CsI1Energy-CsI1Ped[CsI1Channel])*CsI1Gain[CsI1Channel];
+>      if(CsI2Channel>=0)
+> YdCsI2adcPID->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+> 
+> //printf("Ydnadc is %f\n",Ydnadc);
+> hYdCsI2PID_uncalibrated->Fill(CsI2Energy,Ydnadc*cos(det->TYdTheta*0.01745329));
+> if (ICnadc>=40 && ICnadc <100){                                                // condition of ICgate :Jaspreet
+>  hYdCsI2PID_forNa->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+> }
+> if (ICnadc >=100 && ICnadc <350){
+> hYdCsI2PID_forMg->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+> }
+771c838
+<      CsI2Energy = 0.2*CsI2Energy-0.13;  //tk this is temporary until the calibratio is fixed for S1338
+---
+>      //CsI2Energy = 0.2*CsI2Energy-0.13;  //tk this is temporary until the calibratio is fixed for S1338
+980c1047
+<    pFile = fopen ("/home/iris/anaIris/calib-files/CsI2PedGainS1147_11Li.txt" , "r");
+---
+>    pFile = fopen ("/home/iris/anaIris/calib-files/CsI2PedestalandGain_11Li_2015.txt" , "r");
+1046a1114
+>    
+1051c1119
+<  if (run>=2627)
+---
+>  if ((run>=2627)&& (run<3300))
+1055d1122
+< }
+1056a1124,1130
+> }
+>  if (run>=3300)
+>  {
+> pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd2r_OP3354.txt" , "r");
+> printf("reading files in main folder ");
+>  usePeds =1;
+> }
+1108c1182
+<    if (run >=2627)
+---
+>    if ((run >=2627)&& (run<3300))
+1112a1187,1191
+> if (run>=3300)
+>  {
+> pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd2s_OP3354.txt" , "r");
+>  usePeds =1;
+> }
+1166c1245
+<  if ((run >= 1530) && (run < 2667))
+---
+>  if ((run >= 1530) && (run < 2627))
+1169c1248
+<    if (run >=2627){
+---
+>    if ((run >=2627) && (run<3009))
+1170a1250,1251
+>    if ((run >=3025)&& (run<3300)){
+>  pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalibSd1r_ritu.txt" , "r");
+1172a1254,1259
+> if (run>=3300)
+>  {
+> pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd1r_OP3354.txt" , "r");
+> printf("reading files in main folder ");
+>  usePeds =1;
+> }
+1175c1262
+< perror ("Error opening file");
+---
+> perror ("Error opening file ");
+1228c1315
+<  if (run >=2627){
+---
+>  if ((run >=2627)&& (run <3300)){
+1230a1318,1322
+> if (run>=3300)
+>  {
+> pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd1s_OP3354.txt" , "r");
+>  usePeds =1;
+> }
+1232,1233c1324,1325
+< perror ("Error opening file");
+< fprintf(pwFile,"Error opening file");
+---
+> perror ("Error opening file here");
+> fprintf(pwFile,"Error opening file here");
+1241a1334,1338
+> fscanf(pFile,"%s",buffer);
+> 
+>   fscanf(pFile,"%s",buffer);
+> 
+>  fscanf(pFile,"%s",buffer);
+1598a1696,1709
+> YdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 500, 0, 4000, 512, 0, 16.);
+>          printf("Booking TH2F %s \n", label);
+> YdCsI2adcPID = new TH2F("YdCsI2PIDadc", "YdCsI2PIDadc", 500, 0, 4000, 512, 0, 16.);
+>          printf("Booking TH2F %s \n", label);
+> 
+> hYdCsI2PID_forNa = new TH2F("YdCsI2PID_forNa", "YdCsI2PID_forNa", 500, 0, 4000, 512, 0, 16.);
+>          printf("Booking TH2F %s \n", label);
+> 
+> hYdCsI2PID_forMg = new TH2F("YdCsI2PID_forMg", "YdCsI2PID_forMg", 500, 0, 4000, 512, 0, 16.);
+>          printf("Booking TH2F %s \n", label);
+> 
+> hYdCsI2PID_uncalibrated = new TH2F("YdCsI2PID_uncalibrated", "YdCsI2PID_uncalibrated", 500, 0, 4000, 500, 0, 4000.);
+>          printf("Booking TH2F %s \n", label);
+> 
+1634a1746,1751
+>  // = IRIS WebServer for IC =
+>  // Zero the web spectra at BOR
+>  sprintf(spec_store_Ename[0],"IRIS_IC_Energy");
+>  memset(spec_store_Edata,0,sizeof(spec_store_Edata));
+>  // =========================
+>  

@@ -1,0 +1,8 @@
+#!/bin/bash
+cd ./root_files/
+#../bin/anaIris  /ladd/iris_data0/dec2012/run0$1.mid.gz
+#../bin/anaIris  /ladd/iris_data0/iris/current/iris_0000$10000.mid.gz
+/home/iris/anaIris/bin/anaIris  /ladd/iris_data0/iris/current/iris_0000$10000.mid.gz
+#/home/iris/anaIris/bin/anaIris  /ladd/iris_data0/iris/current/run0$1.mid.gz
+#/home/iris/anaIris/bin/anaIris  /ladd/iris_data0/iris/nov2013_S1203/run0$1.mid.gz
+cd /home/iris/anaIris

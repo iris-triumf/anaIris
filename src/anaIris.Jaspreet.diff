@@ -1,0 +1,682 @@
+43a44,46
+> #include <pthread.h>	// = IRIS WebServer for IC =
+> #include "web_server.h"	// = IRIS WebServer for IC =
+> 
+124,150c127,153
+<    FILE *f;
+<    time_t now;
+<    char lstr[256];
+<    const char *str;
+< 
+<    /* update run log if run was written and running online */
+<    bool flag = gOdb->odbReadBool("Logger/Write data");
+<    bool flag1 = gOdb->odbReadBool("Logger/Channels/0/Settings/Active");
+<    int  mode = gOdb->odbReadInt ("Runinfo/Online Mode");
+<    // if (mode == 1) {
+<    if (flag && flag1 && mode) {
+<       /* update run log */
+<      printf("Running runlogAddEntry()\n");
+<       lstr[0] = 0;
+<       str = gOdb->odbReadString("/Logger/Data Dir");
+<       strcpy (lstr, str);
+<       if (lstr[0] != 0)
+<          if (lstr[strlen(lstr) - 1] != '/')
+<             strcat(lstr, "/");
+<       strcat(lstr, "runlog.txt");
+<       f = fopen(lstr, "a");
+< 
+<       //Date Run# Start Time Stop Time Adc Evt  Acc Trig Comment/Description
+< 
+<       time(&now);
+<       strcpy(lstr, ctime(&now));
+<       lstr[10] = 0;
+---
+>   FILE *f;
+>   time_t now;
+>   char lstr[256];
+>   const char *str;
+> 
+>   /* update run log if run was written and running online */
+>   bool flag = gOdb->odbReadBool("Logger/Write data");
+>   bool flag1 = gOdb->odbReadBool("Logger/Channels/0/Settings/Active");
+>   int  mode = gOdb->odbReadInt ("Runinfo/Online Mode");
+>   // if (mode == 1) {
+>   if (flag && flag1 && mode) {
+>     /* update run log */
+>     printf("Running runlogAddEntry()\n");
+>     lstr[0] = 0;
+>     str = gOdb->odbReadString("/Logger/Data Dir");
+>     strcpy (lstr, str);
+>     if (lstr[0] != 0)
+>       if (lstr[strlen(lstr) - 1] != '/')
+> 	strcat(lstr, "/");
+>     strcat(lstr, "runlog.txt");
+>     f = fopen(lstr, "a");
+> 
+>     //Date Run# Start Time Stop Time Adc Evt  Acc Trig Comment/Description
+> 
+>     time(&now);
+>     strcpy(lstr, ctime(&now));
+>     lstr[10] = 0;
+152,153c155,156
+<       int rn = gOdb->odbReadInt("/Runinfo/Run number");
+<       fprintf(f, "%s\t%3d\t", lstr, rn);
+---
+>     int rn = gOdb->odbReadInt("/Runinfo/Run number");
+>     fprintf(f, "%s\t%3d\t", lstr, rn);
+155,158c158,161
+<       str = gOdb->odbReadString("/Runinfo/Start time");
+<       strcpy(lstr, str);
+<       lstr[19] = 0;
+<       fprintf(f, "%s\t", lstr + 11);
+---
+>     str = gOdb->odbReadString("/Runinfo/Start time");
+>     strcpy(lstr, str);
+>     lstr[19] = 0;
+>     fprintf(f, "%s\t", lstr + 11);
+160,162c163,165
+<       strcpy(lstr, ctime(&now));
+<       lstr[19] = 0;
+<       fprintf(f, "%s\t", lstr + 11);
+---
+>     strcpy(lstr, ctime(&now));
+>     lstr[19] = 0;
+>     fprintf(f, "%s\t", lstr + 11);
+164,165c167,168
+<       double n = gOdb->odbReadDouble("/Equipment/AdcTrig/Statistics/Events sent");
+<       fprintf(f, "%5.1lfk\t", n / 1000);
+---
+>     double n = gOdb->odbReadDouble("/Equipment/AdcTrig/Statistics/Events sent");
+>     fprintf(f, "%5.1lfk\t", n / 1000);
+167,169c170,172
+<       float m = gOdb->odbReadFloat("/Equipment/Beamline/variables/Measured", 11);
+<       //      printf(" meas:%f\n", m);
+<       fprintf(f, "%7.2fk\t", m);
+---
+>     float m = gOdb->odbReadFloat("/Equipment/Beamline/variables/Measured", 11);
+>     //      printf(" meas:%f\n", m);
+>     fprintf(f, "%7.2fk\t", m);
+171,172c174,175
+<       str = gOdb->odbReadString("/Experiment/Run Parameters/Comment");
+<       if (strlen(str) != 0) fprintf(f, "%s\t", str);
+---
+>     str = gOdb->odbReadString("/Experiment/Run Parameters/Comment");
+>     if (strlen(str) != 0) fprintf(f, "%s\t", str);
+174,176c177,179
+<       // Last element of the MonsterSheet
+<       str = gOdb->odbReadString("/Experiment/Run Parameters/Run Description");
+<       fprintf(f, "%s\n", str);
+---
+>     // Last element of the MonsterSheet
+>     str = gOdb->odbReadString("/Experiment/Run Parameters/Run Description");
+>     fprintf(f, "%s\n", str);
+178,179c181,182
+<       fclose(f);
+<    }
+---
+>     fclose(f);
+>   }
+181c184
+<    return;
+---
+>   return;
+195,199c198,202
+<   {
+<     gOutputFile->Write();
+<     gOutputFile->Close();
+<     gOutputFile=NULL;
+<   }  
+---
+>     {
+>       gOutputFile->Write();
+>       gOutputFile->Close();
+>       gOutputFile=NULL;
+>     }  
+208c211
+<     NetDirectoryExport(gOutputFile, "outputFile");
+---
+>   NetDirectoryExport(gOutputFile, "outputFile");
+213c216
+<  HandleBOR_PHYSICS(run, time);
+---
+>   HandleBOR_PHYSICS(run, time);
+215c218
+< HandleBOR_STAT(run, time);
+---
+>   HandleBOR_STAT(run, time);
+227,229c230,232
+<  HandleEOR_PHYSICS(run, time); 
+<  HandleEOR_Scaler(run, time);
+<  HandleEOR_STAT(run, time);
+---
+>   HandleEOR_PHYSICS(run, time); 
+>   HandleEOR_Scaler(run, time);
+>   HandleEOR_STAT(run, time);
+232,233c235,236
+<    if (!gIsOffline) //if it is online mode, add a runlog entry. AS
+<   runlogAddEntry(run);
+---
+>   if (!gIsOffline) //if it is online mode, add a runlog entry. AS
+>     runlogAddEntry(run);
+317,318c320,321
+<     //TDC eventId is 2 without EB 
+<  if ((eventId == 1)) {
+---
+>   //TDC eventId is 2 without EB 
+>   if ((eventId == 1)) {
+323c326
+<       //      	printf("TDC bank %s:%d m=%d\n", tdcbkname[m], size, m);
+---
+>       //      printf("TDC bank %s:%d m=%d\n", tdcbkname[m], size, m);
+330c333
+<  }
+---
+>   }
+333c336
+<       m=0;
+---
+>     m=0;
+336c339
+<    
+---
+>      
+338,339c341,342
+< 		HandleScaler(event, ptr, size, m); 
+<                        } 
+---
+> 	HandleScaler(event, ptr, size, m); 
+>       } 
+343,345c346,348
+<     // Do physics now
+<     HandlePHYSICS(&detec, &timeArray);
+<   
+---
+>   // Do physics now
+>   HandlePHYSICS(&detec, &timeArray);
+>  
+366,371c369,374
+<       //
+<       // V1190 modules 
+<       m=0;
+<       while (tdcbkname[m][0]) {
+< 	int size = event.LocateBank(NULL, tdcbkname[m], &ptr);
+< 	//	printf("TDC bank %s:%d m=%d\n", tdcbkname[m], size, m);
+---
+>     //
+>     // V1190 modules 
+>     m=0;
+>     while (tdcbkname[m][0]) {
+>       int size = event.LocateBank(NULL, tdcbkname[m], &ptr);
+>       //	printf("TDC bank %s:%d m=%d\n", tdcbkname[m], size, m);
+373,376c376,377
+< 	if (ptr && size) {
+< 	  HandleV1190(event, ptr, size, m); 
+< 	}
+< 	m++;
+---
+>       if (ptr && size) {
+> 	HandleV1190(event, ptr, size, m); 
+377a379,380
+>       m++;
+>     }
+407,408c410,411
+<  char dcfname[100] = "dccp://";
+<    strcat(dcfname,fname); // added dccp:// in front of fname, there is seg fault
+---
+>   char dcfname[100] = "dccp://";
+>   strcat(dcfname,fname); // added dccp:// in front of fname, there is seg fault
+498c501
+<    TMidasOnline *midas = TMidasOnline::instance();
+---
+>   TMidasOnline *midas = TMidasOnline::instance();
+500,505c503,508
+<    int err = midas->connect(hostname, exptname, "anaIris");
+<    if (err != 0)
+<      {
+<        fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
+<        return -1;
+<      }
+---
+>   int err = midas->connect(hostname, exptname, "anaIris");
+>   if (err != 0)
+>     {
+>       fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
+>       return -1;
+>     }
+507c510
+<    gOdb = midas;
+---
+>   gOdb = midas;
+509,510c512,513
+<    midas->setTransitionHandlers(startRun,endRun,NULL,NULL);
+<    midas->registerTransitions();
+---
+>   midas->setTransitionHandlers(startRun,endRun,NULL,NULL);
+>   midas->registerTransitions();
+512c515
+<    /* reqister event requests */
+---
+>   /* reqister event requests */
+514,515c517,518
+<    midas->setEventHandler(eventHandler);
+<    midas->eventRequest("SYSTEM",-1,-1,(1<<1));
+---
+>   midas->setEventHandler(eventHandler);
+>   midas->eventRequest("SYSTEM",-1,-1,(1<<1));
+517c520
+<    /* fill present run parameters */
+---
+>   /* fill present run parameters */
+519c522
+<    gRunNumber = gOdb->odbReadInt("/runinfo/Run number");
+---
+>   gRunNumber = gOdb->odbReadInt("/runinfo/Run number");
+521,522c524,525
+<    if ((gOdb->odbReadInt("/runinfo/State") == 3))
+<      startRun(0,gRunNumber,0);
+---
+>   if ((gOdb->odbReadInt("/runinfo/State") == 3))
+>     startRun(0,gRunNumber,0);
+524c527
+<    printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
+---
+>   printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
+526,529c529,532
+<    MyPeriodic tm(100,MidasPollHandler);
+<    //MyPeriodic th(1000,SISperiodic);
+<    //MyPeriodic tn(1000,StepThroughSISBuffer);
+<    //MyPeriodic to(1000,Scalerperiodic);
+---
+>   MyPeriodic tm(100,MidasPollHandler);
+>   //MyPeriodic th(1000,SISperiodic);
+>   //MyPeriodic tn(1000,StepThroughSISBuffer);
+>   //MyPeriodic to(1000,Scalerperiodic);
+531c534
+<    /*---- start main loop ----*/
+---
+>   /*---- start main loop ----*/
+533,534c536,537
+<    //loop_online();
+<    app->Run(kTRUE);
+---
+>   //loop_online();
+>   app->Run(kTRUE);
+536,537c539,540
+<    /* disconnect from experiment */
+<    midas->disconnect();
+---
+>   /* disconnect from experiment */
+>   midas->disconnect();
+539c542
+<    return 0;
+---
+>   return 0;
+567,591c570,594
+<    // printf("GUI Message %d %d %d\n",(int)msg,(int)parm1,(int)parm2);
+<     switch (GET_MSG(msg))
+<       {
+<       default:
+< 	break;
+<       case kC_COMMAND:
+< 	switch (GET_SUBMSG(msg))
+< 	  {
+< 	  default:
+< 	    break;
+< 	  case kCM_MENU:
+< 	    switch (parm1)
+< 	      {
+< 	      default:
+< 		break;
+< 	      case M_FILE_EXIT:
+< 	        if(gIsRunning)
+<     		   endRun(0,gRunNumber,0);
+< 		gSystem->ExitLoop();
+< 		break;
+< 	      }
+< 	    break;
+< 	  }
+< 	break;
+<       }
+---
+>   // printf("GUI Message %d %d %d\n",(int)msg,(int)parm1,(int)parm2);
+>   switch (GET_MSG(msg))
+>     {
+>     default:
+>       break;
+>     case kC_COMMAND:
+>       switch (GET_SUBMSG(msg))
+> 	{
+> 	default:
+> 	  break;
+> 	case kCM_MENU:
+> 	  switch (parm1)
+> 	    {
+> 	    default:
+> 	      break;
+> 	    case M_FILE_EXIT:
+> 	      if(gIsRunning)
+> 		endRun(0,gRunNumber,0);
+> 	      gSystem->ExitLoop();
+> 	      break;
+> 	    }
+> 	  break;
+> 	}
+>       break;
+>     }
+593c596
+<     return kTRUE;
+---
+>   return kTRUE;
+597c600
+<     : TGMainFrame(w,s1,s2)
+---
+>   : TGMainFrame(w,s1,s2)
+599c602
+<    //SetCleanup(kDeepCleanup);
+---
+>   //SetCleanup(kDeepCleanup);
+601c604
+<    SetWindowName("ROOT Analyzer Control");
+---
+>   SetWindowName("ROOT Analyzer Control");
+603,605c606,608
+<    // layout the gui
+<    menuFile = new TGPopupMenu(gClient->GetRoot());
+<    menuFile->AddEntry("Exit", M_FILE_EXIT);
+---
+>   // layout the gui
+>   menuFile = new TGPopupMenu(gClient->GetRoot());
+>   menuFile->AddEntry("Exit", M_FILE_EXIT);
+607c610
+<    menuBarItemLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft, 0, 4, 0, 0);
+---
+>   menuBarItemLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft, 0, 4, 0, 0);
+609,610c612,613
+<    menuFile->Associate(this);
+<    //menuControls->Associate(this);
+---
+>   menuFile->Associate(this);
+>   //menuControls->Associate(this);
+612,615c615,618
+<    menuBar = new TGMenuBar(this, 1, 1, kRaisedFrame);
+<    menuBar->AddPopup("&File",     menuFile,     menuBarItemLayout);
+<    //menuBar->AddPopup("&Controls", menuControls, menuBarItemLayout);
+<    menuBar->Layout();
+---
+>   menuBar = new TGMenuBar(this, 1, 1, kRaisedFrame);
+>   menuBar->AddPopup("&File",     menuFile,     menuBarItemLayout);
+>   //menuBar->AddPopup("&Controls", menuControls, menuBarItemLayout);
+>   menuBar->Layout();
+617,618c620,621
+<    menuBarLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX);
+<    AddFrame(menuBar,menuBarLayout);
+---
+>   menuBarLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX);
+>   AddFrame(menuBar,menuBarLayout);
+620,622c623,625
+<    MapSubwindows(); 
+<    Layout();
+<    MapWindow();
+---
+>   MapSubwindows(); 
+>   Layout();
+>   MapWindow();
+627,631c630,634
+<     delete menuFile;
+<     //delete menuControls;
+<     delete menuBar;
+<     delete menuBarLayout;
+<     delete menuBarItemLayout;
+---
+>   delete menuFile;
+>   //delete menuControls;
+>   delete menuBar;
+>   delete menuBarLayout;
+>   delete menuBarItemLayout;
+636,638c639,641
+<     if(gIsRunning)
+<     	endRun(0,gRunNumber,0);
+<     gSystem->ExitLoop();
+---
+>   if(gIsRunning)
+>     endRun(0,gRunNumber,0);
+>   gSystem->ExitLoop();
+686,687c689,690
+<    setbuf(stdout,NULL);
+<    setbuf(stderr,NULL);
+---
+>   setbuf(stdout,NULL);
+>   setbuf(stderr,NULL);
+689,691c692,694
+<    signal(SIGILL,  SIG_DFL);
+<    signal(SIGBUS,  SIG_DFL);
+<    signal(SIGSEGV, SIG_DFL);
+---
+>   signal(SIGILL,  SIG_DFL);
+>   signal(SIGBUS,  SIG_DFL);
+>   signal(SIGSEGV, SIG_DFL);
+693,699c696,702
+<    std::vector<std::string> args;
+<    for (int i=0; i<argc; i++)
+<      {
+<        if (strcmp(argv[i],"-h")==0)
+< 	 help(); // does not return
+<        args.push_back(argv[i]);
+<      }
+---
+>   std::vector<std::string> args;
+>   for (int i=0; i<argc; i++)
+>     {
+>       if (strcmp(argv[i],"-h")==0)
+> 	help(); // does not return
+>       args.push_back(argv[i]);
+>     }
+700a704,717
+> 	// = IRIS WebServer for IC =
+> 	// Launch web server as separate thread
+> 	// Web server Main fucntion to initalize server
+>     pthread_t web_thread;
+>     int a1=1;
+>     pthread_create(&web_thread, NULL,(void* (*)(void*))web_server_main, &a1);
+>  	// =========================
+> 
+>   TApplication *app = new TApplication("anaIris", &argc, argv);
+> 
+>   if(gROOT->IsBatch()) {
+>     printf("Cannot run in batch mode\n");
+>     return 1;
+>   }
+701a719,724
+>   bool forceEnableGraphics = false;
+>   bool testMode = false;
+>   int  oldTcpPort = 0;
+>   int  tcpPort = 0;
+>   const char* hostname = NULL;
+>   const char* exptname = NULL;
+703,720c726,729
+<    TApplication *app = new TApplication("anaIris", &argc, argv);
+< 
+<    if(gROOT->IsBatch()) {
+<    	printf("Cannot run in batch mode\n");
+< 	return 1;
+<    }
+< 
+<    bool forceEnableGraphics = false;
+<    bool testMode = false;
+<    int  oldTcpPort = 0;
+<    int  tcpPort = 0;
+<    const char* hostname = NULL;
+<    const char* exptname = NULL;
+< 
+<    for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
+<      {
+<        const char* arg = args[i].c_str();
+<        //printf("argv[%d] is %s\n",i,arg);
+---
+>   for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
+>     {
+>       const char* arg = args[i].c_str();
+>       //printf("argv[%d] is %s\n",i,arg);
+722,741c731,750
+<        if (strncmp(arg,"-e",2)==0)  // Event cutoff flag (only applicable in offline mode)
+< 	 gEventCutoff = atoi(arg+2);
+<        else if (strncmp(arg,"-m",2)==0) // Enable memory debugging
+< 	 gEnableShowMem = true;
+<        else if (strncmp(arg,"-p",2)==0) // Set the histogram server port
+< 	 oldTcpPort = atoi(arg+2);
+<        else if (strncmp(arg,"-P",2)==0) // Set the histogram server port
+< 	 tcpPort = atoi(arg+2);
+<        else if (strcmp(arg,"-T")==0)
+< 	 testMode = true;
+<        else if (strcmp(arg,"-g")==0)
+< 	 forceEnableGraphics = true;
+<        else if (strncmp(arg,"-H",2)==0)
+< 	 hostname = strdup(arg+2);
+<        else if (strncmp(arg,"-E",2)==0)
+< 	 exptname = strdup(arg+2);
+<        else if (strcmp(arg,"-h")==0)
+< 	 help(); // does not return
+<        else if (arg[0] == '-')
+< 	 help(); // does not return
+---
+>       if (strncmp(arg,"-e",2)==0)  // Event cutoff flag (only applicable in offline mode)
+> 	gEventCutoff = atoi(arg+2);
+>       else if (strncmp(arg,"-m",2)==0) // Enable memory debugging
+> 	gEnableShowMem = true;
+>       else if (strncmp(arg,"-p",2)==0) // Set the histogram server port
+> 	oldTcpPort = atoi(arg+2);
+>       else if (strncmp(arg,"-P",2)==0) // Set the histogram server port
+> 	tcpPort = atoi(arg+2);
+>       else if (strcmp(arg,"-T")==0)
+> 	testMode = true;
+>       else if (strcmp(arg,"-g")==0)
+> 	forceEnableGraphics = true;
+>       else if (strncmp(arg,"-H",2)==0)
+> 	hostname = strdup(arg+2);
+>       else if (strncmp(arg,"-E",2)==0)
+> 	exptname = strdup(arg+2);
+>       else if (strcmp(arg,"-h")==0)
+> 	help(); // does not return
+>       else if (arg[0] == '-')
+> 	help(); // does not return
+744c753
+<    MainWindow mainWindow(gClient->GetRoot(), 200, 300);
+---
+>   MainWindow mainWindow(gClient->GetRoot(), 200, 300);
+746,747c755,756
+<    gROOT->cd();
+<    gOnlineHistDir = new TDirectory("anaIris", "anaIris online plots");
+---
+>   gROOT->cd();
+>   gOnlineHistDir = new TDirectory("anaIris", "anaIris online plots");
+750,751c759,760
+<    if (oldTcpPort)
+<      StartMidasServer(oldTcpPort);
+---
+>   if (oldTcpPort)
+>     StartMidasServer(oldTcpPort);
+753,754c762,763
+<    if (oldTcpPort)
+<      fprintf(stderr,"ERROR: No support for the old midas server!\n");
+---
+>   if (oldTcpPort)
+>     fprintf(stderr,"ERROR: No support for the old midas server!\n");
+757,758c766,767
+<    if (tcpPort)
+<      StartNetDirectoryServer(tcpPort, gOnlineHistDir);
+---
+>   if (tcpPort)
+>     StartNetDirectoryServer(tcpPort, gOnlineHistDir);
+760,761c769,770
+<    if (tcpPort)
+<      fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
+---
+>   if (tcpPort)
+>     fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
+764c773,786
+<    gIsOffline = false;
+---
+>   gIsOffline = false;
+> 
+>   for (unsigned int i=1; i<args.size(); i++)
+>     {
+>       const char* arg = args[i].c_str();
+> 
+>       if (arg[0] != '-')  
+> 	{  
+> 	  gIsOffline = true;
+> 	  //gEnableGraphics = false;
+> 	  //gEnableGraphics |= forceEnableGraphics;
+> 	  ProcessMidasFile(app,arg);
+> 	}
+>     }
+766,794c788,803
+<    for (unsigned int i=1; i<args.size(); i++)
+<      {
+<        const char* arg = args[i].c_str();
+< 
+<        if (arg[0] != '-')  
+< 	 {  
+< 	   gIsOffline = true;
+< 	   //gEnableGraphics = false;
+< 	   //gEnableGraphics |= forceEnableGraphics;
+< 	   ProcessMidasFile(app,arg);
+< 	 }
+<      }
+< 
+<    if (testMode)
+<      {
+<        gOnlineHistDir->cd();
+<        TH1D* hh = new TH1D("test", "test", 100, 0, 100);
+<        hh->Fill(1);
+<        hh->Fill(10);
+<        hh->Fill(50);
+< 
+<        app->Run(kTRUE);
+<        return 0;
+<      }
+< 
+<    // if we processed some data files,
+<    // do not go into online mode.
+<    if (gIsOffline)
+<      return 0;
+---
+>   if (testMode)
+>     {
+>       gOnlineHistDir->cd();
+>       TH1D* hh = new TH1D("test", "test", 100, 0, 100);
+>       hh->Fill(1);
+>       hh->Fill(10);
+>       hh->Fill(50);
+> 
+>       app->Run(kTRUE);
+>       return 0;
+>     }
+> 
+>   // if we processed some data files,
+>   // do not go into online mode.
+>   if (gIsOffline)
+>     return 0;
+796,797c805,806
+<    // gIsOffline = false; Why is this here? AS
+<    //gEnableGraphics = true;
+---
+>   // gIsOffline = false; Why is this here? AS
+>   //gEnableGraphics = true;
+799c808
+<    ProcessMidasOnline(app, hostname, exptname);
+---
+>   ProcessMidasOnline(app, hostname, exptname);
+802c811
+<    return 0;
+---
+>   return 0;
+805a815,822
+> /* emacs
+>  * Local Variables:
+>  * mode:C
+>  * mode:font-lock
+>  * tab-width: 2
+>  * c-basic-offset: 2
+>  * End:
+>  */
