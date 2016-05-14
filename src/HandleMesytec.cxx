@@ -36,6 +36,8 @@
 #include "HandleMesytec.h"
 #include "Globals.h"
 
+#include "web_server.h" // = IRIS WebServer for IC =
+
 int gMesytecnitems;
 
 const int Nchannels = 16*32;
@@ -58,6 +60,34 @@ TH1D * hMes_P[Nchannels] = {NULL}; // Q
 
 char var[50];
 
+ // = IRIS WebServer for IC =
+#define SIZE_OF_ODB_MSC_TABLE 2
+#define NSPECS (SIZE_OF_ODB_MSC_TABLE)
+// Declaration of the spectrum store
+int spec_store_address[NSPECS];
+int spec_store_type[NSPECS]; // 0=energy, 1=time, 2=waveform, 3=hitpattern
+char spec_store_Ename[NSPECS][32];
+char spec_store_Pname[NSPECS][32];
+char spec_store_Wname[NSPECS][32];
+char spec_store_Tname[NSPECS][32];
+char spec_store_Zname[NSPECS][32]; // zero-crossing
+char spec_store_Lname[NSPECS][32]; // cc_long
+char spec_store_Sname[NSPECS][32]; // cc_short
+int spec_store_Edata[NSPECS][SPEC_LENGTH];
+int spec_store_Tdata[NSPECS][SPEC_LENGTH];
+int spec_store_Wdata[NSPECS][SPEC_LENGTH];
+int spec_store_Pdata[NSPECS][SPEC_LENGTH];
+int spec_store_Zdata[NSPECS][SPEC_LENGTH]; // zero-crossing
+int spec_store_Ldata[NSPECS][SPEC_LENGTH]; // cc_long
+int spec_store_Sdata[NSPECS][SPEC_LENGTH]; // cc_short
+int spec_store_hit_type[NHITS];
+char spec_store_hit_name[NHITS][32];
+int spec_store_hit_data[NHITS][SIZE_OF_ODB_MSC_TABLE];
+char spec_store_sum_name[NHITS][32];
+int spec_store_sum_data[NHITS][SPEC_LENGTH];
+ // =========================
+
+
 TCutG *protons = NULL;//proton cut
 TCutG *elasticS3 = NULL;//elastic gate on S3
 int usePeds = 1; //using pedestals instead of offsets for Silicon detectors AS
@@ -66,7 +96,7 @@ TH1D * hIC[NICChannels] = {NULL}; // Q
 float ICEnergy=0; //Dummy for IC energy
 float ICGain[NICChannels]={1.};
 float ICOffset[NICChannels]={0.};
-
+float ICnadc = 0;  
 
 //AS CsI
 TH1D * hCsI1[NCsIChannels] = {NULL}; // Q 
@@ -120,7 +150,7 @@ TH1D * hSd1s[NSd1sChannels] = {NULL}; // Q
 float Sd1s[NSd1sChannels];
 float Sd1sEnergy=0,  Sd1sEnergy2=0; //Dummy for Sd1s energy      
 int Sd1sChannel, Sd1sChannel2; // channel with the greatest value                                                                                    
-float Sd1sGain[NSd1sChannels]={1.};
+float Sd1sGain[NSd1sChannels]={0.};
 float Sd1sOffset[NSd1sChannels]={0.};
 float Sd1sPed[NSd1sChannels]={0.};
 TH2D *hSd1sSummary = {NULL}; //summary spectra
@@ -145,6 +175,9 @@ TH1D * hYd[NYdChannels] = {NULL}; // Q
 float Yd[NYdChannels] ={0}; 
 float YdEnergy=0, YdEnergy2=0; //Dummy for Yd energy
 int YdChannel, YdChannel2; // channel with the greatest value
+int YdTChannel, YdTChannel2;
+float Ydnadc = 0.;
+int TYdChannel;
 float YdGain[NYdChannels]={1.};
 float YdOffset[NYdChannels]={0.};
 float YdPed[NYdChannels]={0.};
@@ -219,7 +252,11 @@ TH1D *hYdCsIETot = {NULL};
 TH2F *hSdPID = {NULL};
 TH2F *hYdCsIPID2 = {NULL};
 TH2F *hYdCsIPID1 = {NULL};
-
+TH2F *YdCsI1adcPID = {NULL};
+TH2F *YdCsI2adcPID = {NULL};
+TH2F *hYdCsI2PID_forNa = {NULL};
+TH2F *hYdCsI2PID_forMg = {NULL};
+TH2F *hYdCsI2PID_uncalibrated = {NULL};
 //AS Angles
 TH1D *hSdTheta = {NULL};
 TH1D *hSdPhi = {NULL};
@@ -229,16 +266,17 @@ TH1D *hYdTheta = {NULL};
 TH1D *hYuTheta = {NULL};
 
 
-float YdDistance = 120; // distance from target in mm
+float YdDistance = 90; // distance from target in mm
 float Yd1r=50, Yd2r = 130 ; // inner and outer radii in mm
 float YuDistance = 83; // distance from target in mm
 float Yu1r=50, Yu2r = 130 ; // inner and outer radii in mm
-float Sd1Distance =650, sSd2Distance= 660; //distance from target in mm
+float Sd1Distance =330, sSd2Distance= 340; //distance from target in mm
 float Sdr1=11,Sdr2=35; //AS Inner and outer radii of an S3 detector (in mm).
 TH1D *hSuTheta = {NULL};
 TH1D *hSuPhi = {NULL};
 float SuDistance = 200; //AS distance from target in mm
 float theta = 0 ,phi = 0, theta1 = 0, phi1=0; //AS Dummies for theta and phi, to be used for filling histograms
+float length = 0; //The length from target to each Yd strips Junki
 float Sdtheta = 0 ,Sdphi = 0, Sdtheta1 = 0, Sdphi1=0; //AS Dummies for theta and phi, to be used for filling histograms
 
 uint32_t modid, oformat, vpeak, resolution, evlength, timestamp;
@@ -268,6 +306,7 @@ int clearDetectors()
   Yd[j] = 0;
 
      theta = 0; 
+     length = 0;
      phi = 0;
      theta1=0; 
      phi1=0;
@@ -355,10 +394,13 @@ printf("Mesytec_ Evt#:%d nitems:%d\n", event.GetSerialNumber(), nitems);
 	  // RK :  Energy Calibration 
 	  
 	  if ((modid==0) && (vpeak > adcThresh) && (vpeak<3840)){
-
+ ICnadc = (float)vpeak; 
 	    //AS Fill histogram
 	    ICEnergy = ((float)vpeak-ICOffset[channel])*ICGain[channel];
 	    hIC[channel]->Fill(ICEnergy, 1.); //IC
+
+	    spec_store_Edata[0][(int)(ICEnergy/10)]++; // = IRIS WebServer for IC =
+//	    spec_store_Edata[0][(int)(vpeak)]++; // = IRIS WebServer for IC = //change by MA
 	    
 	    //SSB
 	    if (channel==16)
@@ -445,7 +487,7 @@ CsI2[channel] = -100.;
 	  }
 	  
 	  if (modid>5 && modid<10 && vpeak>adcThresh  && vpeak<3840){
-	  
+	    Ydnadc = (float)vpeak;
 	    YdEnergy = (float)vpeak;
             
             YdEnergy=(YdEnergy-YdPed[channel+(modid-6)*32])*YdGain[channel+(modid-6)*32];
@@ -654,18 +696,21 @@ if (modid>11 && modid<16 && vpeak>adcThresh && channel>15)
   det->TSd1rChannel = Sd1rChannel;
   det->TSd1sChannel = Sd1sChannel;
 
-    YdEnergy=0; YdChannel = -10000; YdEnergy2=0; YdChannel2 =-10000;
+    YdEnergy=0; YdChannel = -10000; YdEnergy2=0; YdChannel2 =-10000, YdTChannel = -10000, YdTChannel2 = -10000;
     for (int i =0; i< NYdChannels;i++)
       {
 	  if(Yd[i]>YdEnergy){
-  YdEnergy2= YdEnergy;
+           YdEnergy2= YdEnergy;
 	   YdChannel2 = YdChannel;
-	  YdEnergy=Yd[i];
-	  YdChannel = i;
+	   YdTChannel2 = YdTChannel;
+	   YdEnergy=Yd[i];
+	   YdChannel = i;
+	   YdTChannel = i - 128; //YdTChannel is the TDC channels which have max ADC 
 	  }
  else if (Yd[i]>YdEnergy2)//if Yd[i] is between YdEnergy and YdEnergy2
 	    {YdEnergy2=Yd[i];
 	  YdChannel2 = i;
+	  YdTChannel2 = i-128;
 	    } //if
 
       } //for      
@@ -682,6 +727,8 @@ if (modid>11 && modid<16 && vpeak>adcThresh && channel>15)
   //here
   theta = TMath::RadToDeg()*atan((Yd1r*(16.-YdChannel%16-0.5)+Yd2r*(YdChannel%16+0.5))/16./YdDistance);
 	   det->TYdTheta= theta;
+  length = YdDistance/cos(atan((Yd1r*(16.-YdChannel%16-0.5)+Yd2r*(YdChannel%16+0.5))/16./YdDistance));
+//	 det->TYdLength= length;
 	   //hYdTheta -> Fill(theta);
 	 
 
@@ -764,11 +811,26 @@ if (modid>11 && modid<16 && vpeak>adcThresh && channel>15)
 
     if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
 
+if(CsI1Channel>=0)
+  YdCsI1adcPID->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+
+       CsI1Energy = (CsI1Energy-CsI1Ped[CsI1Channel])*CsI1Gain[CsI1Channel];
+     if(CsI2Channel>=0)
+YdCsI2adcPID->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+
+//printf("Ydnadc is %f\n",Ydnadc);
+hYdCsI2PID_uncalibrated->Fill(CsI2Energy,Ydnadc*cos(det->TYdTheta*0.01745329));
+if (ICnadc>=40 && ICnadc <100){                                                // condition of ICgate :Jaspreet
+ hYdCsI2PID_forNa->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+}
+if (ICnadc >=100 && ICnadc <350){
+hYdCsI2PID_forMg->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+}
      if(CsI1Channel>=0)
        CsI1Energy = (CsI1Energy-CsI1Ped[CsI1Channel])*CsI1Gain[CsI1Channel];
      if(CsI2Channel>=0)
      CsI2Energy = (CsI2Energy-CsI2Ped[CsI2Channel])*CsI2Gain[CsI2Channel];
-     CsI2Energy = 0.2*CsI2Energy-0.13;  //tk this is temporary until the calibratio is fixed for S1338
+     //CsI2Energy = 0.2*CsI2Energy-0.13;  //tk this is temporary until the calibratio is fixed for S1338
      // CsIEnergy = CsIEnergy*0.01;//multiplied by a rough gain of 10/ now by 0.01(to get in MeV).
      if (1){// if((CsIChannel-16)/2==ydNo){
     det->TCsIEnergy = CsI1Energy; //for filling the tree
@@ -977,7 +1039,7 @@ CsI1Gain[CsIChan] = b;
      fclose (pFile);
    }
 
-   pFile = fopen ("/home/iris/anaIris/calib-files/CsI2PedGainS1147_11Li.txt" , "r");
+   pFile = fopen ("/home/iris/anaIris/calib-files/CsI2PedestalandGain_11Li_2015.txt" , "r");
    if (pFile == NULL) {
 perror ("Error opening file");
 fprintf(pwFile,"Error opening file");
@@ -986,7 +1048,7 @@ fprintf(pwFile,"Error opening file");
 
   fscanf(pFile,"%s",buffer);
 
-  fscanf(pFile,"%s",buffer);
+ fscanf(pFile,"%s",buffer);
 
  fscanf(pFile,"%s",buffer);
 
@@ -1044,16 +1106,23 @@ for (int i =0;i<NCsIChannels;i++  ){
  if (run<=1100)
    pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib970Sd2r.txt" , "r");
    if (run > 1100 && run <1530)
+   
      pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib1480Sd2r.txt" , "r");
    if ( (run >=1530) && (run<2627))
      pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib1532Sd2r.txt" , "r");
 
- if (run>=2627)
+ if ((run>=2627)&& (run<3300))
  {
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib2629Sd2r.txt" , "r");
   usePeds =1;
-}
 
+}
+ if (run>=3300)
+ {
+pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd2r_OP3354.txt" , "r");
+printf("reading files in main folder ");
+ usePeds =1;
+}
    if (pFile == NULL) {
 perror ("Error opening file");
 fprintf(pwFile,"Error opening file");
@@ -1105,10 +1174,15 @@ hSd2r[0] = (TH1D*)gDirectory->Get("Sd2r00");
   if ( (run >= 1530) && (run<2627)){
      pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib1532Sd2s.txt" , "r");  
   }
-   if (run >=2627)
+   if ((run >=2627)&& (run<3300))
      {
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib2629Sd2s.txt" , "r");
   usePeds =1;     
+}
+if (run>=3300)
+ {
+pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd2s_OP3354.txt" , "r");
+ usePeds =1;
 }
    if (pFile == NULL) {
 perror ("Error opening file");
@@ -1163,16 +1237,24 @@ if (run>=872  && run!=969 && run <1000)
  if ((run<=1301 && run > 1000) || run ==1480)
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib1480Sd1r.txt" , "r");
 
- if ((run >= 1530) && (run < 2667))
+ if ((run >= 1530) && (run < 2627))
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib1530Sd1r.txt" , "r");
 
-   if (run >=2627){
+   if ((run >=2627) && (run<3009))
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib2629Sd1r.txt" , "r");
+   if ((run >=3025)&& (run<3300)){
+ pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalibSd1r_ritu.txt" , "r");
   usePeds = 1;
+}
+if (run>=3300)
+ {
+pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd1r_OP3354.txt" , "r");
+printf("reading files in main folder ");
+ usePeds =1;
 }
 
  if (pFile == NULL) {
-perror ("Error opening file");
+perror ("Error opening file ");
 fprintf(pwFile,"Error opening file");
    }  
  else  {
@@ -1225,16 +1307,26 @@ if (run>1655 && run < 1770)
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib1480Sd1s.txt" , "r");
  if ((run >= 1530) && (run <2627))
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib1530Sd1s.txt" , "r");
- if (run >=2627){
+ if ((run >=2627)&& (run <3300)){
   pFile = fopen ("/home/iris/anaIris/calib-files/alphaCalib2629Sd1s.txt" , "r");
 }
+if (run>=3300)
+ {
+pFile = fopen ("/home/iris/Satbir/Calibration/alphacalibsd1s_OP3354.txt" , "r");
+ usePeds =1;
+}
 if (pFile == NULL) {
-perror ("Error opening file");
-fprintf(pwFile,"Error opening file");
+perror ("Error opening file here");
+fprintf(pwFile,"Error opening file here");
    }  
  else  {
 
   fscanf(pFile,"%s",buffer);
+
+  fscanf(pFile,"%s",buffer);
+
+ fscanf(pFile,"%s",buffer);
+fscanf(pFile,"%s",buffer);
 
   fscanf(pFile,"%s",buffer);
 
@@ -1596,6 +1688,20 @@ fprintf(pwFile,"Error opening file");
 	 hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 500, 0, 40, 512, 0, 16.);
          printf("Booking TH2F %s \n", label);
 
+YdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 500, 0, 4000, 512, 0, 16.);
+         printf("Booking TH2F %s \n", label);
+YdCsI2adcPID = new TH2F("YdCsI2PIDadc", "YdCsI2PIDadc", 500, 0, 4000, 512, 0, 16.);
+         printf("Booking TH2F %s \n", label);
+
+hYdCsI2PID_forNa = new TH2F("YdCsI2PID_forNa", "YdCsI2PID_forNa", 500, 0, 4000, 512, 0, 16.);
+         printf("Booking TH2F %s \n", label);
+
+hYdCsI2PID_forMg = new TH2F("YdCsI2PID_forMg", "YdCsI2PID_forMg", 500, 0, 4000, 512, 0, 16.);
+         printf("Booking TH2F %s \n", label);
+
+hYdCsI2PID_uncalibrated = new TH2F("YdCsI2PID_uncalibrated", "YdCsI2PID_uncalibrated", 500, 0, 4000, 500, 0, 4000.);
+         printf("Booking TH2F %s \n", label);
+
 
        printf(" in Mesytec BOR... Booking PID histos Done ....\n");
 
@@ -1631,7 +1737,13 @@ sprintf(label,"SuTheta");
 
      }
 
-  
+
+ // = IRIS WebServer for IC =
+ // Zero the web spectra at BOR
+ sprintf(spec_store_Ename[0],"IRIS_IC");
+ memset(spec_store_Edata,0,sizeof(spec_store_Edata));
+ // =========================
+ 
 }
 
 void HandleEOR_Mesytec(int run, int time)
