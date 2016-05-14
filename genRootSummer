@@ -1,4 +1,0 @@
-#!/bin/bash
-cd root_files/
-/home/iris/anaIris/bin/anaIris  /ladd/iris_data0/iris/data_test/run00$1.mid.gz
-cd /home/iris/anaIris

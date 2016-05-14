@@ -24,6 +24,7 @@ endif
 ROOTANA = $(HOME)/packages/rootana
 
 CXXFLAGS += -g -O -Wall -Wuninitialized -I./  -I$(INCLUDEDIR) -I$(ROOTSYS)/include -I$(ROOTANA) -I$(ROOTANA)/include
+CFLAGS += -I$(INCLUDEDIR)
 
 ROOTCFLAGS    = $(shell root-config --cflags)
 CXXFLAGS      += -g -Wall -ansi -Df2cFortran -fPIC $(ROOTCFLAGS) 
@@ -40,7 +41,7 @@ SOFLAGS       = -g -shared
 
 all: $(BINARYDIR)/anaIris
 
-$(BINARYDIR)/anaIris: $(ANAOBJECTS) $(OBJECTDIR)/anaIris.o $(MIDASLIBS) $(ROOTANA)/lib/librootana.a 
+$(BINARYDIR)/anaIris: $(ANAOBJECTS) $(OBJECTDIR)/anaIris.o $(OBJECTDIR)/web_server.o $(MIDASLIBS) $(ROOTANA)/lib/librootana.a 
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(NETDIRLIB) $(ROOTGLIBS) -lm -lz -lutil -lnsl -lpthread -lrt
 
 #___ALL THE OBJECT FILES____
@@ -62,6 +63,9 @@ $(OBJECTDIR)/HandleSTAT.o: $(SOURCEDIR)/HandleSTAT.cxx
 
 $(OBJECTDIR)/HandlePHYSICS.o: $(SOURCEDIR)/HandlePHYSICS.cxx 
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJECTDIR)/web_server.o: $(SOURCEDIR)/web_server.c
+	$(CXX) $(USERFLAGS) $(ROOTCFLAGS) $(CFLAGS) $(OSFLAGS) -o $@ -c $<
 
 clean::
 	rm -f $(OBJECTDIR)/*.o 
