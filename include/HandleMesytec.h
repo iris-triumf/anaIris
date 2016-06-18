@@ -81,7 +81,7 @@ Int_t    TICChannel;
  };
 
 void  HandleMesytec(TMidasEvent& event, void* ptr, int wsize, int MYLABEL, det_t *pdet);
-void  HandleBOR_Mesytec(int run, int time);
+void  HandleBOR_Mesytec(int run, int time, det_t *pdet);
 void  HandleEOR_Mesytec(int run, int time);
 
 #endif

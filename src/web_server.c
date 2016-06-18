@@ -467,7 +467,7 @@ int send_spectrum_from_handler(int num, int fd)
 	   if( !strcmp(spec_store_Lname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=7; break;}
 	   if( !strcmp(spec_store_Sname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=8; break;}
 	   // Hack for IRIS server
-	   if( !strcmp("IRIS_IC",spec_name_array[ii]) ){thisSpecID=i; spec_type=0; break;}
+	   //if( !strcmp("IRIS_IC",spec_name_array[ii]) ){thisSpecID=i; spec_type=0; break;}
 	 }
 	 }
        if(thisSpecID<0)
@@ -627,20 +627,20 @@ int send_spectrum_from_handler(int num, int fd)
 	   put_line(fd, temp, strlen(temp) );
 	   break;
 	 }
-       case 999 : // IRIS spectrum and data
-	 {
-	   // Build the part of the string for this spectrum to be sent
-	   for(i=0; i<SPEC_LENGTH; i++)
-	     {
-	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_Edata[0][i]);
-	       put_line(fd, temp, strlen(temp) );
-	     }
-	   // Corrent format at end of each spectrum data
-	   sprintf(temp,"]");
-	   put_line(fd, temp, strlen(temp) );
-	   break;
-	 }
+    //   case 999 : // IRIS spectrum and data
+	// {
+	//   // Build the part of the string for this spectrum to be sent
+	//   for(i=0; i<SPEC_LENGTH; i++)
+	//     {
+	//       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
+	//       sprintf(temp,"%d",spec_store_Edata[0][i]);
+	//       put_line(fd, temp, strlen(temp) );
+	//     }
+	//   // Corrent format at end of each spectrum data
+	//   sprintf(temp,"]");
+	//   put_line(fd, temp, strlen(temp) );
+	//   break;
+	// }
      default: 
 	 {
 	   return(-1);

@@ -61,13 +61,17 @@ TDirectory* gOnlineHistDir = NULL;
 TFile* gOutputFile = NULL;
 VirtualOdb* gOdb = NULL;
 FILE* ASCIIYY1 = NULL;
+FILE* ASCIIIC = NULL;
 FILE* ASCIICsI = NULL;
+FILE* ASCIICsI1= NULL;
+FILE* ASCIICsI2= NULL;
 FILE* ASCIISd1 = NULL;
 FILE* ASCIISd2 = NULL;
 //TCanvas  *gMainWindow = NULL; 	// the online histogram window
 det_t detec; // calibrated variables from detectors, to be passed to HandlePhysics
-//det_t *pdet = &detec;
+det_t *pdet = &detec;
 tdc_t timeArray;
+tdc_t *ptdc = &timeArray;
 
 double GetTimeSec() {
   struct timeval tv;
@@ -211,8 +215,8 @@ void startRun(int transition,int run,int time)
   NetDirectoryExport(gOutputFile, "outputFile");
 #endif
 
-  HandleBOR_Mesytec(run, time);
-  HandleBOR_V1190(run, time, &timeArray);
+  HandleBOR_Mesytec(run, time, pdet);
+  HandleBOR_V1190(run, time, ptdc);
   HandleBOR_PHYSICS(run, time);
   HandleBOR_Scaler(run,time);   
   HandleBOR_STAT(run, time);
@@ -306,10 +310,10 @@ void HandleMidasEvent(TMidasEvent& event)
     m=0;
     while (mesbkname[m][0]) { 
       int size = event.LocateBank(NULL, mesbkname[m], &ptr);
-      //  if (m==2)  printf("ADC bank %s: first: %d %d\n", mesbkname[m], mesbkname[m][0], size); 
+        printf("ADC bank %s: first: %d %d\n", mesbkname[m], mesbkname[m][0], size); 
       // loop until ascii code for first character of the bank name is empty
       if (ptr && size) { 
-	HandleMesytec(event, ptr, size, m, &detec); //Calls Handle_mesytec.cxx
+	HandleMesytec(event, ptr, size, m, pdet); //Calls Handle_mesytec.cxx
       } 
       m++;
     }
@@ -323,10 +327,10 @@ void HandleMidasEvent(TMidasEvent& event)
     m=0;
     while (tdcbkname[m][0]) {
       int size = event.LocateBank(NULL, tdcbkname[m], &ptr);
-      //      printf("TDC bank %s:%d m=%d\n", tdcbkname[m], size, m);
+            printf("TDC bank %s:%d m=%d\n", tdcbkname[m], size, m);
       
       if (ptr && size) {
-	HandleV1190(event, ptr, &timeArray,size, m); 
+	HandleV1190(event, ptr, ptdc,size, m); 
       }
       m++;
     }
@@ -337,6 +341,7 @@ void HandleMidasEvent(TMidasEvent& event)
     while (scalbkname[m][0]) { 
       int size = event.LocateBank(NULL, scalbkname[m], &ptr);
 			
+            printf("Scaler  bank %s:%d m=%d\n", scalbkname[m], size, m);
       if (ptr && size) { 
 				HandleScaler(event, ptr, size, m); 
       } 
@@ -344,7 +349,9 @@ void HandleMidasEvent(TMidasEvent& event)
     }
   }
   // Do physics now
+            printf("Handle Physics\n");
   HandlePHYSICS(&detec, &timeArray);
+            printf("Handle Physics\n");
  
   
   

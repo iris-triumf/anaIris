@@ -24,12 +24,12 @@ void decodeurl(char *dst, const char *src);
 #define WEBPORT           9094
 #define ROOTDIR "/home/iris/anaIris"
 
-#define SPEC_LENGTH 8192
-#define NHITS 6
+#define SPEC_LENGTH 4096
+#define NHITS 1
 #define MAXLEN 1024
 #define MAXODBPATHS 128
 #define MAXSPECNAMES 128
-#define SIZE_OF_ODB_MSC_TABLE 2
+#define SIZE_OF_ODB_MSC_TABLE 1024
 #define NSPECS (SIZE_OF_ODB_MSC_TABLE)
 
 // Declaration of the spectrum store
