@@ -141,9 +141,12 @@ void HandleBOR_PHYSICS(int run, int time)
 
  //proton gate
    TFile *fgate = new TFile("/home/iris/anaIris/gates/cuts.root");
-  protonsP = (TCutG*)fgate->FindObjectAny("protons1");
-  protonsP->SetName("protonsP"); //protons in Physics file
-  elasticPS3 = new TCutG();
+	if(fgate->IsZombie()) protonsP = new TCutG();
+	else{
+  		protonsP = (TCutG*)fgate->FindObjectAny("protons1");
+  		protonsP->SetName("protonsP"); //protons in Physics file
+	}
+  	elasticPS3 = new TCutG();
 
   char label[32], sig[32];
 
