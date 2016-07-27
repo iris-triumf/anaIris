@@ -534,7 +534,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
     if (modid>5 && modid<10) {// check last bank
       	det->EventNumber = event.GetSerialNumber();
     
- 		Sd2rEnergy=0; Sd2rEnergy2 =0; Sd2rChannel = -10000; Sd2rChannel2 =-10000;
+ 		Sd2rEnergy=0; Sd2rEnergy2 =0; Sd2rChannel = -1; Sd2rChannel2 =-1;
  		for (int i =0; i< NSd2rChannels;i++){
       		if (Sd2rEnergy<Sd2r[i]){
           		Sd2rEnergy2 = Sd2rEnergy;
@@ -547,7 +547,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 			}
  		} //for
 
-     	Sd2sEnergy=0; Sd2sEnergy2 =0; Sd2sChannel = -10000; Sd2sChannel2 =-10000;
+     	Sd2sEnergy=0; Sd2sEnergy2 =0; Sd2sChannel = -1; Sd2sChannel2 =-1;
     	for (int i =0; i< NSd2sChannels;i++){
 			if (Sd2sEnergy<Sd2s[i]){
 	  			Sd2sEnergy2 = Sd2sEnergy;
@@ -569,7 +569,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
   		//Sd2sEnergy = (Sd2sEnergy-Sd2sOffset[Sd2sChannel])*Sd2sGain[Sd2sChannel];
   
 
- 		Sd1rEnergy=0; Sd1rEnergy2 =0; Sd1rChannel = -10000; Sd1rChannel2 =-10000;
+ 		Sd1rEnergy=0; Sd1rEnergy2 =0; Sd1rChannel = -1; Sd1rChannel2 =-1;
     	for (int i =0; i< NSd1rChannels;i++){
 			if (Sd1rEnergy<Sd1r[i]){
           		Sd1rEnergy2 = Sd1rEnergy;
@@ -583,7 +583,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 			}
       	}//for
 
- 		Sd1sEnergy=0; Sd1sEnergy2 =0; Sd1sChannel = -10000; Sd1sChannel2 =-10000;
+ 		Sd1sEnergy=0; Sd1sEnergy2 =0; Sd1sChannel = -1; Sd1sChannel2 =-1;
     	for (int i =0; i< NSd1sChannels;i++){
 			if (Sd1sEnergy<Sd1s[i]){
           		Sd1sEnergy2 = Sd1sEnergy;
@@ -613,7 +613,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 		det->TSd1rChannel = Sd1rChannel;
 		det->TSd1sChannel = Sd1sChannel;
 
-    	YdEnergy=0; YdChannel = -10000; YdEnergy2=0; YdChannel2 =-10000, YdTChannel = -10000, YdTChannel2 = -10000;
+    	YdEnergy=0; YdChannel = -1; YdEnergy2=0; YdChannel2 =-1, YdTChannel = -1, YdTChannel2 = -1;
     	for (int i =0; i< NYdChannels;i++){
 	  		if(Yd[i]>YdEnergy){
            		YdEnergy2= YdEnergy;
@@ -648,7 +648,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	   //hYdTheta -> Fill(theta);
 	 
 		//YYu
-    	YuEnergy=0; YuChannel = -10000; YuEnergy2=0; YuChannel2 =-10000;
+    	YuEnergy=0; YuChannel = -1; YuEnergy2=0; YuChannel2 =-1;
     	for (int i =0; i< NYuChannels;i++){
           	if(Yu[i]>YuEnergy){
   				YuEnergy2= YuEnergy;
@@ -804,7 +804,6 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 {
 	std::string CalibFile = "config_online.txt";
-	if(CalibFile=="0") printf("No calibration file specified!\n\n");
 	calMesy.Load(CalibFile);
 	calMesy.Print();
 
@@ -845,52 +844,62 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
   	gOutputFile->cd();
 
 // Temporary variables for calibration 
- 	Int_t Chan=-10000;
+ 	Int_t Chan=-1;
 	double a,b,c;
 	int g; //for ringwise calibration of CsI
 
 //************** Calibrate IC, not yet implemented! *********************************
 	FILE * pFile;
-	FILE * pwFile;
+	FILE * logFile;
  	char buffer[32];
+	
+	// logfile
+   	logFile = fopen("anaIris.log","w");
+	
+   	pFile = fopen(calMesy.fileIC.data(), "r");
 
-	if(calMesy.fileIC==calMesy.installPath){
-		printf("No calibration file for IC specified. Skipping IC calibration.\n\n");
-	}
-	else{
-   		pFile = fopen(calMesy.fileIC.data(), "r");
+	if (pFile == NULL || calMesy.boolIC==false) {
+		//perror ("No file");
+		fprintf(logFile,"No calibration file for IC. Skipping IC calibration.\n");
+		printf("No calibration file for IC. Skipping IC calibration.\n");
+		for (int i =0;i<16;i++  ){
+			ICPed[i] = 0.;
+			ICGain[i] = 1.;
+     	}
+   	}  
+ 	else  {
+		printf("Reading IC config file '%s'\n",calMesy.fileIC.data());
+		// Skip first line
+  		fscanf(pFile,"%s",buffer);
+  		fscanf(pFile,"%s",buffer);
+ 		fscanf(pFile,"%s",buffer);
 
-		if (pFile == NULL) {
-			perror ("Error opening file");
-			fprintf(pwFile,"Error opening file");
-   		}  
- 		else  {
-			printf("Reading IC config file '%s'\n",calMesy.fileIC.data());
-			// Skip first line
-  			fscanf(pFile,"%s",buffer);
-  			fscanf(pFile,"%s",buffer);
- 			fscanf(pFile,"%s",buffer);
-
-			for (int i =0;i<16;i++  ){
-    	   		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
-				ICPed[Chan] = a;
-				ICGain[Chan] = b;
-				printf("ICPed %lf ICgain %lf\n",ICPed[Chan],ICGain[Chan]);
-    	 	}
-    	 	fclose (pFile);
-			printf("\n");
- 		}
-	}
+		for (int i =0;i<16;i++  ){
+       		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
+			ICPed[Chan] = a;
+			ICGain[Chan] = b;
+			printf("ICPed %lf ICgain %lf\n",ICPed[Chan],ICGain[Chan]);
+     	}
+     	fclose (pFile);
+		printf("\n");
+ 	}
 //*****************************************************************
 
 //*************** Calibrate CsI1 ******************************
- 	Chan=-10000;  
- 	
+ 	Chan=-1;  
+ 		
  	pFile = fopen (calMesy.fileCsI1.data(), "r");
-   	if (pFile == NULL) {
-		perror ("Error opening file");
-		fprintf(pwFile,"Error opening file");
-   	}  
+   	if (pFile == NULL || calMesy.boolCsI1==false) {
+		// perror ("No file");
+		fprintf(logFile,"No calibration file for CsI1. Skipping CsI1 calibration.\n");
+		printf("No calibration file for CsI1. Skipping CsI1 calibration.\n");
+   		for (int i =0; i<16; i++){
+			CsI1Ped[i] = 0.;
+			for (int j=0; j<NCsI1GroupRing; j++){
+				CsI1Gain[j][i] = 1.;
+ 			}//for
+		}
+	}  
  	else {
 		printf("Reading config file '%s'\n",calMesy.fileCsI1.data());
 		// Skip first line
@@ -917,9 +926,9 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
 	pFile = fopen (calMesy.fileCsI2.data(),"r");
 
-	if (pFile == NULL) {
-		perror ("Error opening file");
-		fprintf(pwFile,"Error opening file");
+	if (pFile == NULL || calMesy.boolCsI2==false) {
+		fprintf(logFile,"No calibration file for CsI2. Skipping CsI2 calibration.\n");
+		printf("No calibration file for CsI2. Skipping CsI2 calibration.\n");
 	}  
 
 	else  {
@@ -946,15 +955,19 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 //************************************************************************
 
 //**************** Calibrate Sd2 rings ****************************************
-	Chan=-10000;
+	Chan=-1;
 
 	pFile = fopen (calMesy.fileSd2r.data(), "r");
 	usePeds = 1;
 
-   	if (pFile == NULL) {
-		perror ("Error opening file");
-		fprintf(pwFile,"Error opening file");
-   	}  
+   	if (pFile == NULL || calMesy.boolSd2r==false) {
+		fprintf(logFile,"No calibration file for Sd2 rings. Skipping Sd2r calibration.\n");
+		printf("No calibration file for Sd2 rings. Skipping Sd2r calibration.\n");
+   		for (int i =0;i<24;i++  ){
+			Sd2rPed[i] = 0.;
+			Sd2rGain[i] = 1.;  
+		}
+	}  
  	else {
 		printf("Reading Sd2r config file '%s'\n",calMesy.fileSd2r.data());
 		// Skip first line
@@ -962,7 +975,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
   		fscanf(pFile,"%s",buffer);
  		fscanf(pFile,"%s",buffer);
 
-		for (int i =0;i<32;i++  ){
+		for (int i =0;i<24;i++  ){
        		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
        		if(!usePeds){
 				Sd2rOffset[Chan-64] = a;
@@ -979,13 +992,17 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 //************************************************************************
 
 //**************** Calibrate Sd2 sectors ****************************************
-	Chan=-10000;
+	Chan=-1;
    	pFile = fopen (calMesy.fileSd2s.data(), "r");
 
- 	if (pFile == NULL) {
-		perror ("Error opening file");
-		fprintf(pwFile,"Error opening file");
-   	}  
+ 	if (pFile == NULL || calMesy.boolSd2s==false) {
+		fprintf(logFile,"No calibration file for Sd2 sectors. Skipping Sd2s calibration.\n");
+		printf("No calibration file for Sd2 sectors. Skipping Sd2s calibration.\n");
+   		for (int i =0;i<32;i++  ){
+			Sd2sPed[i] = 0.;
+			Sd2sGain[i] = 1.;  
+		}
+	}  
  	else  {
 		printf("Reading Sd2s config file '%s'\n",calMesy.fileSd2s.data());
 		// Skip first line
@@ -1012,13 +1029,17 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
 
 //**************** Calibrate Sd1 rings ****************************************
-	Chan=-10000;
+	Chan=-1;
    	pFile = fopen(calMesy.fileSd1r.data(), "r");
 
-	if (pFile == NULL) {
-		perror ("Error opening file");
-		fprintf(pwFile,"Error opening file");
-   	}  
+	if (pFile == NULL || calMesy.boolSd1r==false) {
+		fprintf(logFile,"No calibration file for Sd1 rings. Skipping Sd1r calibration.\n");
+		printf("No calibration file for Sd1 rings. Skipping Sd1r calibration.\n");
+   		for (int i =0;i<24;i++  ){
+			Sd1rPed[i] = 0.;
+			Sd1rGain[i] = 1.;  
+		}
+	}  
  	else  {
 		printf("Reading Sd1r config file '%s'\n",calMesy.fileSd1r.data());
 		// Skip first line
@@ -1041,13 +1062,17 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 //************************************************************************
 
 //**************** Calibrate Sd1 sectors ****************************************
-	Chan=-10000;
+	Chan=-1;
    	pFile = fopen (calMesy.fileSd1s.data(), "r");
 
-	if (pFile == NULL) {
-		perror ("Error opening file");
-		fprintf(pwFile,"Error opening file");
-   	}  
+	if (pFile == NULL || calMesy.boolSd1s==false) {
+		fprintf(logFile,"No calibration file for Sd1 sectors. Skipping Sd1s calibration.\n");
+		printf("No calibration file for Sd1 sectors. Skipping Sd1s calibration.\n");
+   		for (int i =0;i<24;i++  ){
+			Sd1sPed[i] = 0.;
+			Sd1sGain[i] = 1.;  
+		}
+	}  
  	else  {
 		printf("Reading Sd1s config file '%s'\n",calMesy.fileSd1s.data());
   		// Skip first line
@@ -1072,82 +1097,83 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 //************************************************************************
 
 //**************** Calibrate Su rings ****************************************
-	Chan=-10000;
-	if(calMesy.fileSur==calMesy.installPath){
-		printf("No calibration file for Sur specified. Skipping Sur calibration.\n");
-	}
-	else{
-   		pFile = fopen(calMesy.fileSur.data(), "r");
+	Chan=-1;
+   	pFile = fopen(calMesy.fileSur.data(), "r");
 
-		if (pFile == NULL) {
-			perror ("Error opening file");
-			fprintf(pwFile,"Error opening file");
-   		}  
- 		else  {
-			printf("Reading Sur config file '%s'\n",calMesy.fileSur.data());
-			// Skip first line
-  			fscanf(pFile,"%s",buffer);
-  			fscanf(pFile,"%s",buffer);
- 			fscanf(pFile,"%s",buffer);
+	if (pFile == NULL || calMesy.boolSur==false) {
+		fprintf(logFile,"No calibration file for Su rings. Skipping Sur calibration.\n");
+		printf("No calibration file for Su rings. Skipping Sur calibration.\n");
+   		for (int i =0;i<24;i++  ){
+			SurPed[i] = 0.;
+			SurGain[i] = 1.;  
+		}
+	}  
+ 	else  {
+		printf("Reading Sur config file '%s'\n",calMesy.fileSur.data());
+		// Skip first line
+  		fscanf(pFile,"%s",buffer);
+  		fscanf(pFile,"%s",buffer);
+ 		fscanf(pFile,"%s",buffer);
 
-			for (int i =0;i<24;i++  ){
-    	   		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
-    	   		if (!usePeds)
-					SurOffset[Chan-320] = a;
-    	   		else if (usePeds)
-					SurPed[Chan-320] = a;
-					SurGain[Chan-320] = b;
-					printf("SurPed %lf Surgain %lf\n",SurPed[Chan-320],SurGain[Chan-320]);
-    	 	}
-    	 	fclose (pFile);
-			printf("\n");
- 		}
-	}
+		for (int i =0;i<24;i++  ){
+       		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
+       		if (!usePeds)
+				SurOffset[Chan-320] = a;
+       		else if (usePeds)
+				SurPed[Chan-320] = a;
+				SurGain[Chan-320] = b;
+				printf("SurPed %lf Surgain %lf\n",SurPed[Chan-320],SurGain[Chan-320]);
+     	}
+     	fclose (pFile);
+		printf("\n");
+ 	}
 //************************************************************************
 
 //**************** Calibrate Su sectors ****************************************
-	Chan=-10000;
-	if(calMesy.fileSus==calMesy.installPath){
-		printf("No calibration file for Sus specified. Skipping Sus calibration.\n");
-	}
-	else{
-   		pFile = fopen (calMesy.fileSus.data(), "r");
+	Chan=-1;
+   	pFile = fopen (calMesy.fileSus.data(), "r");
 
-		if (pFile == NULL) {
-			perror ("Error opening file");
-			fprintf(pwFile,"Error opening file");
-   		}  
- 		else  {
-			printf("Reading Sus config file '%s'\n",calMesy.fileSus.data());
-  			// Skip first line
-			fscanf(pFile,"%s",buffer);
-  			fscanf(pFile,"%s",buffer);
- 			fscanf(pFile,"%s",buffer);
-
-			for (int i =0;i<32;i++  ){
-    	   		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
-    	   		if (!usePeds){
-					SusOffset[Chan-352] = a;
-				}
-    	   		else if (usePeds){
-					SusPed[Chan-352] = a;
-					SusGain[Chan-352] = b; 
-					printf("SusPed %lf Susgain %lf\n",a,b);
-				}
- 			}
-    	 	fclose (pFile);
-			printf("\n");
+	if (pFile == NULL || calMesy.boolSus==false) {
+		fprintf(logFile,"No calibration file for Su sectors. Skipping Sus calibration.\n");
+		printf("No calibration file for Su sectors. Skipping Sus calibration.\n");
+   		for (int i =0;i<24;i++  ){
+			SusPed[i] = 0.;
+			SusGain[i] = 1.;  
 		}
+	}  
+ 	else  {
+		printf("Reading Sus config file '%s'\n",calMesy.fileSus.data());
+  		// Skip first line
+		fscanf(pFile,"%s",buffer);
+  		fscanf(pFile,"%s",buffer);
+ 		fscanf(pFile,"%s",buffer);
+
+		for (int i =0;i<32;i++  ){
+       		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
+       		if (!usePeds){
+				SusOffset[Chan-352] = a;
+			}
+       		else if (usePeds){
+				SusPed[Chan-352] = a;
+				SusGain[Chan-352] = b; 
+				printf("SusPed %lf Susgain %lf\n",a,b);
+			}
+ 		}
+     	fclose (pFile);
+		printf("\n");
 	}
 //************************************************************************
 
 //**************** Calibrate Yd ****************************************
-	Chan=-10000;
+	Chan=-1;
    	pFile = fopen (calMesy.fileYd.data(), "r");
 
-	if (pFile == NULL) {
-  		perror ("Error opening file fro Yd");
-  		fprintf(pwFile,"Error opening file for Yd");
+	if (pFile == NULL || calMesy.boolYd==false) {
+		printf("No calibration file for Yd. Skipping Yd calibration.\n");
+		for (int i =0;i<NYdChannels;i++  ){
+			YdOffset[i] = 0.;
+			YdGain[i] = 1.;  
+		}
 	}
 	else  {
 		printf("Reading config file '%s'\n",calMesy.fileYd.data());
@@ -1169,35 +1195,35 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 //************************************************************************
 
 //**************** Calibrate Yu, not yet impemented!  ****************************************
-	Chan=-10000;
-	if(calMesy.fileYu==calMesy.installPath){
-		printf("No calibration file for Yu specified. Skipping Yu calibration.\n");
-	}
-	else{
-   		pFile = fopen (calMesy.fileYu.data(), "r");
+	Chan=-1;
+   	pFile = fopen (calMesy.fileYu.data(), "r");
 
-		if (pFile == NULL) {
-  			perror ("Error opening file fro Yu");
-  			fprintf(pwFile,"Error opening file for Yu");
+	if (pFile == NULL || calMesy.boolYu==false) {
+		fprintf(logFile,"No calibration file for Yu. Skipping Yu calibration.\n");
+		printf("No calibration file for Yu. Skipping Yu calibration.\n");
+		for (int i =0;i<NYdChannels;i++  ){
+			YuOffset[i] = 0.;
+			YuGain[i] = 1.;  
 		}
-		else  {
-			printf("Reading config file '%s'\n",calMesy.fileYu.data());
- 			// Skip first line
-  			fscanf(pFile,"%s",buffer);
-  			fscanf(pFile,"%s",buffer);
-  			fscanf(pFile,"%s",buffer);
-
-  			for (int i =0;i< NYuChannels;i++  ){
-    			fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
-				YuGain[Chan-384] = b;
- 				YuOffset[Chan-384] = -1.*a*b;
- 				printf("gain %lf ped %lf\t",b,a);
-				if((i+1)%4==0) printf("\n");
-    		}
-    		fclose (pFile);
-			printf("\n");
-  		}
 	}
+	else  {
+		printf("Reading config file '%s'\n",calMesy.fileYu.data());
+ 		// Skip first line
+  		fscanf(pFile,"%s",buffer);
+  		fscanf(pFile,"%s",buffer);
+  		fscanf(pFile,"%s",buffer);
+
+  		for (int i =0;i< NYuChannels;i++  ){
+    		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
+			YuGain[Chan-384] = b;
+ 			YuOffset[Chan-384] = -1.*a*b;
+ 			printf("gain %lf ped %lf\t",b,a);
+			if((i+1)%4==0) printf("\n");
+    	}
+    	fclose (pFile);
+		printf("\n");
+  	}
+
 //************************************************************************
     if (gOutputFile) {
 		hMes_P[0] = (TH1D*)gDirectory->Get("adc00");
@@ -1566,6 +1592,12 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	sprintf(spec_store_Ename[8],"SSBEnergy");
 	
 	sprintf(spec_store_hit_name[0],"YdHits");
+	sprintf(spec_store_hit_name[1],"CsI1Hits");
+	sprintf(spec_store_hit_name[2],"CsI2Hits");
+	sprintf(spec_store_hit_name[3],"Sd1rHits");
+	sprintf(spec_store_hit_name[4],"Sd1sHits");
+	sprintf(spec_store_hit_name[5],"Sd2rHits");
+	sprintf(spec_store_hit_name[6],"Sd2sHits");
 
 	for (int chn=0;chn<Nchannels;chn++) {
 		if (chn<32)
