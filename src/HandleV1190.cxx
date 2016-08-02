@@ -162,7 +162,7 @@ void HandleBOR_V1190(int run, int time, tdc_t *timeArray)
 	sprintf(label, "TimeRaw%02d", channel);
 	sprintf(sig, "TimeRaw%03d", channel);
 	hV1190_T[channel] = new TH1D(label, sig, binlimit, 0, 8*binlimit);
-	printf("Booking TH1D %s \n", label);
+	//printf("Booking TH1D %s \n", label);
       }
 
       gOutputFile->cd();
@@ -174,14 +174,14 @@ void HandleBOR_V1190(int run, int time, tdc_t *timeArray)
         sprintf(label, "Time%02d", channel);
         sprintf(sig, "Time%03d", channel);
         hTime[channel] = new TH1D(label, sig, binlimit, -1000, 1000);
-        printf("Booking TH1D %s \n", label);
+        //printf("Booking TH1D %s \n", label);
       }
 
       for (unsigned int channel=0;channel<Nchannels;channel++) {
         sprintf(label, "TimeRF%02d", channel);
         sprintf(sig, "TimeRF%03d", channel);
         hTimeRF[channel] = new TH1D(label, sig, binlimit, -1000, 1000);
-        printf("Booking TH1D %s \n", label);
+        //printf("Booking TH1D %s \n", label);
       }
       
       hTall = new TH1D("dTall", "dTall", binlimit, -1000, 1000);

@@ -316,12 +316,12 @@ int send_spectrum_list(int fd)
 
    sprintf(temp,"getSpectrumList({'spectrumlist':['");
    put_line(fd, temp, strlen(temp) );
-   put_line(fd, spec_store_hit_name[0], strlen(spec_store_hit_name[0]) );
+   put_line(fd, spec_store_hitName[0], strlen(spec_store_hitName[0]) );
 
   for(i=1; i<NHITS; i++)
     {
-      if(strlen(spec_store_hit_name[i])>0){
-	sprintf(temp, "', '%s",spec_store_hit_name[i]);
+      if(strlen(spec_store_hitName[i])>0){
+	sprintf(temp, "', '%s",spec_store_hitName[i]);
 	put_line(fd, temp, strlen(temp) );
       }
     }
@@ -334,43 +334,43 @@ int send_spectrum_list(int fd)
     }
   for(i=0; i<NSPECS; i++) // Change this to the number of spectrum titles received from the odb
     {
-      if(strlen(spec_store_Ename[i])>0){
-	sprintf(temp, "', '%s",spec_store_Ename[i]);
+      if(strlen(spec_store_eName[i])>0){
+	sprintf(temp, "', '%s",spec_store_eName[i]);
 	put_line(fd, temp, strlen(temp) );
       }
     }
   for(i=0; i<NSPECS; i++) // Change this to the number of spectrum titles received from the odb
     {
-      if(strlen(spec_store_Tname[i])>0){
-	sprintf(temp, "', '%s",spec_store_Tname[i]);
+      if(strlen(spec_store_tName[i])>0){
+	sprintf(temp, "', '%s",spec_store_tName[i]);
 	put_line(fd, temp, strlen(temp) );
       }
     }
   for(i=0; i<NSPECS; i++) // Change this to the number of spectrum titles received from the odb
     {
-      if(strlen(spec_store_Pname[i])>0){
-	sprintf(temp, "', '%s",spec_store_Pname[i]);
+      if(strlen(spec_store_adcName[i])>0){
+	sprintf(temp, "', '%s",spec_store_adcName[i]);
 	put_line(fd, temp, strlen(temp) );
       }
     }
   for(i=0; i<NSPECS; i++) // Change this to the number of spectrum titles received from the odb
     {
-      if(strlen(spec_store_Wname[i])>0){
-	sprintf(temp, "', '%s",spec_store_Wname[i]);
+      if(strlen(spec_store_energyName[i])>0){
+	sprintf(temp, "', '%s",spec_store_energyName[i]);
 	put_line(fd, temp, strlen(temp) );
       }
     }
   for(i=0; i<NSPECS; i++) // Change this to the number of spectrum titles received from the odb
     {
-      if(strlen(spec_store_Zname[i])>0){
-	sprintf(temp, "', '%s",spec_store_Zname[i]);
+      if(strlen(spec_store_2dhitName[i])>0){
+	sprintf(temp, "', '%s",spec_store_2dhitName[i]);
 	put_line(fd, temp, strlen(temp) );
       }
     }
   for(i=0; i<NSPECS; i++) // Change this to the number of spectrum titles received from the odb
     {
-      if(strlen(spec_store_Lname[i])>0){
-	sprintf(temp, "', '%s",spec_store_Lname[i]);
+      if(strlen(spec_store_pidName[i])>0){
+	sprintf(temp, "', '%s",spec_store_pidName[i]);
 	put_line(fd, temp, strlen(temp) );
       }
     }
@@ -405,12 +405,12 @@ int GetIDfromName(const char* name)
 
   for(i=0; i<NSPECS; i++)
     {
-      if(strcmp(name,spec_store_Ename[i]) == 0){ return(i); }
-      if(strcmp(name,spec_store_Pname[i]) == 0){ return(i); }
-      if(strcmp(name,spec_store_Tname[i]) == 0){ return(i); }
-      if(strcmp(name,spec_store_Wname[i]) == 0){ return(i); }
-      if(strcmp(name,spec_store_Zname[i]) == 0){ return(i); }
-      if(strcmp(name,spec_store_Lname[i]) == 0){ return(i); }
+      if(strcmp(name,spec_store_eName[i]) == 0){ return(i); }
+      if(strcmp(name,spec_store_adcName[i]) == 0){ return(i); }
+      if(strcmp(name,spec_store_tName[i]) == 0){ return(i); }
+      if(strcmp(name,spec_store_energyName[i]) == 0){ return(i); }
+      if(strcmp(name,spec_store_2dhitName[i]) == 0){ return(i); }
+      if(strcmp(name,spec_store_pidName[i]) == 0){ return(i); }
       if(strcmp(name,spec_store_Sname[i]) == 0){ return(i); }
     }
 
@@ -453,18 +453,18 @@ int send_spectrum_from_handler(int num, int fd)
        // Look for the spectrum in the store and see if it exists.
        thisSpecID=-1;
        spec_type=-1;
-       for(i=0; i<NHITS; i++){ if( !strcmp(spec_store_hit_name[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=4; break; } }
+       for(i=0; i<NHITS; i++){ if( !strcmp(spec_store_hitName[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=4; break; } }
        for(i=0; i<NHITS; i++){ if( !strcmp(spec_store_sum_name[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=5; break; } }
        if(thisSpecID<0){
        for(i=0; i<NSPECS; i++)
 	 {
-	   // if( !strcmp(spec_store_hit_name[i],spec_name_array[ii]) ){thisSpecID=i; break;} // wrong i! - Need to search hits separately
-	   if( !strcmp(spec_store_Ename[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=0; break;}
-	   if( !strcmp(spec_store_Tname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=1; break;}
-	   if( !strcmp(spec_store_Pname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=3; break;}
-	   if( !strcmp(spec_store_Wname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=2; break;}
-	   if( !strcmp(spec_store_Zname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=6; break;}
-	   if( !strcmp(spec_store_Lname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=7; break;}
+	   // if( !strcmp(spec_store_hitName[i],spec_name_array[ii]) ){thisSpecID=i; break;} // wrong i! - Need to search hits separately
+	   if( !strcmp(spec_store_eName[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=0; break;}
+	   if( !strcmp(spec_store_tName[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=1; break;}
+	   if( !strcmp(spec_store_adcName[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=3; break;}
+	   if( !strcmp(spec_store_energyName[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=2; break;}
+	   if( !strcmp(spec_store_2dhitName[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=6; break;}
+	   if( !strcmp(spec_store_pidName[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=7; break;}
 	   if( !strcmp(spec_store_Sname[i],spec_name_array[ii]) ){thisSpecID=i; spec_type=8; break;}
 	   // Hack for IRIS server
 	   //if( !strcmp("IRIS_IC",spec_name_array[ii]) ){thisSpecID=i; spec_type=0; break;}
@@ -499,7 +499,7 @@ int send_spectrum_from_handler(int num, int fd)
 	   for(i=0; i<SPEC_LENGTH; i++)
 	     {
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_Tdata[thisSpecID][i]);
+	       sprintf(temp,"%d",spec_store_tData[thisSpecID][i]);
 	       put_line(fd, temp, strlen(temp) );
 	     }
 	   // Corrent format at end of each spectrum data
@@ -512,9 +512,9 @@ int send_spectrum_from_handler(int num, int fd)
 	   // Build the part of the string for this spectrum to be sent
 	   for(i=0; i<SPEC_LENGTH; i++)
 	     {
-	       if(spec_store_Wdata[thisSpecID][i]>0){
+	       if(spec_store_energyData[thisSpecID][i]>0){
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_Wdata[thisSpecID][i]);
+	       sprintf(temp,"%d",spec_store_energyData[thisSpecID][i]);
 	       put_line(fd, temp, strlen(temp) );
 	       }
 	     }
@@ -529,7 +529,7 @@ int send_spectrum_from_handler(int num, int fd)
 	   for(i=0; i<SPEC_LENGTH; i++)
 	     {
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_Pdata[thisSpecID][i]);
+	       sprintf(temp,"%d",spec_store_adcData[thisSpecID][i]);
 	       put_line(fd, temp, strlen(temp) );
 	     }
 	   // Corrent format at end of each spectrum data
@@ -547,7 +547,7 @@ int send_spectrum_from_handler(int num, int fd)
 	   for(i=0; i<SPEC_LENGTH; i++)
 	     {
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_Edata[thisSpecID][i]);
+	       sprintf(temp,"%d",spec_store_eData[thisSpecID][i]);
 	       put_line(fd, temp, strlen(temp) );
 	     }
 	   // printf("for Energy, temp is .%s.\n",temp);
@@ -561,7 +561,7 @@ int send_spectrum_from_handler(int num, int fd)
 	   for(i=0; i<(SIZE_OF_ODB_MSC_TABLE); i++)
 	     {
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_hit_data[thisSpecID][i]);
+	       sprintf(temp,"%d",spec_store_hitData[thisSpecID][i]);
 	       put_line(fd, temp, strlen(temp) );
 	     }
 	   // Corrent format at end of each spectrum data
@@ -588,7 +588,7 @@ int send_spectrum_from_handler(int num, int fd)
 	   for(i=0; i<SPEC_LENGTH; i++)
 	     {
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_Zdata[thisSpecID][i]);
+	       sprintf(temp,"%d",spec_store_2dhitData[thisSpecID][i]);
 	       put_line(fd, temp, strlen(temp) );
 	     }
 	   // printf("for Energy, temp is .%s.\n",temp);
@@ -603,7 +603,7 @@ int send_spectrum_from_handler(int num, int fd)
 	   for(i=0; i<SPEC_LENGTH; i++)
 	     {
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	       sprintf(temp,"%d",spec_store_Ldata[thisSpecID][i]);
+	       sprintf(temp,"%d",spec_store_pidData[thisSpecID][i]);
 	       put_line(fd, temp, strlen(temp) );
 	     }
 	   // printf("for Energy, temp is .%s.\n",temp);
@@ -633,7 +633,7 @@ int send_spectrum_from_handler(int num, int fd)
 	//   for(i=0; i<SPEC_LENGTH; i++)
 	//     {
 	//       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
-	//       sprintf(temp,"%d",spec_store_Edata[0][i]);
+	//       sprintf(temp,"%d",spec_store_eData[0][i]);
 	//       put_line(fd, temp, strlen(temp) );
 	//     }
 	//   // Corrent format at end of each spectrum data

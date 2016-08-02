@@ -140,7 +140,7 @@ void HandleBOR_PHYSICS(int run, int time)
 {
 
  //proton gate
-   TFile *fgate = new TFile("/home/iris/anaIris/gates/cuts.root");
+   TFile *fgate = new TFile("/home/iris/current/anaIris/cuts_online.root");
 	if(fgate->IsZombie()) protonsP = new TCutG();
 	else{
   		protonsP = (TCutG*)fgate->FindObjectAny("protons1");

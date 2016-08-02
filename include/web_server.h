@@ -25,7 +25,9 @@ void decodeurl(char *dst, const char *src);
 #define ROOTDIR "/home/iris/anaIris"
 
 #define SPEC_LENGTH 4096
-#define NHITS 1
+#define SPEC_LENGTH_2D 128
+#define NHITS 32
+#define NCHANNELS 128
 #define MAXLEN 1024
 #define MAXODBPATHS 128
 #define MAXSPECNAMES 128
@@ -33,26 +35,26 @@ void decodeurl(char *dst, const char *src);
 #define NSPECS (SIZE_OF_ODB_MSC_TABLE)
 
 // Declaration of the spectrum store
- extern int spec_store_address[NSPECS];
- extern int spec_store_type[NSPECS]; // 0=energy, 1=time, 2=waveform, 3=pulse height, 4=hitpattern
- extern char spec_store_Ename[NSPECS][32];
- extern char spec_store_Tname[NSPECS][32];
- extern char spec_store_Wname[NSPECS][32];
- extern char spec_store_Pname[NSPECS][32];
- extern char spec_store_Zname[NSPECS][32];
- extern char spec_store_Lname[NSPECS][32];
- extern char spec_store_Sname[NSPECS][32];
- extern int spec_store_Edata[NSPECS][SPEC_LENGTH];
- extern int spec_store_Tdata[NSPECS][SPEC_LENGTH];
- extern int spec_store_Wdata[NSPECS][SPEC_LENGTH];
- extern int spec_store_Pdata[NSPECS][SPEC_LENGTH];
- extern int spec_store_Zdata[NSPECS][SPEC_LENGTH];
- extern int spec_store_Ldata[NSPECS][SPEC_LENGTH];
- extern int spec_store_Sdata[NSPECS][SPEC_LENGTH];
- extern int spec_store_hit_type[NHITS];
- extern char spec_store_hit_name[NHITS][32];
- extern int spec_store_hit_data[NHITS][SIZE_OF_ODB_MSC_TABLE];
- extern char spec_store_sum_name[NHITS][32];
+extern int spec_store_address[NSPECS];
+extern int spec_store_type[NSPECS]; // 0=energy, 1=time, 2=waveform, 3=pulse height, 4=hitpattern
+extern char spec_store_eName[NSPECS][32];
+extern char spec_store_tName[NSPECS][32];
+extern char spec_store_energyName[NSPECS][32];
+extern char spec_store_adcName[NSPECS][32];
+extern char spec_store_2dhitName[NSPECS][32];
+extern char spec_store_pidName[NSPECS][32];
+extern char spec_store_Sname[NSPECS][32];
+extern int spec_store_eData[NSPECS][SPEC_LENGTH];
+extern int spec_store_tData[NSPECS][SPEC_LENGTH];
+extern int spec_store_energyData[NSPECS][SPEC_LENGTH];
+extern int spec_store_adcData[NSPECS][SPEC_LENGTH];
+extern int spec_store_2dhitData[NSPECS][NCHANNELS*SPEC_LENGTH_2D];
+extern int spec_store_pidData[NSPECS][SPEC_LENGTH];
+extern int spec_store_Sdata[NSPECS][SPEC_LENGTH];
+extern int spec_store_hit_type[NHITS];
+extern char spec_store_hitName[NHITS][32];
+extern int spec_store_hitData[NHITS][NCHANNELS];
+extern char spec_store_sum_name[NHITS][32];
 extern int spec_store_sum_data[NHITS][SPEC_LENGTH];
 
 

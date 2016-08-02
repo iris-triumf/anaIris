@@ -349,11 +349,8 @@ void HandleMidasEvent(TMidasEvent& event)
     }
   }
   // Do physics now
-            printf("Handle Physics\n");
-  HandlePHYSICS(&detec, &timeArray);
-            printf("Handle Physics\n");
- 
-  
+	printf("Handle Physics\n");
+  	HandlePHYSICS(&detec, &timeArray);
   
   //--------------------------------------------------------------------------------
   // DISABLE FOR NOW
