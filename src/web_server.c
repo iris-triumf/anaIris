@@ -558,7 +558,7 @@ int send_spectrum_from_handler(int num, int fd)
 	 }
        case 4 : // Hitpattern spectrum
 	 {
-	   for(i=0; i<(SIZE_OF_ODB_MSC_TABLE); i++)
+	   for(i=0; i<(NHITS); i++)
 	     {
 	       if(i>0){sprintf(temp,","); put_line(fd, temp, strlen(temp) );}
 	       sprintf(temp,"%d",spec_store_hitData[thisSpecID][i]);

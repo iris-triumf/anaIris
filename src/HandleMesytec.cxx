@@ -240,6 +240,9 @@ TH1D * hSd2sElHits = {NULL}; // Downstream S3 2 sectors with elastic gate
 TH1D * hSd1rElHits = {NULL}; // Downstream S3 1 rings with elastic gate                                                                                 
 TH1D * hSd1sElHits = {NULL}; // Downstream S3 1 sectors with elastic gate
 
+TH1D * hCsI1Hits = {NULL};  // CsI1
+TH1D * hCsI2Hits = {NULL};  // CsI2
+
 TH1D * hYd1Hits = {NULL};  // Downstream Y11 1
 TH1D * hYd2Hits = {NULL};  // Downstream Y11 2
 TH1D * hYd3Hits = {NULL};  // Downstream Y11 3
@@ -547,57 +550,81 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	  				}
 	
 	    			//hits 
-	  
+	    
+	    			if (modid==1 && vpeak>adcThresh&&channel<16){	 
+	    				hCsI1Hits->Fill(channel, 1.); // CsI hit  
+						spec_store_hitData[0][channel]++;	
+					}
+	    			if (modid==1 && vpeak>adcThresh&&channel>15){	 
+	    				hCsI2Hits->Fill(channel-16, 1.); //CsI hits  
+						spec_store_hitData[1][channel-16]++;	
+					}
+
 	    			if (modid==2 && vpeak>adcThresh){	 
 	    				hSd2rHits->Fill(channel, 1.); //Sd2r hits  
+						spec_store_hitData[4][channel]++;	
 					}
 	    			if (modid==3 && vpeak>adcThresh)	 {
 	    				hSd2sHits->Fill(channel, 1.); //Sd2s hits
+		   				spec_store_hitData[5][channel]++;
 	  				}
 
- 					if (modid==4 && vpeak>adcThresh && vpeak<3500)	 {
+ 					if (modid==4 && vpeak>adcThresh)	 {
 	    				hSd1rHits->Fill(channel, 1.); //Sd1r hits
-	  				}	
-	  
+		   				spec_store_hitData[2][channel]++;
+					}	  
  					if (modid==5 && vpeak>adcThresh)	{	     
 	    				hSd1sHits->Fill(channel, 1.); //Sd1s hits 
+		   				spec_store_hitData[3][channel]++;
  					}
 
-	  				if (modid==10 && vpeak>adcThresh)	 
+	  				if (modid==10 && vpeak>adcThresh){	 
 	    				hSurHits->Fill(channel, 1.); //Sur hits 
-	  
-	  				if (modid==11 && vpeak>adcThresh)	 
+	 				}
+	  				if (modid==11 && vpeak>adcThresh){	 
 	    				hSusHits->Fill(channel, 1.); //Sus hits
+					}
 
-					if (modid==6 && vpeak>adcThresh && channel<16)
+					if (modid==6 && vpeak>adcThresh && channel<16){
 					  	hYd1Hits->Fill(channel,1.);
-					
-					if (modid==6 && vpeak>adcThresh  && channel>15)
+						spec_store_hitData[6][channel]++;	
+					}
+					if (modid==6 && vpeak>adcThresh  && channel>15){
 					  	hYd2Hits->Fill(channel-16,1.);
-					
-					if (modid==7 && vpeak>adcThresh && channel<16)
+						spec_store_hitData[7][channel-16]++;	
+					}
+					if (modid==7 && vpeak>adcThresh && channel<16){
 					  	hYd3Hits->Fill(channel,1.);
-					
-					if (modid==7 && vpeak>adcThresh && channel>15)
+						spec_store_hitData[8][channel]++;	
+					}
+					if (modid==7 && vpeak>adcThresh && channel>15){
 					  	hYd4Hits->Fill(channel-16,1.);
-					
-					if (modid==8 && vpeak>adcThresh && channel<16)
+						spec_store_hitData[9][channel-16]++;	
+					}
+					if (modid==8 && vpeak>adcThresh && channel<16){
 					  	hYd5Hits->Fill(channel,1.);
-					
-					if (modid==8 && vpeak>adcThresh && channel>15)
+						spec_store_hitData[10][channel]++;	
+					}
+					if (modid==8 && vpeak>adcThresh && channel>15){
 					  	hYd6Hits->Fill(channel-16,1.);
-					
-					if (modid==9 && vpeak>adcThresh && channel<16)
+						spec_store_hitData[11][channel-16]++;	
+					}
+					if (modid==9 && vpeak>adcThresh && channel<16){
 					  	hYd7Hits->Fill(channel,1.);
-					
-					if (modid==9 && vpeak>adcThresh && channel>15)
+						spec_store_hitData[12][channel]++;	
+					}
+					if (modid==9 && vpeak>adcThresh && channel>15){
 					  	hYd8Hits->Fill(channel-16,1.);
-					
-					if (modid>5 && modid<10 && vpeak>adcThresh && channel<16)
+						spec_store_hitData[13][channel-16]++;	
+					}
+					if (modid>5 && modid<10 && vpeak>adcThresh && channel<16){
 					  	hYdHits->Fill(channel,1.);
-					
-					if (modid>5 && modid<10 && vpeak>adcThresh && channel>15)
+						spec_store_hitData[14][channel]++;	
+					}
+					if (modid>5 && modid<10 && vpeak>adcThresh && channel>15){
   						hYdHits->Fill(channel-16,1.);
+						spec_store_hitData[14][channel-16]++;	
+					}
 
 	  				break;
 			} // switch
@@ -639,18 +666,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
   
 	    spec_store_energyData[6][int(Sd2rEnergy*scalingSd2)]++; // = IRIS WebServer for IC =
 	    spec_store_energyData[7][int(Sd2sEnergy*scalingSd2)]++; // = IRIS WebServer for IC =
-		if(Sd2rChannel>-1){
-			spec_store_hitData[5][Sd2rChannel]++;	
-			//spec_store_2dhitData[5][Sd2rChannel+int(Sd2rEnergy*128)]++;
-		}	
-		if(Sd2sChannel>-1){
-		   	spec_store_hitData[6][Sd2sChannel]++;
-		}	
   		//if (Sd2rEnergy >0)
   		// Sd2rEnergy = (Sd2rEnergy-Sd2rOffset[Sd2rChannel])*Sd2rGain[Sd2rChannel];
 		//if (Sd2sEnergy >0)  
   		//Sd2sEnergy = (Sd2sEnergy-Sd2sOffset[Sd2sChannel])*Sd2sGain[Sd2sChannel];
-  
 
  		Sd1rEnergy=0; Sd1rEnergy2 =0; Sd1rChannel = -1; Sd1rChannel2 =-1;
     	for (int i =0; i< NSd1rChannels;i++){
@@ -684,13 +703,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
  
 	    spec_store_energyData[4][int(Sd1rEnergy*scalingSd1)]++; // = IRIS WebServer for IC =
 	    spec_store_energyData[5][int(Sd1sEnergy*scalingSd1)]++; // = IRIS WebServer for IC =
-		if(Sd1rChannel>-1){
-		   	spec_store_hitData[3][Sd1rChannel]++;
-		}	
-		if(Sd1sChannel>-1){
-		   	spec_store_hitData[4][Sd1sChannel]++;
-		}	
-				  
+			  
 		det->TSd2rEnergy = Sd2rEnergy;
 		det->TSd2sEnergy = Sd2sEnergy;
 		det->TSd1rEnergy = Sd1rEnergy;
@@ -726,8 +739,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	    spec_store_energyData[1][int(YdEnergy*scalingYd)]++; // = IRIS WebServer for IC =
 		det->TYdEnergy = YdEnergy;
 		if(YdChannel>-1){
-			spec_store_hitData[0][YdChannel]++;	
-			//det->TYdChannel = YdChannel;
+			det->TYdChannel = YdChannel;
 		}
 		//here
 		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
@@ -811,8 +823,6 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 
 	    spec_store_energyData[2][int(CsI1Energy*scalingCsI)]++; // = IRIS WebServer for IC =
 	    spec_store_energyData[3][int(CsI2Energy*scalingCsI)]++; // = IRIS WebServer for IC =
-		if(CsI1Channel>-1) spec_store_hitData[1][CsI1Channel]++;	
-		if(CsI2Channel>-1) spec_store_hitData[2][CsI2Channel]++;	
     	
 		if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
 
@@ -1565,7 +1575,17 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 		sprintf(sig, "Sd1sElHits");
 		hSd1sElHits = new TH1D(label, sig, 32, 0, 32);
 		printf("Booking TH1D %s \n", label);
+			
+		sprintf(label, "CsI1Hits");
+		sprintf(sig, "CsI1Hits");
+		hCsI1Hits = new TH1D(label, sig, 16, 0, 16);
+		printf("Booking TH1D %s \n", label);
 		
+		sprintf(label, "CsI2Hits");
+		sprintf(sig, "CsI2Hits");
+		hCsI2Hits = new TH1D(label, sig, 16, 0, 16);
+		printf("Booking TH1D %s \n", label);
+
 		sprintf(label, "Yd1Hits");
 		sprintf(sig, "Yd1Hits");
 		hYd1Hits = new TH1D(label, sig, 16, 0, 16);
@@ -1724,13 +1744,21 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	sprintf(spec_store_energyName[7],"Sd2sEnergy");
 	sprintf(spec_store_energyName[8],"SSBEnergy");
 		
-	sprintf(spec_store_hitName[0],"YdHits");
-	sprintf(spec_store_hitName[1],"CsI1Hits");
-	sprintf(spec_store_hitName[2],"CsI2Hits");
-	sprintf(spec_store_hitName[3],"Sd1rHits");
-	sprintf(spec_store_hitName[4],"Sd1sHits");
-	sprintf(spec_store_hitName[5],"Sd2rHits");
-	sprintf(spec_store_hitName[6],"Sd2sHits");
+	sprintf(spec_store_hitName[0],"CsI1Hits");
+	sprintf(spec_store_hitName[1],"CsI2Hits");
+	sprintf(spec_store_hitName[2],"Sd1rHits");
+	sprintf(spec_store_hitName[3],"Sd1sHits");
+	sprintf(spec_store_hitName[4],"Sd2rHits");
+	sprintf(spec_store_hitName[5],"Sd2sHits");
+	sprintf(spec_store_hitName[6],"Yd1Hits");
+	sprintf(spec_store_hitName[7],"Yd2Hits");
+	sprintf(spec_store_hitName[8],"Yd3Hits");
+	sprintf(spec_store_hitName[9],"Yd4Hits");
+	sprintf(spec_store_hitName[10],"Yd5Hits");
+	sprintf(spec_store_hitName[11],"Yd6Hits");
+	sprintf(spec_store_hitName[12],"Yd7Hits");
+	sprintf(spec_store_hitName[13],"Yd8Hits");
+	sprintf(spec_store_hitName[14],"YdHits");
 
 	sprintf(spec_store_2dhitName[0],"2D-YdHits");
 	sprintf(spec_store_2dhitName[1],"2D-CsI1Hits");
