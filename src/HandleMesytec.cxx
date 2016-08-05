@@ -217,6 +217,7 @@ float SSBEnergy = 0;
 float SSBOffset=0;
 float SSBGain=0;
 
+float ScintEnergy = 0;
 
 //YYu  
 TH1D * hYu[NYuChannels] = {NULL}; // Q
@@ -430,7 +431,11 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	    				hIC[channel]->Fill(ICEnergy, 1.); //IC
 						spec_store_eData[15][int(ICEnergy)]++; // = IRIS WebServer for IC =
 						//spec_store_eData[15][int(ICEnergy*scalingIC)]++; // = IRIS WebServer for IC =
-						
+						if (channel==19){
+	          				ScintEnergy = float(vpeak);// *SSBGain + SSBOffset;
+							spec_store_energyData[9][int(ScintEnergy)]++; // = IRIS WebServer for IC =
+						}
+
 	        			if (channel==31){
 	          				SSBEnergy = float(vpeak);// *SSBGain + SSBOffset;
 							spec_store_energyData[8][int(SSBEnergy)]++; // = IRIS WebServer for IC =
@@ -1044,6 +1049,12 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	if (pFile == NULL || calMesy.boolCsI2==false) {
 		fprintf(logFile,"No calibration file for CsI2. Skipping CsI2 calibration.\n");
 		printf("No calibration file for CsI2. Skipping CsI2 calibration.\n");
+		for (int i =0; i<16; i++){
+			CsI2Ped[i] = 0.;
+			for (int j=0; j<NCsI2Group; j++){
+				CsI2Gain[j][i] = 1.;
+ 			}//for
+		}
 	}  
 
 	else  {
@@ -1729,7 +1740,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	memset(spec_store_2dhitName,0,sizeof(spec_store_2dhitName));
 	memset(spec_store_eData,0,sizeof(spec_store_eData));
 	//memset(spec_store_tData,0,sizeof(spec_store_tData));
-	memset(spec_store_energyData,0,sizeof(spec_store_sum_data));
+	memset(spec_store_energyData,0,sizeof(spec_store_energyData));
 	memset(spec_store_adcData,0,sizeof(spec_store_adcData));
 	memset(spec_store_hitData,0,sizeof(spec_store_hitData));
 	memset(spec_store_2dhitData,0,sizeof(spec_store_2dhitData));
@@ -1743,6 +1754,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	sprintf(spec_store_energyName[6],"Sd2rEnergy");
 	sprintf(spec_store_energyName[7],"Sd2sEnergy");
 	sprintf(spec_store_energyName[8],"SSBEnergy");
+	sprintf(spec_store_energyName[9],"ScintEnergy");
 		
 	sprintf(spec_store_hitName[0],"CsI1Hits");
 	sprintf(spec_store_hitName[1],"CsI2Hits");
