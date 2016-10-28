@@ -288,8 +288,8 @@ TH2F *hYdCsIPID2 = {NULL};
 TH2F *hYdCsIPID1 = {NULL};
 TH2F *YdCsI1adcPID = {NULL};
 TH2F *YdCsI2adcPID = {NULL};
-TH2F *hYdCsI2PID_forNa = {NULL};
-TH2F *hYdCsI2PID_forMg = {NULL};
+//TH2F *hYdCsI2PID_forNa = {NULL};
+//TH2F *hYdCsI2PID_forMg = {NULL};
 TH2F *hYdCsI2PID_uncalibrated = {NULL};
 //AS Angles
 TH1D *hSdTheta = {NULL};
@@ -836,14 +836,14 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
        	//CsI1Energy = (CsI1Energy-CsI1Ped[CsI1Channel])*CsI1Gain[CsI1Channel];
      	if(CsI2Channel>=0) YdCsI2adcPID->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
 
-		//printf("Ydnadc is %f\n",Ydnadc);
-		hYdCsI2PID_uncalibrated->Fill(CsI2Energy,Ydnadc*cos(det->TYdTheta*0.01745329));
-		if (ICnadc>=40 && ICnadc <100){ // condition of ICgate :Jaspreet
- 			hYdCsI2PID_forNa->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
-		}
-		else if (ICnadc >=100 && ICnadc <350){
-			hYdCsI2PID_forMg->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
-		}
+//		//printf("Ydnadc is %f\n",Ydnadc);
+//		hYdCsI2PID_uncalibrated->Fill(CsI2Energy,Ydnadc*cos(det->TYdTheta*0.01745329));
+//		if (ICnadc>=40 && ICnadc <100){ // condition of ICgate :Jaspreet
+// 			hYdCsI2PID_forNa->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+//		}
+//		else if (ICnadc >=100 && ICnadc <350){
+//			hYdCsI2PID_forMg->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+//		}
      
 	    int gCsI1 = (YdChannel%16)/(16/NCsI1GroupRing);
 		if(CsI1Channel>=0) CsI1Energy = (CsI1Energy-CsI1Ped[CsI1Channel])*CsI1Gain[gCsI1][CsI1Channel];
@@ -1680,11 +1680,11 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 		YdCsI2adcPID = new TH2F("YdCsI2PIDadc", "YdCsI2PIDadc", 500, 0, 4000, 512, 0, 16.);
         printf("Booking TH2F %s \n", label);
 
-		hYdCsI2PID_forNa = new TH2F("YdCsI2PID_forNa", "YdCsI2PID_forNa", 500, 0, 4000, 512, 0, 16.);
-        printf("Booking TH2F %s \n", label);
-
-		hYdCsI2PID_forMg = new TH2F("YdCsI2PID_forMg", "YdCsI2PID_forMg", 500, 0, 4000, 512, 0, 16.);
-        printf("Booking TH2F %s \n", label);
+//		hYdCsI2PID_forNa = new TH2F("YdCsI2PID_forNa", "YdCsI2PID_forNa", 500, 0, 4000, 512, 0, 16.);
+//        printf("Booking TH2F %s \n", label);
+//
+//		hYdCsI2PID_forMg = new TH2F("YdCsI2PID_forMg", "YdCsI2PID_forMg", 500, 0, 4000, 512, 0, 16.);
+//        printf("Booking TH2F %s \n", label);
 
 		hYdCsI2PID_uncalibrated = new TH2F("YdCsI2PID_uncalibrated", "YdCsI2PID_uncalibrated", 500, 0, 4000, 500, 0, 4000.);
         printf("Booking TH2F %s \n", label);

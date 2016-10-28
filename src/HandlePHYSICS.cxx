@@ -143,7 +143,7 @@ void HandleBOR_PHYSICS(int run, int time)
    TFile *fgate = new TFile("/home/iris/current/anaIris/cuts_online.root");
 	if(fgate->IsZombie()) protonsP = new TCutG();
 	else{
-  		protonsP = (TCutG*)fgate->FindObjectAny("protons1");
+  		protonsP = (TCutG*)fgate->FindObjectAny("protons");
   		protonsP->SetName("protonsP"); //protons in Physics file
 	}
   	elasticPS3 = new TCutG();
