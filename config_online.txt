@@ -1,5 +1,5 @@
 // General                                                                                                                                                                                                       
-PATH=/home/current/calib/
+PATH=/home/iris/current/calib/
 GEOMETRY=geometry_s1537.txt
 
 // Mesytec
