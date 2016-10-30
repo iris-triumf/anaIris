@@ -1,12 +1,12 @@
 // General                                                                                                                                                                                                       
-PATH=/home/iris/mholl/calib_s1483/
-GEOMETRY=calib-files/geometry_s1483.txt
+PATH=/home/current/calib/
+GEOMETRY=calib-files/geometry_s1537.txt
 
 // Mesytec
-CSI1=calib-files/CsI1PedestalandGain.txt
-CSI2=calib-files/calib_csi_jaspreet.txt
-SD1R=calib-files/alphacalibsd1r_OP3354.txt
-SD1S=calib-files/alphacalibsd1s_OP3354.txt
-SD2R=calib-files/alphacalibsd2r_OP3354_new.txt
-SD2S=calib-files/alphacalibsd2s_OP3354.txt
-YD=calib-files/alphaCalib3354_fourpoints.txt
+CSI1=CsI1_dummy.txt
+CSI2=CsI2_dummy.txt
+SD1R=Sd1r_dummy.txt
+SD1S=Sd1s_dummy.txt
+SD2R=Sd2r_dummy.txt
+SD2S=Sd2s_dummy.txt
+YD=Yd_dummy.txt

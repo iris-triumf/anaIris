@@ -1711,7 +1711,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	 	printf("Booking TH1D %s \n", label);
 
 		sprintf(label,"SdETheta");
- 		hSdETheta = new TH2D(label, "SdETheta", 500, 0, 10,512,0,120);
+ 		hSdETheta = new TH2D(label, "SdETheta",750,0,15,750,0,150);
 	 	printf("Booking TH1D %s \n", label);
 
 		sprintf(label,"SuTheta");
