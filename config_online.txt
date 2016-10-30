@@ -1,6 +1,6 @@
 // General                                                                                                                                                                                                       
 PATH=/home/current/calib/
-GEOMETRY=calib-files/geometry_s1537.txt
+GEOMETRY=geometry_s1537.txt
 
 // Mesytec
 CSI1=CsI1_dummy.txt
