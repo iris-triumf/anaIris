@@ -1,12 +1,17 @@
-// General                                                                                                                                                                                                       
-PATH=/home/iris/current/calib/
-GEOMETRY=geometry_s1537.txt
+PATH=/home/iris/
+GEOMETRY=current/calib/geometry_s1537.txt
+SD1R=current/calib/hSd1r_calib_gain15.out
+SD1S=current/calib/hSd1s_calib_gain15.out
+SD2R=current/calib/hSd2r_calib.out
+SD2S=current/calib/hSd2s_calib.out
+CSI1=current/calib/CsI1Calib.txt
+CSI2=current/calib/CsI2Calib.txt
+YD=current/calib/Yd_calib.out
+//TCORR_IC=/home/iris/current/calib/ICcentroid_scale.dat
+//TCORR_SI=/home/iris/current/calib/Sdcentroid_scale.dat
 
-// Mesytec
-CSI1=CsI1_dummy.txt
-CSI2=CsI2_dummy.txt
-SD1R=Sd1r_dummy.txt
-SD1S=Sd1s_dummy.txt
-SD2R=Sd2r_dummy.txt
-SD2S=Sd2s_dummy.txt
-YD=Yd_dummy.txt
+//DEDX_D=/home/iris/current/calib/dedx_p.txt
+//DEDX_I1=/home/iris/current/calib/dedx_16O.txt
+//RUNDEPPAR1=/home/iris/current/calib/runDepPar_s1537_16O.txt
+//GATES=/home/iris/old_anaIris/treeIris/gates/gates_s1483.root
+//USE_ICGATES!

@@ -21,7 +21,7 @@ NETDIRLIB = $(ROOTANA)/libNetDirectory/libNetDirectory.a
 endif
 
 # ROOT analyzer
-ROOTANA = $(HOME)/packages/rootana_old
+	ROOTANA = $(HOME)/packages/rootana
 
 CXXFLAGS += -g -O -Wall -Wuninitialized -I./  -I$(INCLUDEDIR) -I$(ROOTSYS)/include -I$(ROOTANA) -I$(ROOTANA)/include
 CFLAGS += -I$(INCLUDEDIR)

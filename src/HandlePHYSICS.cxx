@@ -46,7 +46,8 @@ TH1D * hYdEnergy = NULL; //YdEnergy
 TH1D * hYuEnergy = NULL; //YuEnergy
 TH2D *hYdCsIEnergyTime = NULL;
 TH2D *hS3EnergyTime = NULL;
-TH2D *hYdCsITheta = NULL;
+TH2D *hYdCsI1Theta = NULL;
+TH2D *hYdCsI2Theta = NULL;
 TH2D *hYuEnergyTheta = NULL;
 TH2D *hYdCsIThetaProt = NULL; //kinematics with proton gate
 Double_t tRF = 0.;
@@ -79,7 +80,8 @@ if (det->TYuChannel>-1)
  timeChannel = det->TSd1sChannel+384;
   hS3EnergyTime->Fill(timeArray->timeRF[timeChannel],det->TSd1sEnergy+det->TSd2sEnergy);
  
-  hYdCsITheta->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
+  hYdCsI1Theta->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
+  hYdCsI2Theta->Fill(det->TYdTheta,det->TCsI2Energy+det->TYdEnergy);
   if (protonsP->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
   hYdCsIThetaProt->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
   }
@@ -163,8 +165,10 @@ void HandleBOR_PHYSICS(int run, int time)
        hYdCsIEnergyTime = new TH2D("YdCsIEnergyTime","YdCsIEnergyTime",512,0,1024,512,0,20);
 	printf("Booking TH2D  YdCsIEnergyTime\n");
 
- hYdCsITheta = new TH2D("YdCsITheta","YdCsITheta",512, 0 ,60, 512, 0, 20);
-	printf("Booking TH2D  YdCsITheta\n");
+ hYdCsI1Theta = new TH2D("YdCsI1Theta","YdCsI1Theta",600, 0 ,60, 800, 0, 40);
+	printf("Booking TH2D  YdCsI1Theta\n");
+ hYdCsI2Theta = new TH2D("YdCsI2Theta","YdCsI2Theta",600, 0 ,60, 800, 0, 80);
+	printf("Booking TH2D  YdCsI2Theta\n");
  hYdCsIThetaProt = new TH2D("YdCsIThetaProt","YdCsIThetaProt",512, 0 ,60, 512, 0, 20);
 	printf("Booking TH2D  YdCsIThetaProt\n");
 
