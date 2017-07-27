@@ -41,7 +41,8 @@
 const int Nchannels = 24;
 const int binlimit = 1900;
 int timeChannel=0; // corresponding time cahnnel for the highest energy adc channel
-TH1D * hQValue = NULL; // QValue
+TH1D * hQValue1 = NULL; // QValue
+TH1D * hQValue2 = NULL; // QValue
 TH1D * hYdEnergy = NULL; //YdEnergy
 TH1D * hYuEnergy = NULL; //YuEnergy
 TH2D *hYdCsIEnergyTime = NULL;
@@ -51,16 +52,18 @@ TH2D *hYdCsI2Theta = NULL;
 TH2D *hYuEnergyTheta = NULL;
 TH2D *hYdCsIThetaProt = NULL; //kinematics with proton gate
 Double_t tRF = 0.;
-double EBAC = 66.; //Beam energy from accelerator
+double EBAC = 144.; //Beam energy from accelerator
 Double_t m1=11.;
 Double_t m3=1.;
   Double_t m4=11.;
 Double_t a1, a2;
- Double_t  b1,j,thetaD, Q,E1,E3,thetaR,ECsI,EYY1;
+ Double_t  b1,j,thetaD, Q,E1,E3,thetaR,ECsI,EYY1, EDL;
+ Double_t Q1,Q2 ,EBeam,Eb1,Pb1,PA;
+  Double_t mA, ma,mb,mB;
 
 //gates
-TCutG* protonsP = NULL;
-TCutG* elasticPS3 = NULL;
+TCutG* transfer = NULL;
+TCutG* elastic = NULL;
 
 
 void HandlePHYSICS(det_t * det, tdc_t *timeArray)
@@ -82,7 +85,7 @@ if (det->TYuChannel>-1)
  
   hYdCsI1Theta->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
   hYdCsI2Theta->Fill(det->TYdTheta,det->TCsI2Energy+det->TYdEnergy);
-  if (protonsP->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
+  if (transfer->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
   hYdCsIThetaProt->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
   }
   hYuEnergyTheta->Fill(det->TYuTheta,det->TYuEnergy);
@@ -90,51 +93,59 @@ if (det->TYuChannel>-1)
 
  // ble_t  Qvalue(Double_t Q, Double_t E1, Double_t E3, Double_t m1,Double_t m3, Double_t m4, Double_t thetaR)
 
-
- 
-     ECsI= det->TCsIEnergy;
-   if( ECsI == -10000){
-      ECsI=0;}
+  	if (elastic->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
+     	ECsI= det->TCsIEnergy;
+   		if( ECsI == -10000){
+      		ECsI=0;}
       
-   else if (ECsI != -10000){
-      ECsI= ECsI;
-   }
+   		else if (ECsI != -10000){
+      		ECsI= ECsI;
+   		}
    
-   //cout<<"csi value taken is:"<<ECsI<<endl;
-     EYY1 = det->TYdEnergy ;
-     // cout<<"EYY ENERGY IS"<<EYY1<<endl;
-   E3=  ECsI+EYY1;
-   // cout<<"etot"<<E3<<endl;
-    E1 =EBAC;
-    //cout<<"beam energy"<<E1<<endl;
-    //cout<<"Energy of projectile and ejectile(lighter particle):";
-    // cin>>E1>>E3;
-    // thetaD = det->TYdTheta;
-  
-    //thetaR = thetaD*(pi/180);
-//  cout<<"thetaR value is :"<< thetaR<<endl;
-    // cin.ignore();
+		EYY1 = det->TYdEnergy ;
+	 	EDL = 0.227; //energy loss in dead layer
+   		Eb1=  ECsI+EYY1+EDL; 
+    	EBeam =EBAC;
+  		thetaD = det->TYdTheta;
+  		thetaR = thetaD*TMath::DegToRad();
 
-    // a1 = 1.+(m3/m4);
-     // cout<<"a1 value is:"<<a1<<endl;
+  		mA=5606.556;
+  		ma=107961.79;
+  		mb=107961.79;
+  		mB=5606.556;
+		PA = sqrt(EBeam*EBeam+2.*EBeam*mA);//beam momentum
+		Pb1 = sqrt(Eb1*Eb1+2.*Eb1*mb);
+	 	Q1 = mA+ma-mb- sqrt(mA*mA+mb*mb-ma*ma-2.*(mA+EBeam)*(mb+Eb1)+2.*PA*Pb1*cos(thetaR)+2.*(EBeam+mA+ma-Eb1-mb)*ma);  //Alisher's equation 
+
+  		hQValue1->Fill(Q1,1.);
+  	}
+  
+	if (transfer->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
+     	ECsI= det->TCsIEnergy;
+   		if( ECsI == -10000){
+      		ECsI=0;}
+      
+   		else if (ECsI != -10000){
+      		ECsI= ECsI;
+   		}
+   
+     	EYY1 = det->TYdEnergy ;
+	 	EDL = 0.148; //energy loss in dead layer
+   		Eb1=  ECsI+EYY1+EDL; 
+    	EBeam =EBAC;
+  		thetaD = det->TYdTheta;
+  		thetaR = thetaD*TMath::DegToRad();
+
+  		mA=5606.556;
+  		ma=107961.79;
+  		mb=109824.646;
+  		mB=3728.401;
+		PA = sqrt(EBeam*EBeam+2.*EBeam*mA);//beam momentum
+		Pb1 = sqrt(Eb1*Eb1+2.*Eb1*mb);
+	 	Q2 = mA+ma-mb- sqrt(mA*mA+mb*mb-ma*ma-2.*(mA+EBeam)*(mb+Eb1)+2.*PA*Pb1*cos(thetaR)+2.*(EBeam+mA+ma-Eb1-mb)*ma);  //Alisher's equation 
  
-    // a2= (1.-(m1/m4));
-     // cout<<"a2 value is:"<<a2<<endl;
-     b1 =(sqrt(m1*E1*m3*E3));
-     //cout<<"b1 value is:"<<b1<<endl;
-  j= ((2.*b1)/m4);
-  // cout<<"j value is:"<<j<<endl;
-  thetaD = det->TYdTheta;
-  //cout<<"theta value taken"<<thetaD<<endl;
-  // cin>>thetaD;
-  thetaR = thetaD*TMath::DegToRad();
-  // cout<<"theta value is :"<<thetaR<<endl;
-  Q = ((E3*a1)-(E1*a2)-(j*(cos(thetaR))));
-  // hQvalue -> Fill(Q); TEMP.
-  // cout<<"Qvalue is :"<<Q<<endl;
-  det->QValue = Q;
- 
-  hQValue->Fill(Q,1.);
+  		hQValue2->Fill(Q2,1.);
+  }
 }
 
 //---------------------------------------------------------------------------------
@@ -142,13 +153,18 @@ void HandleBOR_PHYSICS(int run, int time)
 {
 
  //proton gate
-   TFile *fgate = new TFile("/home/iris/current/anaIris/cuts_online.root");
-	if(fgate->IsZombie()) protonsP = new TCutG();
-	else{
-  		protonsP = (TCutG*)fgate->FindObjectAny("protons1");
-  		protonsP->SetName("protonsP"); //protons in Physics file
+   	TFile *fgate1 = new TFile("/home/iris/current/calib/S1642/pid_gate_4He.root");
+   	TFile *fgate2 = new TFile("/home/iris/current/calib/S1642/pid_gate_6He.root");
+	if(fgate1->IsZombie()) transfer = new TCutG();
+  	else{
+  		transfer = (TCutG*)fgate1->FindObjectAny("pid_4He");
+  		transfer->SetName("pid_4He"); //protons in Physics file
 	}
-  	elasticPS3 = new TCutG();
+	if(fgate2->IsZombie()) elastic = new TCutG();
+  	else{
+		elastic = (TCutG*)fgate2->FindObjectAny("pid_6He");
+  		elastic->SetName("pid_6He"); //protons in Physics file
+	}
 
   char label[32], sig[32];
 
@@ -165,9 +181,9 @@ void HandleBOR_PHYSICS(int run, int time)
        hYdCsIEnergyTime = new TH2D("YdCsIEnergyTime","YdCsIEnergyTime",512,0,1024,512,0,20);
 	printf("Booking TH2D  YdCsIEnergyTime\n");
 
- hYdCsI1Theta = new TH2D("YdCsI1Theta","YdCsI1Theta",600, 0 ,60, 800, 0, 40);
+ hYdCsI1Theta = new TH2D("YdCsI1Theta","YdCsI1Theta",600, 0 ,60, 800, 0, 120);
 	printf("Booking TH2D  YdCsI1Theta\n");
- hYdCsI2Theta = new TH2D("YdCsI2Theta","YdCsI2Theta",600, 0 ,60, 800, 0, 80);
+ hYdCsI2Theta = new TH2D("YdCsI2Theta","YdCsI2Theta",600, 0 ,60, 800, 0, 120);
 	printf("Booking TH2D  YdCsI2Theta\n");
  hYdCsIThetaProt = new TH2D("YdCsIThetaProt","YdCsIThetaProt",512, 0 ,60, 512, 0, 20);
 	printf("Booking TH2D  YdCsIThetaProt\n");
@@ -178,9 +194,12 @@ void HandleBOR_PHYSICS(int run, int time)
 hS3EnergyTime = new TH2D("S3EnergyTime","S3EnergyTime",512,0,1024,512,0,200);
    printf("Booking TH2D  S3EnergyTime\n");
       printf(" in Physics BOR... Booking histos Done ....\n");
-    
-      hQValue = new TH1D("QValue","QValue",1024,-10,10);
-      printf("Booking T1D  QValue\n");
+     
+      hQValue1 = new TH1D("QValue1","QValue1",2000,-20,20);
+      printf("Booking T1D  QValue1\n");
+
+      hQValue2 = new TH1D("QValue2","QValue2",2000,-20,20);
+      printf("Booking T1D  QValue2\n");
 }
   
   

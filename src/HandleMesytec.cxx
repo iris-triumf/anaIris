@@ -132,6 +132,9 @@ TH1D * hCsI2[NCsIChannels] = {NULL}; // Q
 TH1D * hCsI2Sum = {NULL};
 float CsI[32]={0}, CsIEnergy, CsIEnergy2; //CsI energy 
 float CsI1[32]={0}, CsI2[32]={0}, CsI1Energy, CsI1Energy2, CsI2Energy, CsI2Energy2; //CsI energy
+int CsI1ADC[32] = {0}, CsI2ADC[32] ={0};
+float CsI1nadc = 0;
+float CsI2nadc = 0;
 int CsIChannel;
 int CsIChannel2; // channel with the greatest value
 int CsI1Channel;
@@ -205,8 +208,8 @@ float SusPed[NSusChannels]={0.};
 TH1D * hYd[NYdChannels] = {NULL}; // Q
 float Yd[NYdChannels] ={0}; 
 float YdEnergy=0, YdEnergy2=0; //Dummy for Yd energy
-int YdADC = 0;
-int YdChannel, YdChannel2; // channel with the greatest value
+int YdADC[32] = {0};
+int YdChannel, YdChannel2, YdNo, YdNo2; // channel with the greatest value
 int YdTChannel, YdTChannel2;
 float Ydnadc = 0.;
 int TYdChannel;
@@ -282,7 +285,7 @@ extern FILE* ASCIISd2;
 int ascii =0; // bool for writing ascii AS
 
 uint32_t adcThresh = 0;
-int ydNo;
+int ydnumber, ydnumber2;
 //AS Total energies
 
 TH1D *hSdETot = {NULL};
@@ -291,8 +294,15 @@ TH1D *hYdCsIETot = {NULL};
 TH2F *hSdPID = {NULL};
 TH2F *hYdCsIPID2 = {NULL};
 TH2F *hYdCsIPID1 = {NULL};
-TH2F *YdCsI1adcPID = {NULL};
-TH2F *YdCsI2adcPID = {NULL};
+TH2F *hYdCsI1adcPID = {NULL};
+TH2F *hYdCsI2adcPID = {NULL};
+TH2F *hYdadcCsI1adcPID = {NULL};
+TH2F *hYdadcCsI2adcPID = {NULL};
+TH2F *Ydrange = {NULL};
+TH2F *CsI1range = {NULL};
+TH2F *CsI2range = {NULL};
+TH2F *hYdCsI1Corr = {NULL};
+TH2F *hYdCsI2Corr = {NULL};
 //TH2F *hYdCsI2PID_forNa = {NULL};
 //TH2F *hYdCsI2PID_forMg = {NULL};
 //TH2F *hYdCsI1PID_uncalibrated = {NULL};
@@ -440,22 +450,28 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	  				hMes_P[channel+(modid*32)]->Fill((float)vpeak , 1.);
 					spec_store_adcData[channel+(modid*32)][vpeak]++;
 	  				if ((modid==0) && (vpeak > adcThresh) && (vpeak<3840)){ // Why 3840? MH
-	    				//AS Fill histogram
+	    				printf("IC1\n");
+						//AS Fill histogram
  						ICnadc = (float)vpeak; 
 						IC[channel] = (float)vpeak;
 						ICEnergy = ((float)vpeak-ICPed[channel])*ICGain[channel];
-	    				hIC[channel]->Fill(ICEnergy, 1.); //IC
+	    				printf("IC2: %d %d\n", channel,vpeak);
+	    				//hIC[channel]->Fill(ICEnergy, 1.); //IC
+	    				printf("IC3\n");
 						spec_store_eData[15][int(ICEnergy)]++; // = IRIS WebServer =
+	    				printf("IC4\n");
 						//spec_store_eData[15][int(ICEnergy*scalingIC)]++; // = IRIS WebServer =
 						if (channel==19){
 	          				ScintEnergy = float(vpeak);// *SSBGain + SSBOffset;
 							spec_store_energyData[9][int(ScintEnergy)]++; // = IRIS WebServer =
 						}
+	    				printf("IC5\n");
 
 	        			if (channel==31){
 	          				SSBEnergy = float(vpeak);// *SSBGain + SSBOffset;
 							spec_store_energyData[8][int(SSBEnergy)]++; // = IRIS WebServer =
 						}
+	    				printf("IC6\n");
 	  				}
 	  
 	  				if (modid==1 && vpeak > adcThresh && vpeak<3840){
@@ -542,11 +558,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	  				}
 	  
 	  				if (modid>5 && modid<10 && vpeak>adcThresh  && vpeak<3840){
-						YdADC=vpeak;
-						Ydnadc = float(YdADC);
 	 					Yd[channel+(modid-6)*32]=YdOffset[channel+(modid-6)*32]+YdGain[channel+(modid-6)*32]*(float)vpeak;
-	    				if (channel<16) ydNo = (modid-6)*2+1; //Yd number
-	    				if (channel>15) ydNo = (modid-6)*2+2;
+						YdADC[channel+(modid-6)*32]=vpeak;
+	    				if (channel<16) ydnumber = (modid-6)*2+1; //Yd number
+	    				if (channel>15) ydnumber = (modid-6)*2+2;
 						hYd[channel]->Fill(Yd[channel+(modid-6)*32],1.);
 						spec_store_eData[channel+(modid-6)*32+192][int(Yd[channel+(modid-6)*32]*scalingYd)]++; // = IRIS WebServer =
 	  				} //modid
@@ -791,18 +806,23 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 		det->TSd1sChannel = Sd1sChannel;
 
     	YdEnergy=0; YdChannel = -1; YdEnergy2=0; YdChannel2 =-1, YdTChannel = -1, YdTChannel2 = -1;
+		ydnumber = YdChannel/16; //Yd number                                                                               
     	for (int i =0; i< NYdChannels;i++){
 	  		if(Yd[i]>YdEnergy){
            		YdEnergy2= YdEnergy;
 	   			YdChannel2 = YdChannel;
+	   			YdNo2 = YdNo;
 	   			YdTChannel2 = YdTChannel;
 	   			YdEnergy=Yd[i];
+	   			Ydnadc=YdADC[i];
 	   			YdChannel = i;
+	   			YdNo = i/16;
 	   			YdTChannel = i - 128; //YdTChannel is the TDC channels which have max ADC 
 	  		}
  			else if (Yd[i]>YdEnergy2){//if Yd[i] is between YdEnergy and YdEnergy2
 	    		YdEnergy2=Yd[i];
 	  			YdChannel2 = i;
+	  			YdNo2 = i/16;
 	  			YdTChannel2 = i-128;
 	    	} //if
       	} //for      
@@ -818,6 +838,8 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 		if(YdChannel>-1){
 			det->TYdChannel = YdChannel;
 		}
+  		
+		
 		//here
 		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
 		det->TYdTheta= theta;
@@ -859,6 +881,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	  			CsIEnergy2 = CsIEnergy;
 	  			CsIChannel2 = CsIChannel;
           		CsIEnergy=CsI[i];
+          		//CsI1nadc=CsIADC[i];
           		CsIChannel = i;
 			}
       		else  if (CsIEnergy2<CsI[i]){
@@ -869,15 +892,18 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
   
   		//CsI
   
-    	CsI1Energy=0; CsI1Energy2 =0; CsI1Channel = -100; CsI1Channel2 =-100;
+    	CsI1Energy=0; CsI1Energy2 =0;
+		CsI1Channel = -100; CsI1Channel2 =-100;
 		if(YdChannel>=0){
     		for (int i =0; i< 16;i++) {
       		// printf("CsI ch: %d, value %f\n", i, CsI[i]);
+			   	CsI1ADC[i] = CsI1[i];
 			   	CsI1[i] = (CsI1[i]-CsI1Ped[i])*CsI1Gain[YdChannel%16][i];
       			if (CsI1Energy<CsI1[i]){
 					CsI1Energy2 = CsI1Energy;
 					CsI1Channel2 = CsI1Channel;
 					CsI1Energy=CsI1[i];
+					CsI1nadc=CsI1ADC[i];
 					CsI1Channel = i;
 				}
       			else  if (CsI1Energy2<CsI1[i]){
@@ -891,11 +917,13 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 		if(YdChannel>=0){
 			for (int i =0; i< 16;i++) {
 			// printf("CsI ch: %d, value %f\n", i, CsI[i]);                                                              
+			   	CsI2ADC[i] = CsI2[i];
 			   	CsI2[i] = (CsI2[i]-CsI2Ped[i])*CsI2Gain[YdChannel%16][i];
 				if (CsI2Energy<CsI2[i]){
 					CsI2Energy2 = CsI2Energy;
 					CsI2Channel2 = CsI2Channel;
 					CsI2Energy=CsI2[i];
+					CsI2nadc=CsI2ADC[i];
 					CsI2Channel = i;}
 		  		else  if (CsI2Energy2<CsI2[i]){
 					CsI2Energy2=CsI2[i];
@@ -916,11 +944,28 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
     	
 		if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
 
-		if(CsI1Channel>=0) YdCsI1adcPID->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsI1adcPID->Fill(CsI1nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
+		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdadcCsI1adcPID->Fill(CsI1nadc,Ydnadc);
+		
+		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsIPID1->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+		if(YdChannel>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo||CsI1Channel2==2*YdNo+1)) hYdCsIPID1->Fill(CsI1Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
+		if(YdChannel2>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo2||CsI1Channel==2*YdNo2+1)) hYdCsIPID1->Fill(CsI1Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
+		if(YdChannel2>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo2||CsI1Channel==2*YdNo2+1)) hYdCsIPID1->Fill(CsI1Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
 
-       	//CsI1Energy = (CsI1Energy-CsI1Ped[CsI1Channel])*CsI1Gain[CsI1Channel];
-     	if(CsI2Channel>=0) YdCsI2adcPID->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsI2adcPID->Fill(CsI2nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdadcCsI2adcPID->Fill(CsI2nadc,Ydnadc);
+     	
+		if(YdChannel>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo||CsI2Channel==2*YdNo+1)) hYdCsIPID2->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo||CsI2Channel2==2*YdNo+1)) hYdCsIPID2->Fill(CsI2Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel2>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo2||CsI2Channel==2*YdNo2+1)) hYdCsIPID2->Fill(CsI2Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel2>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo2||CsI2Channel2==2*YdNo2+1)) hYdCsIPID2->Fill(CsI2Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
 
+		if(YdChannel>=0&&YdEnergy>0.) Ydrange->Fill(Ydnadc,YdEnergy);
+		if(CsI1Channel>=0&&CsI1Energy>0.) CsI1range->Fill(CsI1nadc,CsI1Energy);
+		if(CsI2Channel>=0&&CsI2Energy>0.) CsI2range->Fill(CsI2nadc,CsI2Energy);
+
+		if(YdChannel>=0&&CsI1Channel>=0) hYdCsI1Corr->Fill(YdNo,CsI1Channel);
+		if(YdChannel>=0&&CsI2Channel>=0) hYdCsI2Corr->Fill(YdNo,CsI2Channel);
 //		//printf("Ydnadc is %f\n",Ydnadc);
 //		hYdCsI1PID_uncalibrated->Fill(CsI1Energy,Ydnadc*cos(det->TYdTheta*0.01745329));
 //		hYdCsI2PID_uncalibrated->Fill(CsI2Energy,Ydnadc*cos(det->TYdTheta*0.01745329));
@@ -930,7 +975,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 //		else if (ICnadc >=100 && ICnadc <350){
 //			hYdCsI2PID_forMg->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
 //		}
-         	if (1){// if((CsIChannel-16)/2==ydNo){
+         	if (1){// if((CsIChannel-16)/2==ydnumber){
     		det->TCsIEnergy = CsI1Energy; //for filling the tree
     		det->TCsIChannel = CsI1Channel;
     	}
@@ -940,12 +985,12 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
     	}
 
 		printf("etc:\n");     
-     	if (1){// if((CsIChannel-16)/2==ydNo){
+     	if (1){// if((CsIChannel-16)/2==ydnumber){
     		det->TCsI1Energy = CsI1Energy; //for filling the tree
     		det->TCsI1Channel = CsI1Channel;
     	}
 
-   		if (1){// if((CsIChannel-16)/2==ydNo){
+   		if (1){// if((CsIChannel-16)/2==ydnumber){
     		det->TCsI2Energy = CsI2Energy; //for filling the tree
     		det->TCsI2Channel = CsI2Channel;
     	}
@@ -979,14 +1024,13 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 
  		if (elasticS3->IsInside(Sd2sEnergy,Sd1sEnergy)) hSd1sElHits->Fill(Sd1sChannel, 1.); //Sd2r hits with elastic gate
 
-  		ydNo = YdChannel/16; //Yd number                                                                               
       
-		hYdCsIPID2->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+		//hYdCsIPID2->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
  		
 		if (YdEnergy!=0) hYdCsIETot->Fill(YdEnergy); // AS Note: Add cos theta after calculation of angles is added
  		
 		//hYdCsIPID1->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
-		hYdCsIPID1->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+		//hYdCsIPID1->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
      	
 		if (protons->IsInside(CsI1Energy,YdEnergy*cos(det->TYdTheta*1.74532925199432955e-02))){
        		hYdHitsProt->Fill(YdChannel,1.);
@@ -1002,11 +1046,15 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	calMesy.Print();
 
  	//proton gate
-   	TFile *fgate = new TFile("/home/iris/current/anaIris/cuts_online.root");
+   	TFile *fgate = new TFile("/home/iris/current/anaIris/online_gate_18O.root");
 	if(fgate->IsZombie()) protons = new TCutG();
+	//else{
+  	//	protons = (TCutG*)fgate->FindObjectAny("protons1");
+  	//	protons->SetName("protons"); //protons in Physics file
+	//}
 	else{
-  		protons = (TCutG*)fgate->FindObjectAny("protons1");
-  		protons->SetName("protons"); //protons in Physics file
+  		protons = (TCutG*)fgate->FindObjectAny("18O");
+  		protons->SetName("18O"); //protons in Physics file
 	}
   	elasticS3 = new TCutG();
 
@@ -1830,17 +1878,34 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	 	hSdPID= new TH2F( "SdPID", "SDPID", 1000, 0., 100., 1000, 0., 100.);
 	 	printf("Booking TH2F %s \n", label);
        
-	 	hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1000, 0., 40., 1000, 0., 10.);
+	 	hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1500, 0., 75., 1000, 0., 10.);
 	 	printf("Booking TH2F %s \n", label);
 
-	 	hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1000, 0., 40., 1000, 0., 10.);
+	 	hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1500, 0., 75., 1000, 0., 10.);
         printf("Booking TH2F %s \n", label);
 
-		YdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 1024, 0, 4096, 1000, 0., 10.);
+		hYdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 1024, 0, 4096, 1000, 0., 10.);
         printf("Booking TH2F %s \n", label);
-		YdCsI2adcPID = new TH2F("YdCsI2PIDadc", "YdCsI2PIDadc", 1024, 0, 4096, 1000, 0., 10.);
+		hYdCsI2adcPID = new TH2F("YdCsI2PIDadc", "YdCsI2PIDadc", 1024, 0, 4096, 1000, 0., 10.);
         printf("Booking TH2F %s \n", label);
-//		
+
+		hYdadcCsI1adcPID = new TH2F("YdadcCsI1PIDadc", "YdadcCsI1PIDadc", 1024, 0, 4096, 1024, 0., 4096.);
+        printf("Booking TH2F %s \n", label);
+		hYdadcCsI2adcPID = new TH2F("YdadcCsI2PIDadc", "YdadcCsI2PIDadc", 1024, 0, 4096, 1024, 0., 4096.);
+        printf("Booking TH2F %s \n", label);
+
+		Ydrange = new TH2F("Ydrange", "Ydrange", 1024, 0, 4096, 1500, 0., 20.);
+        printf("Booking TH2F %s \n", label);
+		CsI1range = new TH2F("CsI1range", "CsI1range", 1024, 0, 4096, 1500, 0., 100.);
+        printf("Booking TH2F %s \n", label);
+		CsI2range = new TH2F("CsI2range", "CsI2range", 1024, 0, 4096, 1500, 0., 100.);
+        printf("Booking TH2F %s \n", label);
+		
+		hYdCsI1Corr = new TH2F("YdCsI1Corr", "YdCsI1Corr", 8, 0, 8, 16, 0., 16.);
+        printf("Booking TH2F %s \n", label);
+		hYdCsI2Corr = new TH2F("YdCsI2Corr", "YdCsI2Corr", 8, 0, 8, 16, 0., 16.);
+        printf("Booking TH2F %s \n", label);
+
 //		hYdCsI1PID_uncalibrated = new TH2F("YdCsI1PID_uncalibrated", "YdCsI1PID_uncalibrated", 4000, 0, 4000, 4000, 0, 4000);
 //        printf("Booking TH2F %s \n", label);
 //

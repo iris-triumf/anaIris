@@ -1,12 +1,12 @@
 PATH=/home/iris/
-GEOMETRY=current/calib/geometry_s1537.txt
+GEOMETRY=current/calib/S1642/geometry_s1642.txt
 SD1R=current/calib/hSd1r_calib_gain15.out
 SD1S=current/calib/hSd1s_calib_gain15.out
 SD2R=current/calib/hSd2r_calib.out
 SD2S=current/calib/hSd2s_calib.out
-CSI1=current/calib/CsI1Calib.txt
-CSI2=current/calib/CsI2Calib.txt
-YD=current/calib/Yd_calib.out
+CSI1=current/calib/S1642/CsI1_calib_s1642_6He.txt
+CSI2=current/calib/S1642/CsI2_calib_s1642_6He.txt
+YD=current/calib/S1642/alpha_calib_Yd_6He.txt
 //TCORR_IC=/home/iris/current/calib/ICcentroid_scale.dat
 //TCORR_SI=/home/iris/current/calib/Sdcentroid_scale.dat
 
