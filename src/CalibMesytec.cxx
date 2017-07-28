@@ -33,9 +33,11 @@ void CalibMesytec::ReadFilenames(char* line)
 	val++;
 	if (*val==0 && expect_val) printf("Value missing for parameter %s",line);
 
+	Double_t v;
 	char cval[256];	
 	std::string strval;
 	sscanf(val,"%s",cval);
+	sscanf(val,"%lf",&v);
 	strval=cval;
 	
 	//	parameter of type string:
@@ -110,6 +112,70 @@ void CalibMesytec::ReadFilenames(char* line)
 	if (strcmp(line,"ASCII")==0){
 		boolASCII =kTRUE;
 	}
+	if (strcmp(line,"GATEFIlE1")==0){
+		fGate1 = strval;
+		boolFGate1 =kTRUE;
+	}
+	if (strcmp(line,"GATEFILE2")==0){
+		fGate2 = strval;
+		boolFGate2 =kTRUE;
+	}
+	if (strcmp(line,"GATEFILE3")==0){
+		fGate3 = strval;
+		boolFGate3 =kTRUE;
+	}
+	if (strcmp(line,"GATEFILE4")==0){
+		fGate4 = strval;
+		boolFGate4 =kTRUE;
+	}
+	if (strcmp(line,"GATENAME1")==0){
+		nGate1 = strval;
+	}
+	if (strcmp(line,"GATENAME2")==0){
+		nGate2 = strval;
+	}
+	if (strcmp(line,"GATENAME3")==0){
+		nGate3 = strval;
+	}
+	if (strcmp(line,"GATENAME3")==0){
+		nGate4 = strval;
+	}
+	if (strcmp(line,"EBAC")==0){
+		EBAC = v;
+	}
+	if (strcmp(line,"mA")==0){
+		mA = v;
+	}
+	if (strcmp(line,"ma")==0){
+		ma = v;
+	}
+	if (strcmp(line,"mB1")==0){
+		mB1 = v;
+	}
+	if (strcmp(line,"mB2")==0){
+		mB2 = v;
+	}
+	if (strcmp(line,"mB3")==0){
+		mB3 = v;
+	}
+	if (strcmp(line,"mb1")==0){
+		mb1 = v;
+	}
+	if (strcmp(line,"mb2")==0){
+		mb2 = v;
+	}
+	if (strcmp(line,"mb3")==0){
+		mb3 = v;
+	}
+	if (strcmp(line,"ELDL1")==0){
+		eldl1 = v;
+	}
+	if (strcmp(line,"ELDL2")==0){
+		eldl2 = v;
+	}
+	if (strcmp(line,"ELDL3")==0){
+		eldl3 = v;
+	}
 }
 
 void CalibMesytec::Load(std::string filename){	
@@ -128,6 +194,21 @@ void CalibMesytec::Load(std::string filename){
 	boolYd=kFALSE;
 	boolYu=kFALSE;
 	boolASCII=kFALSE;
+	boolFGate1=kFALSE;
+	boolFGate2=kFALSE;
+	boolFGate3=kFALSE;
+	EBAC = 0.;
+	mA = 0.;
+	ma = 0.;
+	mB1 = 0.;
+	mB2 = 0.;
+	mB3 = 0.;
+	mb1 = 0.;
+	mb2 = 0.;
+	mb3 = 0.;
+	eldl1 = 0.;
+	eldl2 = 0.;
+	eldl3 = 0.;
 
 	char line[256];
 	FILE* file=fopen(filename.data(),"rb");
@@ -159,36 +240,92 @@ void CalibMesytec::Load(std::string filename){
 	file=NULL;
 }
 
-void CalibMesytec::Print(){
-	printf("\n********************************\n");
-	printf("** Mesytec calibration files: **\n");
-	if(boolGeometry)	printf("Experiment geometry: %s\n",fileGeometry.data());
-	else	printf("No experiment geometry specified.\n");
-	if(boolELoss)	printf("Energy loss root file: %s\n",fileELoss.data());
-	else	printf("No energy loss root file specified.\n");
-	if(boolIC)	printf("Ionization chamber calibration: %s\n",fileIC.data());
-	else	printf("No ionization chamber calibration specified.\n");
-	if(boolCsI1)	printf("CsI1 calibration: %s\n",fileCsI1.data());
-	else	printf("No CsI1 calibration specified.\n");
-	if(boolCsI2)	printf("CsI2 calibration: %s\n",fileCsI2.data());
-	else	printf("No CsI2 calibration specified.\n");
-	if(boolSd1r)	printf("Sd1r calibration: %s\n",fileSd1r.data());
-	else	printf("No Sd1r calibration specified.\n");
-	if(boolSd1s)	printf("Sd1s calibration: %s\n",fileSd1s.data());
-	else	printf("No Sd1s calibration specified.\n");
-	if(boolSd2r)	printf("Sd2r calibration: %s\n",fileSd2r.data());
-	else	printf("No Sd2r calibration specified.\n");
-	if(boolSd2s)	printf("Sd2s calibration: %s\n",fileSd2s.data());
-	else	printf("No Sd2s calibration specified.\n");
-	if(boolSur)	printf("Sur calibration: %s\n",fileSur.data());
-	else	printf("No Sur calibration specified.\n");
-	if(boolSus)	printf("Sus calibration: %s\n",fileSus.data());
-	else	printf("No Sus calibration specified.\n");
-	if(boolYd)	printf("Yd calibration: %s\n",fileYd.data());
-	else	printf("No Yd calibration specified.\n");
-	if(boolYu)	printf("Yu calibration: %s\n",fileYu.data());
-	else	printf("No Yu calibration specified.\n");
-	printf("********************************\n\n");
+void CalibMesytec::Print(Int_t calledfrom){
+	if(calledfrom==0){
+		printf("\n********************************\n");
+		printf("** Mesytec calibration files: **\n");
+		if(boolGeometry)	printf("Experiment geometry: %s\n",fileGeometry.data());
+		else	printf("No experiment geometry specified.\n");
+		if(boolELoss)	printf("Energy loss root file: %s\n",fileELoss.data());
+		else	printf("No energy loss root file specified.\n");
+		if(boolIC)	printf("Ionization chamber calibration: %s\n",fileIC.data());
+		else	printf("No ionization chamber calibration specified.\n");
+		if(boolCsI1)	printf("CsI1 calibration: %s\n",fileCsI1.data());
+		else	printf("No CsI1 calibration specified.\n");
+		if(boolCsI2)	printf("CsI2 calibration: %s\n",fileCsI2.data());
+		else	printf("No CsI2 calibration specified.\n");
+		if(boolSd1r)	printf("Sd1r calibration: %s\n",fileSd1r.data());
+		else	printf("No Sd1r calibration specified.\n");
+		if(boolSd1s)	printf("Sd1s calibration: %s\n",fileSd1s.data());
+		else	printf("No Sd1s calibration specified.\n");
+		if(boolSd2r)	printf("Sd2r calibration: %s\n",fileSd2r.data());
+		else	printf("No Sd2r calibration specified.\n");
+		if(boolSd2s)	printf("Sd2s calibration: %s\n",fileSd2s.data());
+		else	printf("No Sd2s calibration specified.\n");
+		if(boolSur)	printf("Sur calibration: %s\n",fileSur.data());
+		else	printf("No Sur calibration specified.\n");
+		if(boolSus)	printf("Sus calibration: %s\n",fileSus.data());
+		else	printf("No Sus calibration specified.\n");
+		if(boolYd)	printf("Yd calibration: %s\n",fileYd.data());
+		else	printf("No Yd calibration specified.\n");
+		if(boolYu)	printf("Yu calibration: %s\n",fileYu.data());
+		else	printf("No Yu calibration specified.\n");
+		printf("********************************\n\n");
+	}
+	else{	
+		if(boolFGate1){	
+			printf("Gate 1:\n");
+			printf("File: %s\n",fGate1.data());
+			printf("Name: %s\n",nGate1.data());
+		}
+		else	printf("No Gate1 specified.\n");
+		if(boolFGate2){	
+			printf("Gate 2:\n");
+			printf("File: %s\n",fGate2.data());
+			printf("Name: %s\n",nGate2.data());
+		}
+		else	printf("No Gate2 specified.\n");
+		if(boolFGate3){	
+			printf("Gate 3:\n");
+			printf("File: %s\n",fGate3.data());
+			printf("Name: %s\n",nGate3.data());
+		}
+		else	printf("No Gate3 specified.\n");
+		if(boolFGate4){	
+			printf("Gate 4:\n");
+			printf("File: %s\n",fGate4.data());
+			printf("Name: %s\n",nGate4.data());
+		}
+		else	printf("No Gate4 specified.\n");
+
+
+		printf("EBAC = %.1lf\n",EBAC);
+		printf("mA = %.1lf\n",mA);
+		printf("ma = %.1lf\n",ma);
+		printf("mB1 = %.1lf\n",mB1);
+		printf("mB2 = %.1lf\n",mB2);
+		printf("mB3 = %.1lf\n",mB3);
+		printf("mb1 = %.1lf\n",mb1);
+		printf("mb2 = %.1lf\n",mb2);
+		printf("mb3 = %.1lf\n",mb3);
+		printf("Estimated dead layer energy loss 1 = %.1lf\n",eldl1);
+		printf("Estimated dead layer energy loss 2 = %.1lf\n",eldl2);
+		printf("Estimated dead layer energy loss 3 = %.1lf\n",eldl3);
+	}
 }
+
 void CalibMesytec::Clear(){
+
+	EBAC = 0.;
+	mA = 0.;
+	ma = 0.;
+	mB1 = 0.;
+	mB2 = 0.;
+	mB3 = 0.;
+	mb1 = 0.;
+	mb2 = 0.;
+	mb3 = 0.;
+	eldl1 = 0.;
+	eldl2 = 0.;
+	eldl3 = 0.;
 }

@@ -189,16 +189,16 @@ TH2D *hSd1sSummary = {NULL}; //summary spectra
 
 TH1D * hSur[NSurChannels] = {NULL}; //  Upstream S3 rings 
 float Sur[NSurChannels];
-float SurEnergy=0; //Dummy for Sur energy
-int SurChannel; // channel with the greatest value
+float SurEnergy=0, SurEnergy2=0; //Dummy for Sur energy
+int SurChannel, SurChannel2; // channel with the greatest value
 float SurGain[NSurChannels]={1.};
 float SurOffset[NSurChannels]={0.};
 float SurPed[NSurChannels]={0.};
 
 TH1D * hSus[NSusChannels] = {NULL}; // Upstream S3 sectors   
 float Sus[NSusChannels];
-int SusChannel; // channel with the greatest value
-float SusEnergy=0; //Dummy for Sus energy                                                                                          
+int SusChannel, SusChannel2; // channel with the greatest value
+float SusEnergy=0, SusEnergy2=0; //Dummy for Sus energy                                                                                          
 float SusGain[NSusChannels]={1.};
 float SusOffset[NSusChannels]={0.};
 float SusPed[NSusChannels]={0.};
@@ -312,8 +312,14 @@ TH1D *hSdTheta = {NULL};
 TH1D *hSdPhi = {NULL};
 TH2D *hSdETheta = {NULL};
 TH2D *hSdPhiTheta = {NULL};
+TH2D *hSuETheta = {NULL};
+TH2D *hSuPhiTheta = {NULL};
+TH2D *hYuETheta = {NULL};
+TH2D *hYdETheta = {NULL};
 TH1D *hYdTheta = {NULL};
 TH1D *hYuTheta = {NULL};
+TH1D *hSuTheta = {NULL};
+TH1D *hSuPhi = {NULL};
 
 // float YdDistance = 0.; // distance from target in mm
 // float YuDistance = 83.; // distance from target in mm
@@ -332,8 +338,6 @@ float Sdtheta = 0 ,Sdphi = 0, Sdtheta1 = 0, Sdphi1=0; //AS Dummies for theta and
 TRandom3 fRandom(0);
 Double_t randm; //random number between 0 and 1 for each event
 
-TH1D *hSuTheta = {NULL};
-TH1D *hSuPhi = {NULL};
 
 uint32_t modid, oformat, vpeak, resolution, evlength, timestamp;
 uint32_t channel, overflow;
@@ -776,6 +780,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 				Sd1rChannel2 = i;
 			}
       	}//for
+		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-Sd1rChannel-0.5)+geoM.SdOuterRadius*(Sd1rChannel%24+0.1))/24./geoM.Sd1Distance);
+		det->TSdTheta= theta;
+		hSdTheta -> Fill(theta);
+	   	hSdETheta -> Fill(theta,Sd1rEnergy);
 
  		Sd1sEnergy=0; Sd1sEnergy2 =0; Sd1sChannel = -1; Sd1sChannel2 =-1;
     	for (int i =0; i< NSd1sChannels;i++){
@@ -790,6 +798,38 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 			}
       	} //for
 
+ 		SurEnergy=0; SurEnergy2 =0; SurChannel = -1; SurChannel2 =-1;
+    	for (int i =0; i< NSurChannels;i++){
+			if (SurEnergy<Sur[i]){
+          		SurEnergy2 = SurEnergy;
+	  			SurChannel2 = SurChannel;
+          		SurEnergy=Sur[i];
+          		SurChannel = i;}
+
+			else if (SurEnergy2<Sur[i]){
+		   		SurEnergy2=Sur[i];
+				SurChannel2 = i;
+			}
+      	}//for
+		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel%24+0.1))/24./geoM.SuDistance);
+		det->TSuTheta= theta;
+		hSuTheta -> Fill(theta);
+	   	hSuETheta -> Fill(theta,SurEnergy);
+	 
+
+ 		SusEnergy=0; SusEnergy2 =0; SusChannel = -1; SusChannel2 =-1;
+    	for (int i =0; i< NSusChannels;i++){
+			if (SusEnergy<Sus[i]){
+          		SusEnergy2 = SusEnergy;
+	  			SusChannel2 = SusChannel;
+          		SusEnergy=Sus[i];
+          		SusChannel = i;}
+			else if (SusEnergy2<Sus[i]){
+		   		SusEnergy2=Sus[i];
+				SusChannel2 = i;
+			}
+      	} //for
+
   		if (ascii) 
    			fprintf(ASCIISd1," %d  %d %d %d %d %d %d %d %d \n",event.GetSerialNumber(), Sd1rChannel+64, (int)Sd1rEnergy,  Sd1rChannel2+64, (int)Sd1rEnergy2,  Sd1sChannel+96, (int)Sd1sEnergy,  Sd1sChannel2+96, (int)Sd1sEnergy2);
  
@@ -800,10 +840,14 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 		det->TSd2sEnergy = Sd2sEnergy;
 		det->TSd1rEnergy = Sd1rEnergy;
 		det->TSd1sEnergy = Sd1sEnergy;
+		det->TSurEnergy = SurEnergy;
+		det->TSusEnergy = SusEnergy;
 		det->TSd2rChannel = Sd2rChannel;
 		det->TSd2sChannel = Sd2sChannel;
 		det->TSd1rChannel = Sd1rChannel;
 		det->TSd1sChannel = Sd1sChannel;
+		det->TSurChannel = SurChannel;
+		det->TSusChannel = SusChannel;
 
     	YdEnergy=0; YdChannel = -1; YdEnergy2=0; YdChannel2 =-1, YdTChannel = -1, YdTChannel2 = -1;
 		ydnumber = YdChannel/16; //Yd number                                                                               
@@ -830,22 +874,17 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
   		if (ascii) 
     		fprintf(ASCIIYY1," %d  %d %d %d %d \n",event.GetSerialNumber(), YdChannel+192, (int)YdEnergy,  YdChannel2+192, (int)YdEnergy2);
   
-  		//if (YdEnergy>0)
-    	// YdEnergy = YdEnergy*YdGain[YdChannel]+YdOffset[YdChannel];
- 
 	    spec_store_energyData[1][int(YdEnergy*scalingYd)]++; // = IRIS WebServer =
 		det->TYdEnergy = YdEnergy;
 		if(YdChannel>-1){
 			det->TYdChannel = YdChannel;
 		}
   		
-		
-		//here
 		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
 		det->TYdTheta= theta;
 		length = geoM.YdDistance/cos(atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance));
-		//	 det->TYdLength= length;
 	   	hYdTheta -> Fill(theta);
+	   	hYdETheta -> Fill(theta,YdEnergy);
 	 
 		//YYu
     	YuEnergy=0; YuChannel = -1; YuEnergy2=0; YuChannel2 =-1;
@@ -865,16 +904,14 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
   		if (ascii)
     		fprintf(ASCIIYY1," %d  %d %d %d %d \n",event.GetSerialNumber(), YuChannel+384, (int)YuEnergy,  YuChannel2+384, (int)YuEnergy2);
 
-  		//if (YuEnergy>0)
-  		//    // YuEnergy = YuEnergy*YuGain[YuChannel]+YuOffset[YuChannel];
-  
 		det->TYuEnergy = YuEnergy;
 		det->TYuChannel = YuChannel;
-		//here
-		// theta = TMath::RadToDeg()*atan((YdInnerRadius*(16.-YuChannel%16-0.5)+YdOuterRadius*(YuChannel%16+0.5))/16./YuDistance);
-		// det->TYuTheta= theta;
-		// hYuTheta -> Fill(theta);
-  		CsIEnergy=0; CsIEnergy2 =0; CsIChannel = -100; CsIChannel2 =-100;
+		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YuChannel%16-0.5)+geoM.YdOuterRadius*(YuChannel%16+0.5))/16./geoM.YuDistance);
+		det->TYuTheta= theta;
+		hYuTheta -> Fill(theta);
+	   	hYuETheta -> Fill(theta,YuEnergy);
+  		
+		CsIEnergy=0; CsIEnergy2 =0; CsIChannel = -100; CsIChannel2 =-100;
     	for (int i =0; i< NCsIChannels;i++) {
       		// printf("CsI ch: %d, value %f\n", i, CsI[i]);
       		if (CsIEnergy<CsI[i]){
@@ -931,15 +968,8 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 				}
 			}//for
 		} // if 
- 
-	//    int gCsI1 = (YdChannel%16);// /(16/NCsI1GroupRing);
-	//	if(CsI1Channel>=0&&YdChannel>=0) CsI1Energy = (CsI1Energy-CsI1Ped[CsI1Channel])*CsI1Gain[gCsI1][CsI1Channel];
-	//	printf("%d %d %d\n",CsI1Channel,YdChannel,gCsI1);
-	//	int gCsI2 = (YdChannel%16);// /(16/NCsI2Group);
-    // 	if(CsI2Channel>=0&&YdChannel>=0) CsI2Energy = (CsI2Energy-CsI2Ped[CsI2Channel])*CsI2Gain[gCsI2][CsI2Channel];
-	//	printf("%d %d %d\n",CsI2Channel,YdChannel,gCsI2);
-
-	    spec_store_energyData[2][int(CsI1Energy*scalingCsI)]++; // = IRIS WebServer =
+	    
+		spec_store_energyData[2][int(CsI1Energy*scalingCsI)]++; // = IRIS WebServer =
 	    spec_store_energyData[3][int(CsI2Energy*scalingCsI)]++; // = IRIS WebServer =
     	
 		if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
@@ -1043,7 +1073,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 {
 	std::string CalibFile = "config_online.txt";
 	calMesy.Load(CalibFile);
-	calMesy.Print();
+	calMesy.Print(0);
 
  	//proton gate
    	TFile *fgate = new TFile("/home/iris/current/anaIris/online_gate_18O.root");
@@ -1922,6 +1952,10 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	 	hYdTheta= new TH1D( "YdTheta", "YdTheta", 360, 0, 90);
 	 	printf("Booking TH1D %s \n", label);
 
+		sprintf(label,"YdETheta");
+ 		hYdETheta = new TH2D(label, "YdETheta",90,0,90,750,0,25);
+	 	printf("Booking TH1D %s \n", label);
+
   		sprintf(label,"SdTheta");
 	 	hSdTheta= new TH1D( "SdTheta", "SdTheta", 360, 0, 90);
 	 	printf("Booking TH1D %s \n", label);
@@ -1937,11 +1971,23 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 		sprintf(label,"SdETheta");
  		hSdETheta = new TH2D(label, "SdETheta",150,0,15,750,0,150);
 	 	printf("Booking TH1D %s \n", label);
+ 
+  		sprintf(label,"YuTheta");
+	 	hYuTheta= new TH1D( "YuTheta", "YuTheta", 360, 90, 180);
+	 	printf("Booking TH1D %s \n", label);
+
+		sprintf(label,"YuETheta");
+ 		hYuETheta = new TH2D(label, "YuETheta",90,90,180,750,0,25);
+	 	printf("Booking TH1D %s \n", label);
 
 		sprintf(label,"SuTheta");
-	 	hSuTheta= new TH1D( "SuTheta", "SuTheta", 360, 0, 90);
+	 	hSuTheta= new TH1D( "SuTheta", "SuTheta", 360, 90, 180);
 	 	printf("Booking TH1D %s \n", label);
-       
+ 
+		sprintf(label,"SuETheta");
+ 		hYuETheta = new TH2D(label, "SuETheta",90,90,180,750,0,25);
+	 	printf("Booking TH1D %s \n", label);
+      
  		sprintf(label,"SuPhi");
 	 	hSuPhi = new TH1D(label, "SuPhi", 360, 0, 360);
 	 	printf("Booking TH1D %s \n", label);
@@ -1950,7 +1996,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
   	} // if(gOutputFile)
 
-	calMesy.Print();
+	calMesy.Print(0);
 	// = IRIS WebServer =
 	// Zero the web spectra at BOR
 	memset(spec_store_address,0,sizeof(spec_store_address));
