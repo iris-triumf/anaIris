@@ -94,7 +94,6 @@ void HandlePHYSICS(det_t * det, tdc_t *timeArray)
 		hYdCsIThetaProt->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
 	}
 	hYuEnergyTheta->Fill(det->TYuTheta,det->TYuEnergy);
-
   	if (elastic->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
      	ECsI= det->TCsIEnergy;
    		if( ECsI == -10000){
@@ -202,6 +201,7 @@ void HandleBOR_PHYSICS(int run, int time)
    	TFile *fgate1 = new TFile(calPhys.fGate1.data());
    	TFile *fgate2 = new TFile(calPhys.fGate2.data());
    	TFile *fgate3 = new TFile(calPhys.fGate3.data());
+   	TFile *fgate4 = new TFile(calPhys.fGate4.data());
 	if(calPhys.boolFGate1==kFALSE||fgate1->IsZombie()) transfer = new TCutG();
   	else{
   		transfer = (TCutG*)fgate1->FindObjectAny(calPhys.nGate1.data());
@@ -212,12 +212,16 @@ void HandleBOR_PHYSICS(int run, int time)
 		elastic = (TCutG*)fgate2->FindObjectAny(calPhys.nGate2.data());
   		elastic->SetName(calPhys.nGate2.data()); //protons in Physics file
 	}
-	if(calPhys.boolFGate3==kFALSE||fgate3->IsZombie()) elastic = new TCutG();
+	if(calPhys.boolFGate3==kFALSE||fgate3->IsZombie()) upstream = new TCutG();
   	else{
-		elastic = (TCutG*)fgate3->FindObjectAny(calPhys.nGate3.data());
-  		elastic->SetName(calPhys.nGate3.data()); //protons in Physics file
+		upstream = (TCutG*)fgate3->FindObjectAny(calPhys.nGate3.data());
+  		upstream->SetName(calPhys.nGate3.data()); //protons in Physics file
 	}
-
+	if(calPhys.boolFGate4==kFALSE||fgate4->IsZombie()) upstream_sd = new TCutG();
+  	else{
+		upstream_sd = (TCutG*)fgate4->FindObjectAny(calPhys.nGate4.data());
+  		upstream_sd->SetName(calPhys.nGate4.data()); //protons in Physics file
+	}
 
   	char label[32], sig[32];
 

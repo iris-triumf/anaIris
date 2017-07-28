@@ -302,7 +302,7 @@ void HandleMidasEvent(TMidasEvent& event)
   // clear values here!
   extern int clearDetectors();
   clearDetectors();
-  
+ printf("eventID: %d\n",eventId); 
   if ((eventId == 1)) {
 #if 1 // with EB
     //

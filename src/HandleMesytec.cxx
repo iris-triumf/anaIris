@@ -454,28 +454,28 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	  				hMes_P[channel+(modid*32)]->Fill((float)vpeak , 1.);
 					spec_store_adcData[channel+(modid*32)][vpeak]++;
 	  				if ((modid==0) && (vpeak > adcThresh) && (vpeak<3840)){ // Why 3840? MH
-	    				printf("IC1\n");
+	    				//printf("IC1\n");
 						//AS Fill histogram
  						ICnadc = (float)vpeak; 
 						IC[channel] = (float)vpeak;
 						ICEnergy = ((float)vpeak-ICPed[channel])*ICGain[channel];
-	    				printf("IC2: %d %d\n", channel,vpeak);
+	    				//printf("IC2: %d %d\n", channel,vpeak);
 	    				//hIC[channel]->Fill(ICEnergy, 1.); //IC
-	    				printf("IC3\n");
+	    				//printf("IC3\n");
 						spec_store_eData[15][int(ICEnergy)]++; // = IRIS WebServer =
-	    				printf("IC4\n");
+	    				//printf("IC4\n");
 						//spec_store_eData[15][int(ICEnergy*scalingIC)]++; // = IRIS WebServer =
 						if (channel==19){
 	          				ScintEnergy = float(vpeak);// *SSBGain + SSBOffset;
 							spec_store_energyData[9][int(ScintEnergy)]++; // = IRIS WebServer =
 						}
-	    				printf("IC5\n");
+	    				//printf("IC5\n");
 
 	        			if (channel==31){
 	          				SSBEnergy = float(vpeak);// *SSBGain + SSBOffset;
 							spec_store_energyData[8][int(SSBEnergy)]++; // = IRIS WebServer =
 						}
-	    				printf("IC6\n");
+	    				//printf("IC6\n");
 	  				}
 	  
 	  				if (modid==1 && vpeak > adcThresh && vpeak<3840){
@@ -601,7 +601,6 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	  				}
 	
 	    			//hits 
-	    
 	    			if (modid==1 && vpeak>adcThresh&&channel<16){	 
 	    				hCsI1Hits->Fill(channel, 1.); // CsI hit  
 						spec_store_hitData[0][channel]++;	
@@ -780,7 +779,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 				Sd1rChannel2 = i;
 			}
       	}//for
-		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-Sd1rChannel-0.5)+geoM.SdOuterRadius*(Sd1rChannel%24+0.1))/24./geoM.Sd1Distance);
+		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-Sd1rChannel-0.5)+geoM.SdOuterRadius*(Sd1rChannel+0.5))/24./geoM.Sd1Distance);
 		det->TSdTheta= theta;
 		hSdTheta -> Fill(theta);
 	   	hSdETheta -> Fill(theta,Sd1rEnergy);
@@ -811,11 +810,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 				SurChannel2 = i;
 			}
       	}//for
-		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel%24+0.1))/24./geoM.SuDistance);
+		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel+0.5))/24./geoM.SuDistance);
 		det->TSuTheta= theta;
 		hSuTheta -> Fill(theta);
 	   	hSuETheta -> Fill(theta,SurEnergy);
-	 
 
  		SusEnergy=0; SusEnergy2 =0; SusChannel = -1; SusChannel2 =-1;
     	for (int i =0; i< NSusChannels;i++){
@@ -883,7 +881,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
 		det->TYdTheta= theta;
 		length = geoM.YdDistance/cos(atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance));
-	   	hYdTheta -> Fill(theta);
+		hYdTheta -> Fill(theta);
 	   	hYdETheta -> Fill(theta,YdEnergy);
 	 
 		//YYu
@@ -1541,7 +1539,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 				sprintf(label, "adc%02d", channel);
 				sprintf(sig, "adc%03d", channel);
 				hMes_P[channel] = new TH1D(label, sig, adcBins, 0, adcBins);
-				printf("Booking TH1D %s \n", label);
+				//printf("Booking TH1D %s \n", label);
       		}
       		printf(" in Mesytec BOR... Booking histos Done ....\n");
 		}
@@ -1905,13 +1903,13 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 		//
        	printf(" in Mesytec BOR... Booking PID histos\n");
        	sprintf(label,"SdPID");
-	 	hSdPID= new TH2F( "SdPID", "SDPID", 1000, 0., 100., 1000, 0., 100.);
+	 	hSdPID= new TH2F( "SdPID", "SDPID", 1000, 0., 100., 1000, 0., 200.);
 	 	printf("Booking TH2F %s \n", label);
        
-	 	hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1500, 0., 75., 1000, 0., 10.);
+	 	hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1500, 0., 75., 1000, 0., 30.);
 	 	printf("Booking TH2F %s \n", label);
 
-	 	hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1500, 0., 75., 1000, 0., 10.);
+	 	hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1500, 0., 75., 1000, 0., 30.);
         printf("Booking TH2F %s \n", label);
 
 		hYdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 1024, 0, 4096, 1000, 0., 10.);
@@ -1954,7 +1952,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
 		sprintf(label,"YdETheta");
  		hYdETheta = new TH2D(label, "YdETheta",90,0,90,750,0,25);
-	 	printf("Booking TH1D %s \n", label);
+	 	printf("Booking T21D %s \n", label);
 
   		sprintf(label,"SdTheta");
 	 	hSdTheta= new TH1D( "SdTheta", "SdTheta", 360, 0, 90);
@@ -1966,11 +1964,11 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
  		sprintf(label,"SdPhiTheta");
  		hSdPhiTheta = new TH2D(label, "SdPhiTheta", 180, 0, 180,180,0,360);
-	 	printf("Booking TH1D %s \n", label);
+	 	printf("Booking TH2D %s \n", label);
 
 		sprintf(label,"SdETheta");
  		hSdETheta = new TH2D(label, "SdETheta",150,0,15,750,0,150);
-	 	printf("Booking TH1D %s \n", label);
+	 	printf("Booking TH2D %s \n", label);
  
   		sprintf(label,"YuTheta");
 	 	hYuTheta= new TH1D( "YuTheta", "YuTheta", 360, 90, 180);
@@ -1978,15 +1976,15 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
 		sprintf(label,"YuETheta");
  		hYuETheta = new TH2D(label, "YuETheta",90,90,180,750,0,25);
-	 	printf("Booking TH1D %s \n", label);
+	 	printf("Booking TH2D %s \n", label);
 
 		sprintf(label,"SuTheta");
 	 	hSuTheta= new TH1D( "SuTheta", "SuTheta", 360, 90, 180);
 	 	printf("Booking TH1D %s \n", label);
  
 		sprintf(label,"SuETheta");
- 		hYuETheta = new TH2D(label, "SuETheta",90,90,180,750,0,25);
-	 	printf("Booking TH1D %s \n", label);
+ 		hSuETheta = new TH2D(label, "SuETheta",90,90,180,750,0,25);
+	 	printf("Booking TH2D %s \n", label);
       
  		sprintf(label,"SuPhi");
 	 	hSuPhi = new TH1D(label, "SuPhi", 360, 0, 360);
