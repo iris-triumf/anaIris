@@ -51,7 +51,7 @@ bool gIsPedestalsRun = false;
 bool gIsOffline = false;
 int  gEventCutoff = 0;
 
-char mesbkname[][5] = {"ICA_", "SD2A", "SD1A", "YDA_","SUA_","YUA_",""};
+char mesbkname[][5] = {"ICA_", "SD2A", "SD1A", "YDA_","SUA_","YUA_"};
 char tdcbkname[][5] = {"ICT_", "YDT_", "YUT_", "SUT_" ,"SD2T" ,"SD1T"};
 //char tdcbkname[][5] = {"YDT_","YUT_", "SUT_" ,"SD2T" ,"SD1T","ICT_"};
 char stabkname[][5] = {"VTST", "VTSA", "VTRT", "VTRA"};

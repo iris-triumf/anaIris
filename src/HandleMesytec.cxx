@@ -388,7 +388,7 @@ int clearDetectors()
   return 0;
 }
 
-void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t *det)
+void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *det)
 {
 	uint32_t *data;
 	int    i, debug = 0, debug1 = 0;
@@ -727,7 +727,8 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 	} // nitems != 0
 
 	//After looping over banks, fill the ascii files
-    if (modid>5 && modid<10) {// check last bank
+    //if (modid>5 && modid<10) {// check last bank
+    if (bank==5) {// check last bank
       	det->EventNumber = event.GetSerialNumber();
     
  		Sd2rEnergy=0; Sd2rEnergy2 =0; Sd2rChannel = -1; Sd2rChannel2 =-1;
