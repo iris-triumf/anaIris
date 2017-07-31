@@ -810,7 +810,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 				SurChannel2 = i;
 			}
       	}//for
-		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel+0.5))/24./geoM.SuDistance);
+		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel+0.5))/24./geoM.SuDistance)+180.;
 		det->TSuTheta= theta;
 		hSuTheta -> Fill(theta);
 	   	hSuETheta -> Fill(theta,SurEnergy);
@@ -904,7 +904,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, det_t
 
 		det->TYuEnergy = YuEnergy;
 		det->TYuChannel = YuChannel;
-		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YuChannel%16-0.5)+geoM.YdOuterRadius*(YuChannel%16+0.5))/16./geoM.YuDistance);
+		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YuChannel%16-0.5)+geoM.YdOuterRadius*(YuChannel%16+0.5))/16./geoM.YuDistance+180.);
 		det->TYuTheta= theta;
 		hYuTheta -> Fill(theta);
 	   	hYuETheta -> Fill(theta,YuEnergy);
