@@ -811,11 +811,12 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				SurChannel2 = i;
 			}
       	}//for
-		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel+0.5))/24./geoM.SuDistance)+180.;
-		det->TSuTheta= theta;
-		hSuTheta -> Fill(theta);
-	   	hSuETheta -> Fill(theta,SurEnergy);
-
+		if(SurChannel>-1){
+			theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel+0.5))/24./geoM.SuDistance)+180.;
+			det->TSuTheta= theta;
+			hSuTheta -> Fill(theta);
+			hSuETheta -> Fill(theta,SurEnergy);
+		}
  		SusEnergy=0; SusEnergy2 =0; SusChannel = -1; SusChannel2 =-1;
     	for (int i =0; i< NSusChannels;i++){
 			if (SusEnergy<Sus[i]){
@@ -879,11 +880,13 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			det->TYdChannel = YdChannel;
 		}
   		
-		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
-		det->TYdTheta= theta;
-		length = geoM.YdDistance/cos(atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance));
-		hYdTheta -> Fill(theta);
-	   	hYdETheta -> Fill(theta,YdEnergy);
+		if(YdChannel%16>-1){
+			theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
+			det->TYdTheta= theta;
+			length = geoM.YdDistance/cos(atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance));
+			hYdTheta -> Fill(theta);
+			hYdETheta -> Fill(theta,YdEnergy);
+		}
 	 
 		//YYu
     	YuEnergy=0; YuChannel = -1; YuEnergy2=0; YuChannel2 =-1;
@@ -905,10 +908,12 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 
 		det->TYuEnergy = YuEnergy;
 		det->TYuChannel = YuChannel;
-		theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YuChannel%16-0.5)+geoM.YdOuterRadius*(YuChannel%16+0.5))/16./geoM.YuDistance+180.);
-		det->TYuTheta= theta;
-		hYuTheta -> Fill(theta);
-	   	hYuETheta -> Fill(theta,YuEnergy);
+		if(YuChannel%16>-1){
+			theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YuChannel%16-0.5)+geoM.YdOuterRadius*(YuChannel%16+0.5))/16./geoM.YuDistance)+180.;
+			det->TYuTheta= theta;
+			hYuTheta -> Fill(theta);
+			hYuETheta -> Fill(theta,YuEnergy);
+		}
   		
 		CsIEnergy=0; CsIEnergy2 =0; CsIChannel = -100; CsIChannel2 =-100;
     	for (int i =0; i< NCsIChannels;i++) {
@@ -1904,13 +1909,13 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 		//
        	printf(" in Mesytec BOR... Booking PID histos\n");
        	sprintf(label,"SdPID");
-	 	hSdPID= new TH2F( "SdPID", "SDPID", 1000, 0., 100., 1000, 0., 200.);
+		hSdPID= new TH2F( "SdPID", "SDPID", 1500, 0., 150., 1000, 0., 100.);
 	 	printf("Booking TH2F %s \n", label);
        
-	 	hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1500, 0., 75., 1000, 0., 30.);
+		hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1500, 0., 75., 1000, 0., 10.);
 	 	printf("Booking TH2F %s \n", label);
 
-	 	hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1500, 0., 75., 1000, 0., 30.);
+	 	hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1500, 0., 75., 1000, 0., 10.);
         printf("Booking TH2F %s \n", label);
 
 		hYdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 1024, 0, 4096, 1000, 0., 10.);
@@ -1968,7 +1973,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 	 	printf("Booking TH2D %s \n", label);
 
 		sprintf(label,"SdETheta");
- 		hSdETheta = new TH2D(label, "SdETheta",150,0,15,750,0,150);
+ 		hSdETheta = new TH2D(label, "SdETheta",150,0,15,1000,0,500);
 	 	printf("Booking TH2D %s \n", label);
  
   		sprintf(label,"YuTheta");
