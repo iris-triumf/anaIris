@@ -237,6 +237,19 @@ float YuGain[NYuChannels]={1.};
 float YuOffset[NYuChannels]={0.};
 float YuPed[NYuChannels]={0.};
 
+//TRIFIC
+TH1D * hTRIFIC_1 = NULL;
+TH1D * hTRIFIC_2 = NULL;
+TH1D * hTRIFIC_3 = NULL;
+TH2F * hTRIFIC_1v2 = NULL;
+TH2F * hTRIFIC_1v3 = NULL;
+TH2F * hTRIFIC_2v3 = NULL;
+TH2F * hTRIFIC_1v23 = NULL;
+TH2F * hTRIFIC_12v3 = NULL;
+float TRIFICEnergy1 = 0, TRIFICEnergy2 = 0, TRIFICEnergy3 = 0;
+float TRIFICGain=0;
+float TRIFICOffset=0;
+
 //AS  Hit count histos
 TH1D * hSd2rHits = {NULL}; // Downstream S3 2 rings   
 TH1D * hSd2sHits = {NULL}; // Downstream S3 2 sectors 
@@ -474,6 +487,16 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	        			if (channel==31){
 	          				SSBEnergy = float(vpeak);// *SSBGain + SSBOffset;
 							spec_store_energyData[8][int(SSBEnergy)]++; // = IRIS WebServer =
+						}
+	        			
+						if (channel==22){
+	          				TRIFICEnergy1 = float(vpeak);
+						}
+	        			if (channel==23){
+	          				TRIFICEnergy2 = float(vpeak);
+						}
+	        			if (channel==24){
+	          				TRIFICEnergy3 = float(vpeak);
 						}
 	    				//printf("IC6\n");
 	  				}
@@ -812,7 +835,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			}
       	}//for
 		if(SurChannel>-1){
-			theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-SurChannel-0.5)+geoM.SdOuterRadius*(SurChannel+0.5))/24./geoM.SuDistance)+180.;
+			theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(SurChannel+0.5)+geoM.SdOuterRadius*(24.-SurChannel-0.5))/24./geoM.SuDistance)+180.;
 			det->TSuTheta= theta;
 			hSuTheta -> Fill(theta);
 			hSuETheta -> Fill(theta,SurEnergy);
@@ -1046,6 +1069,17 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 		if (protons->IsInside(CsI1Energy,YdEnergy*cos(det->TYdTheta*1.74532925199432955e-02))){
        		hYdHitsProt->Fill(YdChannel,1.);
        	}
+
+		// TRIFIC histos
+		if(TRIFICEnergy1>0) hTRIFIC_1->Fill(TRIFICEnergy1); 
+		if(TRIFICEnergy2>0) hTRIFIC_2->Fill(TRIFICEnergy2); 
+		if(TRIFICEnergy3>0) hTRIFIC_3->Fill(TRIFICEnergy3); 
+		if(TRIFICEnergy1>0&&TRIFICEnergy2>0) hTRIFIC_1v2->Fill(TRIFICEnergy2,TRIFICEnergy1); 
+		if(TRIFICEnergy1>0&&TRIFICEnergy3>0) hTRIFIC_1v3->Fill(TRIFICEnergy3,TRIFICEnergy1); 
+		if(TRIFICEnergy2>0&&TRIFICEnergy3>0) hTRIFIC_2v3->Fill(TRIFICEnergy3,TRIFICEnergy2); 
+		if(TRIFICEnergy1>0&&TRIFICEnergy2>0&&TRIFICEnergy3>0) hTRIFIC_12v3->Fill(TRIFICEnergy3,TRIFICEnergy1+TRIFICEnergy2);
+		if(TRIFICEnergy1>0&&TRIFICEnergy2>0) hTRIFIC_1v23->Fill(TRIFICEnergy2+TRIFICEnergy3,TRIFICEnergy1);
+
 	} //last bank
 }
 
@@ -1884,97 +1918,168 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
 		printf(" in Mesytec BOR... Booking ETot histos Done ....\n");
    
-		// PID Spectra
-		//
-       	printf(" in Mesytec BOR... Booking PID histos\n");
-       	sprintf(label,"SdPID");
-		hSdPID= new TH2F( "SdPID", "SDPID", 1500, 0., 150., 1000, 0., 100.);
-	 	printf("Booking TH2F %s \n", label);
-       
-		hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1500, 0., 75., 1000, 0., 10.);
-	 	printf("Booking TH2F %s \n", label);
 
-	 	hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1500, 0., 75., 1000, 0., 10.);
-        printf("Booking TH2F %s \n", label);
-
-		hYdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 1024, 0, 4096, 1000, 0., 10.);
-        printf("Booking TH2F %s \n", label);
-		hYdCsI2adcPID = new TH2F("YdCsI2PIDadc", "YdCsI2PIDadc", 1024, 0, 4096, 1000, 0., 10.);
-        printf("Booking TH2F %s \n", label);
-
-		hYdadcCsI1adcPID = new TH2F("YdadcCsI1PIDadc", "YdadcCsI1PIDadc", 1024, 0, 4096, 1024, 0., 4096.);
-        printf("Booking TH2F %s \n", label);
-		hYdadcCsI2adcPID = new TH2F("YdadcCsI2PIDadc", "YdadcCsI2PIDadc", 1024, 0, 4096, 1024, 0., 4096.);
-        printf("Booking TH2F %s \n", label);
-
-		Ydrange = new TH2F("Ydrange", "Ydrange", 1024, 0, 4096, 1500, 0., 20.);
-        printf("Booking TH2F %s \n", label);
-		CsI1range = new TH2F("CsI1range", "CsI1range", 1024, 0, 4096, 1500, 0., 100.);
-        printf("Booking TH2F %s \n", label);
-		CsI2range = new TH2F("CsI2range", "CsI2range", 1024, 0, 4096, 1500, 0., 100.);
-        printf("Booking TH2F %s \n", label);
+		// ====================== //
+		// ==== PID Spectra  ==== //
+		// ====================== //
 		
-		hYdCsI1Corr = new TH2F("YdCsI1Corr", "YdCsI1Corr", 8, 0, 8, 16, 0., 16.);
-        printf("Booking TH2F %s \n", label);
-		hYdCsI2Corr = new TH2F("YdCsI2Corr", "YdCsI2Corr", 8, 0, 8, 16, 0., 16.);
-        printf("Booking TH2F %s \n", label);
+		hYdCsIPID1 = (TH2F*)gDirectory->Get("YdCsIPID1");
+   		if (hYdCsIPID1 == 0) {
+     		// Make an IC directory and cd to it.
+        	TDirectory* PID_dir = gOutputFile->mkdir("PID");      
+        	PID_dir->cd();
+    
+       		printf(" in Mesytec BOR... Booking PID histos\n");
+	 		
+       		sprintf(label,"YdCsIPID1");
+			hYdCsIPID1 = new TH2F("YdCsIPID1", "YdCsIPID1", 1500, 0., 75., 1000, 0., 10.);
+        	printf("Booking TH2F %s \n", label);
+        
+       		sprintf(label,"YdCsIPID2");
+			hYdCsIPID2 = new TH2F("YdCsIPID2", "YdCsIPID2", 1500, 0., 75., 1000, 0., 10.);
+	 		printf("Booking TH2F %s \n", label);
 
-//		hYdCsI1PID_uncalibrated = new TH2F("YdCsI1PID_uncalibrated", "YdCsI1PID_uncalibrated", 4000, 0, 4000, 4000, 0, 4000);
-//        printf("Booking TH2F %s \n", label);
-//
-//		hYdCsI2PID_uncalibrated = new TH2F("YdCsI2PID_uncalibrated", "YdCsI2PID_uncalibrated", 4000, 0, 4000, 4000, 0, 4000);
-//        printf("Booking TH2F %s \n", label);
+       		sprintf(label,"SdPID");
+			hSdPID= new TH2F( "SdPID", "SDPID", 1500, 0., 150., 1000, 0., 100.);
+	 		printf("Booking TH2F %s \n", label);
+  			
+       		sprintf(label,"YdCsI1PIDadc");
+			hYdCsI1adcPID = new TH2F("YdCsI1PIDadc", "YdCsI1PIDadc", 1024, 0, 4096, 1000, 0., 10.);
+        	printf("Booking TH2F %s \n", label);
+       		sprintf(label,"YdCsI2PIDadc");
+			hYdCsI2adcPID = new TH2F("YdCsI2PIDadc", "YdCsI2PIDadc", 1024, 0, 4096, 1000, 0., 10.);
+        	printf("Booking TH2F %s \n", label);
 
+       		sprintf(label,"YdadcCsI1PIDadc");
+			hYdadcCsI1adcPID = new TH2F("YdadcCsI1PIDadc", "YdadcCsI1PIDadc", 1024, 0, 4096, 1024, 0., 4096.);
+        	printf("Booking TH2F %s \n", label);
+       		sprintf(label,"YdadcCsI2PIDadc");
+			hYdadcCsI2adcPID = new TH2F("YdadcCsI2PIDadc", "YdadcCsI2PIDadc", 1024, 0, 4096, 1024, 0., 4096.);
+        	printf("Booking TH2F %s \n", label);
+
+       		sprintf(label,"Ydrange");
+			Ydrange = new TH2F("Ydrange", "Ydrange", 1024, 0, 4096, 1500, 0., 20.);
+        	printf("Booking TH2F %s \n", label);
+       		sprintf(label,"CsI1range");
+			CsI1range = new TH2F("CsI1range", "CsI1range", 1024, 0, 4096, 1500, 0., 100.);
+        	printf("Booking TH2F %s \n", label);
+       		sprintf(label,"CsI2range");
+			CsI2range = new TH2F("CsI2range", "CsI2range", 1024, 0, 4096, 1500, 0., 100.);
+        	printf("Booking TH2F %s \n", label);
+			
+       		sprintf(label,"YdCsI1Corr");
+			hYdCsI1Corr = new TH2F("YdCsI1Corr", "YdCsI1Corr", 8, 0, 8, 16, 0., 16.);
+        	printf("Booking TH2F %s \n", label);
+       		sprintf(label,"YdCsI2Corr");
+			hYdCsI2Corr = new TH2F("YdCsI2Corr", "YdCsI2Corr", 8, 0, 8, 16, 0., 16.);
+        	printf("Booking TH2F %s \n", label);
+		}
        	printf(" in Mesytec BOR... Booking PID histos Done ....\n");
 
-       	//AS Angle histos
+
+		// ====================== //
+		// ====    Angles    ==== //
+		// ====================== //
 
  		printf(" in Mesytec BOR... Booking angle histos\n");
-     
-  		sprintf(label,"YdTheta");
-	 	hYdTheta= new TH1D( "YdTheta", "YdTheta", 360, 0, 90);
-	 	printf("Booking TH1D %s \n", label);
+ 
+		hYdTheta = (TH1D*)gDirectory->Get("YdTheta");
+   		if (hYdTheta == 0) {
+     		// Make an IC directory and cd to it.
+        	TDirectory* Angle_dir = gOutputFile->mkdir("Angles");      
+        	Angle_dir->cd();
 
-		sprintf(label,"YdETheta");
- 		hYdETheta = new TH2D(label, "YdETheta",90,0,90,750,0,25);
-	 	printf("Booking T21D %s \n", label);
+  			sprintf(label,"YdTheta");
+	 		hYdTheta= new TH1D( "YdTheta", "YdTheta", 360, 0, 90);
+	 		printf("Booking TH1D %s \n", label);
 
-  		sprintf(label,"SdTheta");
-	 	hSdTheta= new TH1D( "SdTheta", "SdTheta", 360, 0, 90);
-	 	printf("Booking TH1D %s \n", label);
+			sprintf(label,"YdETheta");
+ 			hYdETheta = new TH2D(label, "YdETheta",90,0,90,750,0,25);
+	 		printf("Booking TH2D %s \n", label);
+
+  			sprintf(label,"SdTheta");
+	 		hSdTheta= new TH1D( "SdTheta", "SdTheta", 360, 0, 90);
+	 		printf("Booking TH1D %s \n", label);
        
- 		sprintf(label,"SdPhi");
-	 	hSdPhi = new TH1D(label, "SdPhi", 360, 0, 360);
-	 	printf("Booking TH1D %s \n", label);
+ 			sprintf(label,"SdPhi");
+	 		hSdPhi = new TH1D(label, "SdPhi", 360, 0, 360);
+	 		printf("Booking TH1D %s \n", label);
 
- 		sprintf(label,"SdPhiTheta");
- 		hSdPhiTheta = new TH2D(label, "SdPhiTheta", 180, 0, 180,180,0,360);
-	 	printf("Booking TH2D %s \n", label);
+ 			sprintf(label,"SdPhiTheta");
+ 			hSdPhiTheta = new TH2D(label, "SdPhiTheta", 180, 0, 180,180,0,360);
+	 		printf("Booking TH2D %s \n", label);
 
-		sprintf(label,"SdETheta");
- 		hSdETheta = new TH2D(label, "SdETheta",150,0,15,1000,0,500);
-	 	printf("Booking TH2D %s \n", label);
+			sprintf(label,"SdETheta");
+ 			hSdETheta = new TH2D(label, "SdETheta",150,0,15,1000,0,500);
+	 		printf("Booking TH2D %s \n", label);
  
-  		sprintf(label,"YuTheta");
-	 	hYuTheta= new TH1D( "YuTheta", "YuTheta", 360, 90, 180);
-	 	printf("Booking TH1D %s \n", label);
+  			sprintf(label,"YuTheta");
+	 		hYuTheta= new TH1D( "YuTheta", "YuTheta", 360, 90, 180);
+	 		printf("Booking TH1D %s \n", label);
 
-		sprintf(label,"YuETheta");
- 		hYuETheta = new TH2D(label, "YuETheta",90,90,180,750,0,25);
-	 	printf("Booking TH2D %s \n", label);
+			sprintf(label,"YuETheta");
+ 			hYuETheta = new TH2D(label, "YuETheta",90,90,180,750,0,25);
+	 		printf("Booking TH2D %s \n", label);
 
-		sprintf(label,"SuTheta");
-	 	hSuTheta= new TH1D( "SuTheta", "SuTheta", 360, 90, 180);
-	 	printf("Booking TH1D %s \n", label);
+			sprintf(label,"SuTheta");
+	 		hSuTheta= new TH1D( "SuTheta", "SuTheta", 360, 90, 180);
+	 		printf("Booking TH1D %s \n", label);
  
-		sprintf(label,"SuETheta");
- 		hSuETheta = new TH2D(label, "SuETheta",90,90,180,750,0,25);
-	 	printf("Booking TH2D %s \n", label);
+			sprintf(label,"SuETheta");
+ 			hSuETheta = new TH2D(label, "SuETheta",90,90,180,750,0,25);
+	 		printf("Booking TH2D %s \n", label);
       
- 		sprintf(label,"SuPhi");
-	 	hSuPhi = new TH1D(label, "SuPhi", 360, 0, 360);
-	 	printf("Booking TH1D %s \n", label);
+ 			sprintf(label,"SuPhi");
+	 		hSuPhi = new TH1D(label, "SuPhi", 360, 0, 360);
+	 		printf("Booking TH1D %s \n", label);
+		}
+       	printf(" in Mesytec BOR... Booking angle histos Done ....\n");
 
+
+		// ====================== //
+		// ====    TRIFIC    ==== //
+		// ====================== //
+
+ 		printf(" in Mesytec BOR... Booking TRIFIC histos\n");
+		hTRIFIC_1 = (TH1D*)gDirectory->Get("TRIFIC_1");
+   		
+		if (hTRIFIC_1 == 0) {
+     		// Make an IC directory and cd to it.
+        	TDirectory* TRIFIC_dir = gOutputFile->mkdir("TRIFIC");      
+        	TRIFIC_dir->cd();
+
+  			sprintf(label,"TRIFIC_1");
+	 		hTRIFIC_1= new TH1D( label, label, 4096, 0, 4096);
+	 		printf("Booking TH1D %s \n", label);
+
+  			sprintf(label,"TRIFIC_2");
+	 		hTRIFIC_2= new TH1D( label, label, 4096, 0, 4096);
+	 		printf("Booking TH1D %s \n", label);
+
+  			sprintf(label,"TRIFIC_3");
+	 		hTRIFIC_3= new TH1D( label, label, 4096, 0, 4096);
+	 		printf("Booking TH1D %s \n", label);
+							
+			sprintf(label,"TRIFIC_1v2");
+ 			hTRIFIC_1v2 = new TH2F(label, label, 384, 0, 3840, 384, 0, 3840);
+	 		printf("Booking TH2F %s \n", label);
+
+			sprintf(label,"TRIFIC_1v3");
+ 			hTRIFIC_1v3 = new TH2F(label, label, 384, 0, 3840, 384, 0, 3840);
+	 		printf("Booking TH2F %s \n", label);
+
+			sprintf(label,"TRIFIC_2v3");
+ 			hTRIFIC_2v3 = new TH2F(label, label, 384, 0, 3840, 384, 0, 3840);
+	 		printf("Booking TH2F %s \n", label);
+
+			sprintf(label,"TRIFIC_1v23");
+ 			hTRIFIC_1v23 = new TH2F(label, label, 768, 0, 7680, 384, 0, 3840);
+	 		printf("Booking TH2F %s \n", label);
+
+			sprintf(label,"TRIFIC_12v3");
+ 			hTRIFIC_12v3 = new TH2F(label, label, 384, 0, 3840, 768, 0, 7680);
+	 		printf("Booking TH2F %s \n", label);
+		}
        	printf(" in Mesytec BOR... Booking angle histos Done ....\n");
 
   	} // if(gOutputFile)

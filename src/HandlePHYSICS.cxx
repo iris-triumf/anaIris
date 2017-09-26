@@ -45,8 +45,8 @@ int timeChannel=0; // corresponding time cahnnel for the highest energy adc chan
 TH1D * hQValue1 = NULL; // QValue
 TH1D * hQValue2 = NULL; // QValue
 TH1D * hQValueU = NULL; // QValue
-TH1D * hYdEnergy = NULL; //YdEnergy
-TH1D * hYuEnergy = NULL; //YuEnergy
+//TH1D * hYdEnergy = NULL; //YdEnergy
+//TH1D * hYuEnergy = NULL; //YuEnergy
 TH2D *hYdCsIEnergyTime = NULL;
 TH2D *hS3EnergyTime = NULL;
 TH2D *hYdCsI1Theta = NULL;
@@ -74,13 +74,13 @@ void HandlePHYSICS(det_t * det, tdc_t *timeArray)
 		timeChannel = det->TYdChannel+64;
 	}
 	// printf("timeChannel = %d time %lf YdEnergy %lf\n",timeChannel,timeArray->timeRF[timeChannel],det->TYdEnergy);
-	hYdEnergy->Fill(det->TYdEnergy,1.);
+	//hYdEnergy->Fill(det->TYdEnergy,1.);
 
 	if (det->TYuChannel>-1){
   		timeChannel = det->TYuChannel+64;
 	}
   	// printf("timeChannel = %d time %lf YuEnergy %lf\n",timeChannel,timeArray->timeRF[timeChannel],det->TYuEnergy);
-   	hYuEnergy->Fill(det->TYuEnergy,1.);
+   	//hYuEnergy->Fill(det->TYuEnergy,1.);
 
   	hYdCsIEnergyTime->Fill(timeArray->timeRF[timeChannel],det->TYdEnergy+det->TCsIEnergy);
   	if (det->TSd1sChannel>-1){
@@ -231,37 +231,45 @@ void HandleBOR_PHYSICS(int run, int time)
 
  
     if (gOutputFile) {
-      	printf(" in Physics BOR... Booking histos\n");
+		
+		hQValue1 = (TH1D*)gDirectory->Get("QValue1");
+   		if (hQValue1 == 0) {
+     		// Make a directory and cd to it.
+        	TDirectory* PHYSICS_dir = gOutputFile->mkdir("PHYSICS");      
+        	PHYSICS_dir->cd();
 
-      	hYdEnergy = new TH1D("YdEnergy","YdEnergy",512,0,20);
-      	hYuEnergy = new TH1D("YuEnergy","YuEnergy",512,0,20);
-       	hYdCsIEnergyTime = new TH2D("YdCsIEnergyTime","YdCsIEnergyTime",512,0,1024,512,0,20);
-		printf("Booking TH2D  YdCsIEnergyTime\n");
+      		printf(" in Physics BOR... Booking histos\n");
+ 
+      		hQValue1 = new TH1D("QValue1","QValue1",2000,-20,20);
+      		printf("Booking TH1D  QValue1\n");
 
- 		hYdCsI1Theta = new TH2D("YdCsI1Theta","YdCsI1Theta",600, 0 ,60, 800, 0, 120);
-		printf("Booking TH2D  YdCsI1Theta\n");
- 		hYdCsI2Theta = new TH2D("YdCsI2Theta","YdCsI2Theta",600, 0 ,60, 800, 0, 120);
-		printf("Booking TH2D  YdCsI2Theta\n");
- 		hYdCsIThetaProt = new TH2D("YdCsIThetaProt","YdCsIThetaProt",512, 0 ,60, 512, 0, 20);
-		printf("Booking TH2D  YdCsIThetaProt\n");
+      		hQValue2 = new TH1D("QValue2","QValue2",2000,-20,20);
+      		printf("Booking TH1D  QValue2\n");
+      		
+			hQValueU = new TH1D("QValueU","QValue2",2000,-20,20);
+      		printf("Booking TH1D  QValueU\n");
 
- 		hYuEnergyTheta = new TH2D("YuEnergyTheta","YuEnergyTheta",512, 0 ,60, 512, 0, 20);
-		printf("Booking TH2D  YdCsITheta\n");
+			hYdCsIEnergyTime = new TH2D("YdCsIEnergyTime","YdCsIEnergyTime",512,0,1024,512,0,20);
+			printf("Booking TH2D  YdCsIEnergyTime\n");
+
+ 			hYdCsI1Theta = new TH2D("YdCsI1Theta","YdCsI1Theta",600, 0 ,60, 800, 0, 120);
+			printf("Booking TH2D  YdCsI1Theta\n");
+ 			
+			hYdCsI2Theta = new TH2D("YdCsI2Theta","YdCsI2Theta",600, 0 ,60, 800, 0, 120);
+			printf("Booking TH2D  YdCsI2Theta\n");
+ 			
+			hYdCsIThetaProt = new TH2D("YdCsIThetaProt","YdCsIThetaProt",512, 0 ,60, 512, 0, 20);
+			printf("Booking TH2D  YdCsIThetaProt\n");
+
+ 			hYuEnergyTheta = new TH2D("YuEnergyTheta","YuEnergyTheta",512, 0 ,60, 512, 0, 20);
+			printf("Booking TH2D  YdCsITheta\n");
 	
-		hS3EnergyTime = new TH2D("S3EnergyTime","S3EnergyTime",512,0,1024,512,0,200);
-   		printf("Booking TH2D  S3EnergyTime\n");
-      	printf(" in Physics BOR... Booking histos Done ....\n");
-     
-      	hQValue1 = new TH1D("QValue1","QValue1",2000,-20,20);
-      	printf("Booking T1D  QValue1\n");
-
-      	hQValue2 = new TH1D("QValue2","QValue2",2000,-20,20);
-      	printf("Booking T1D  QValue2\n");
-      	
-		hQValueU = new TH1D("QValueU","QValue2",2000,-20,20);
-      	printf("Booking T1D  QValueU\n");
+			hS3EnergyTime = new TH2D("S3EnergyTime","S3EnergyTime",512,0,1024,512,0,200);
+   			printf("Booking TH2D  S3EnergyTime\n");
+      		
+			printf(" in Physics BOR... Booking histos Done ....\n");
+    		}
 	}
-  
 }
 
 void HandleEOR_PHYSICS(int run, int time)
