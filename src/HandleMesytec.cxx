@@ -119,7 +119,9 @@ TCutG *elasticS3 = NULL;//elastic gate on S3
 int usePeds = 0; //using pedestals instead of offsets for Silicon detectors AS
 //AS Ion Chamber
 TH1D * hIC[NICChannels] = {NULL}; // Q 
+TH1D * hICSum = {NULL}; // Q 
 float IC[16], ICEnergy=0; //Dummy for IC energy
+float ICEnergy1=0, ICEnergy2=0, ICEnergy3=0, ICEnergy4=0; //Dummy for IC energy
 float ICGain[NICChannels]={1.};
 float ICOffset[NICChannels]={0.};
 float ICPed[NICChannels]={0.};
@@ -301,7 +303,18 @@ uint32_t adcThresh = 0;
 int ydnumber, ydnumber2;
 //AS Total energies
 
+TH1D *hSd1rEnergy = {NULL};
+TH1D *hSd1sEnergy = {NULL};
+TH1D *hSd2rEnergy = {NULL};
+TH1D *hSd2sEnergy = {NULL};
+TH1D *hSurEnergy = {NULL};
+TH1D *hSusEnergy = {NULL};
+TH1D *hYdEnergy = {NULL};
+TH1D *hYuEnergy = {NULL};
+TH1D *hCsI1Energy = {NULL};
+TH1D *hCsI2Energy = {NULL};
 TH1D *hSdETot = {NULL};
+TH1D *hSdETotMonitor = {NULL};
 TH1D *hYdCsIETot = {NULL};
 //AS DE-E spectra
 TH2F *hSdPID = {NULL};
@@ -359,53 +372,38 @@ void HandleEOR_Mesytec(int run, int time);
 
 int clearDetectors()
 {
-  for (int j=0; j<NCsIChannels; j++)
-  CsI[j] = 0;
+	for (int j=0; j<NCsIChannels; j++) CsI[j] = 0;
+	for (int j=0; j<NCsIChannels; j++) CsI1[j] = 0;
+	for (int j=0; j<NCsIChannels; j++) CsI2[j] = 0;
+	
+	for (int j=0; j<NSd1rChannels; j++) Sd1r[j] = 0;
+	for (int j=0; j<NSd1sChannels; j++) Sd1s[j] = 0;
+	for (int j=0; j<NSd2rChannels; j++) Sd2r[j] = 0;
+	for (int j=0; j<NSd2sChannels; j++) Sd2s[j] = 0;
+	for (int j=0; j<NSurChannels; j++) Sur[j] = 0;
+	for (int j=0; j<NSusChannels; j++) Sus[j] = 0;
+	
+	for (int j=0; j<NYdChannels; j++) Yd[j] = 0;
+	for (int j=0; j<NYuChannels; j++) Yu[j] = 0;
 
- for (int j=0; j<NSd2rChannels; j++)
-  Sd2r[j] = 0;
+	theta = 0; 
+	length = 0;
+	phi = 0;
+	theta1=0; 
+	phi1=0;
+	Sdtheta = 0; 
+	Sdphi = 0;
+	Sdtheta1=0; 
+	Sdphi1=0;
 
- for (int j=0; j<NSd2sChannels; j++)
-  Sd2s[j] = 0;
-
-
- for (int j=0; j<NSd1rChannels; j++)
-  Sd1r[j] = 0;
-
- for (int j=0; j<NSd1sChannels; j++)
-  Sd1s[j] = 0;
-
-
- for (int j=0; j<NSurChannels; j++)
-  Sur[j] = 0;
-
- for (int j=0; j<NSusChannels; j++)
-  Sus[j] = 0;
-
- for (int j=0; j<NYdChannels; j++)
-  Yd[j] = 0;
-
- for (int j=0; j<NYuChannels; j++)
-  Yu[j] = 0;
-
-     theta = 0; 
-     length = 0;
-     phi = 0;
-     theta1=0; 
-     phi1=0;
-     Sdtheta = 0; 
-     Sdphi = 0;
-     Sdtheta1=0; 
-     Sdphi1=0;
-
-  return 0;
+	return 0;
 }
 
 void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *det)
 {
 	uint32_t *data;
 	int    i, debug = 0, debug1 = 0;
-	int eventId = event.GetEventId();
+	//int eventId = event.GetEventId();
 	
 	// clearDetectors();
 	
@@ -466,14 +464,14 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	  				
 	  				hMes_P[channel+(modid*32)]->Fill((float)vpeak , 1.);
 					spec_store_adcData[channel+(modid*32)][vpeak]++;
-	  				if ((modid==0) && (vpeak > adcThresh) && (vpeak<3840)){ // Why 3840? MH
+	  				if ((modid==0) && (vpeak > adcThresh) && (vpeak<3840)){
 	    				//printf("IC1\n");
 						//AS Fill histogram
  						ICnadc = (float)vpeak; 
 						IC[channel] = (float)vpeak;
 						ICEnergy = ((float)vpeak-ICPed[channel])*ICGain[channel];
 	    				//printf("IC2: %d %d\n", channel,vpeak);
-	    				//hIC[channel]->Fill(ICEnergy, 1.); //IC
+	    				hIC[channel]->Fill(IC[channel], 1.); //IC
 	    				//printf("IC3\n");
 						spec_store_eData[15][int(ICEnergy)]++; // = IRIS WebServer =
 	    				//printf("IC4\n");
@@ -489,13 +487,13 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 							spec_store_energyData[8][int(SSBEnergy)]++; // = IRIS WebServer =
 						}
 	        			
-						if (channel==22){
+						if (channel==21){
 	          				TRIFICEnergy1 = float(vpeak);
 						}
-	        			if (channel==23){
+	        			if (channel==22){
 	          				TRIFICEnergy2 = float(vpeak);
 						}
-	        			if (channel==24){
+	        			if (channel==23){
 	          				TRIFICEnergy3 = float(vpeak);
 						}
 	    				//printf("IC6\n");
@@ -753,7 +751,8 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
     //if (modid>5 && modid<10) {// check last bank
     if (bank==5) {// check last bank
       	det->EventNumber = event.GetSerialNumber();
-    
+   
+		if(IC[3]>0.&&IC[7]>0.&&IC[11]>0.&&IC[15]>0.) hICSum->Fill(IC[3]+IC[7]+IC[11]+IC[15]);	
  		Sd2rEnergy=0; Sd2rEnergy2 =0; Sd2rChannel = -1; Sd2rChannel2 =-1;
  		for (int i =0; i< NSd2rChannels;i++){
       		if (Sd2rEnergy<Sd2r[i]){
@@ -766,6 +765,9 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				Sd2rChannel2 = i;
 			}
  		} //for
+		if(Sd2rEnergy>0){
+			hSd2rEnergy -> Fill(Sd2rEnergy);
+		}
 
      	Sd2sEnergy=0; Sd2sEnergy2 =0; Sd2sChannel = -1; Sd2sChannel2 =-1;
     	for (int i =0; i< NSd2sChannels;i++){
@@ -779,6 +781,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 					Sd2sChannel2 = i;
 				}
       	} //for
+		if(Sd2sEnergy>0){
+			hSd2sEnergy -> Fill(Sd2sEnergy);
+		}
+
 
   		if (ascii) 
     		fprintf(ASCIISd2," %d  %d %d %d %d %d %d %d %d \n",event.GetSerialNumber(), Sd2rChannel+64, (int)Sd2rEnergy,  Sd2rChannel2+64, (int)Sd2rEnergy2,  Sd2sChannel+96, (int)Sd2sEnergy,  Sd2sChannel2+96, (int)Sd2sEnergy2);
@@ -805,8 +811,11 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
       	}//for
 		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-Sd1rChannel-0.5)+geoM.SdOuterRadius*(Sd1rChannel+0.5))/24./geoM.Sd1Distance);
 		det->TSdTheta= theta;
-		hSdTheta -> Fill(theta);
-	   	hSdETheta -> Fill(theta,Sd1rEnergy);
+		if(Sd1rEnergy>0){
+			hSd1rEnergy -> Fill(Sd1rEnergy);
+			hSdTheta -> Fill(theta);
+	   		hSdETheta -> Fill(theta,Sd1rEnergy);
+		}
 
  		Sd1sEnergy=0; Sd1sEnergy2 =0; Sd1sChannel = -1; Sd1sChannel2 =-1;
     	for (int i =0; i< NSd1sChannels;i++){
@@ -820,6 +829,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				Sd1sChannel2 = i;
 			}
       	} //for
+		if(Sd1sEnergy>0){
+			hSd1sEnergy -> Fill(Sd1sEnergy);
+		}
+
 
  		SurEnergy=0; SurEnergy2 =0; SurChannel = -1; SurChannel2 =-1;
     	for (int i =0; i< NSurChannels;i++){
@@ -834,9 +847,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				SurChannel2 = i;
 			}
       	}//for
-		if(SurChannel>-1){
+		if(SurEnergy>0&&SurChannel>-1){
 			theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(SurChannel+0.5)+geoM.SdOuterRadius*(24.-SurChannel-0.5))/24./geoM.SuDistance)+180.;
 			det->TSuTheta= theta;
+			hSurEnergy -> Fill(SurEnergy);
 			hSuTheta -> Fill(theta);
 			hSuETheta -> Fill(theta,SurEnergy);
 		}
@@ -852,6 +866,9 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				SusChannel2 = i;
 			}
       	} //for
+		if(SusEnergy>0){
+			hSusEnergy -> Fill(SusEnergy);
+		}
 
   		if (ascii) 
    			fprintf(ASCIISd1," %d  %d %d %d %d %d %d %d %d \n",event.GetSerialNumber(), Sd1rChannel+64, (int)Sd1rEnergy,  Sd1rChannel2+64, (int)Sd1rEnergy2,  Sd1sChannel+96, (int)Sd1sEnergy,  Sd1sChannel2+96, (int)Sd1sEnergy2);
@@ -903,10 +920,11 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			det->TYdChannel = YdChannel;
 		}
   		
-		if(YdChannel%16>-1){
+		if(YdEnergy>0&&YdChannel%16>-1){
 			theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
 			det->TYdTheta= theta;
 			length = geoM.YdDistance/cos(atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance));
+			hYdEnergy -> Fill(YdEnergy);
 			hYdTheta -> Fill(theta);
 			hYdETheta -> Fill(theta,YdEnergy);
 		}
@@ -931,9 +949,10 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 
 		det->TYuEnergy = YuEnergy;
 		det->TYuChannel = YuChannel;
-		if(YuChannel%16>-1){
+		if(YuEnergy>0&&YuChannel%16>-1){
 			theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YuChannel%16-0.5)+geoM.YdOuterRadius*(YuChannel%16+0.5))/16./geoM.YuDistance)+180.;
 			det->TYuTheta= theta;
+			hYuEnergy -> Fill(YuEnergy);
 			hYuTheta -> Fill(theta);
 			hYuETheta -> Fill(theta,YuEnergy);
 		}
@@ -976,6 +995,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				}
 			}//for
     	} //Yd
+		if(CsI1Energy>0) hCsI1Energy->Fill(CsI1Energy);
 
 		CsI2Energy=0; CsI2Energy2 =0; CsI2Channel = -100; CsI2Channel2 =-100;
 		if(YdChannel>=0){
@@ -995,6 +1015,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				}
 			}//for
 		} // if 
+		if(CsI2Energy>0) hCsI2Energy->Fill(CsI2Energy);
 	    
 		spec_store_energyData[2][int(CsI1Energy*scalingCsI)]++; // = IRIS WebServer =
 	    spec_store_energyData[3][int(CsI2Energy*scalingCsI)]++; // = IRIS WebServer =
@@ -1058,6 +1079,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	  
 	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hSdPID->Fill(Sd2rEnergy,Sd1rEnergy);
 	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hSdETot->Fill(Sd1rEnergy+Sd2rEnergy);
+	  	if (IC[15]>700.&&IC[15]<1000. && Sd1rChannel==2 && Sd2rChannel==3) hSdETotMonitor->Fill(Sd1rEnergy+Sd2rEnergy);
 
 		if (elasticS3->IsInside(Sd2sEnergy,Sd1sEnergy)) hSd2rElHits->Fill(Sd2rChannel, 1.); //Sd2r hits with elastic gat
  		if (elasticS3->IsInside(Sd2sEnergy,Sd1sEnergy)) hSd2sElHits->Fill(Sd2sChannel, 1.); //Sd2r hits with elastic gate
@@ -1101,7 +1123,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
 	ascii = calMesy.boolASCII;
 	
-	char label[32],sig[32];
+	char label[32];
 	
 	geoM.ReadGeometry(calMesy.fileGeometry.data());
 // ************************************************************************************
@@ -1550,8 +1572,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
         		else if(channel>=384 && channel < 512) adcYYu_dir->cd();
 
 				sprintf(label, "adc%02d", channel);
-				sprintf(sig, "adc%03d", channel);
-				hMes_P[channel] = new TH1D(label, sig, adcBins, 0, adcBins);
+				hMes_P[channel] = new TH1D(label, label, adcBins, 0, adcBins);
 				//printf("Booking TH1D %s \n", label);
       		}
       		printf(" in Mesytec BOR... Booking histos Done ....\n");
@@ -1566,10 +1587,11 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 			printf(" in Mesytec BOR... Booking IC histos\n");
        		for (int channel=0;channel<NICChannels;channel++) {
   				sprintf(label, "IC%02d", channel);
-  				sprintf(sig, "IC%03d", channel);
-  				hIC[channel] = new TH1D(label, sig, adcBins, 0, adcBins);
+  				hIC[channel] = new TH1D(label, label, adcBins, 0, adcBins);
   				printf("Booking TH1D %s \n", label);
        		}
+  			sprintf(label, "ICSum");
+  			hICSum = new TH1D(label, label, adcBins*4, 0, adcBins*4);
        		printf(" in Mesytec BOR... Booking IC histos Done ....\n");
    		}
 		
@@ -1582,14 +1604,12 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 			printf(" in Mesytec BOR... Booking CsI1 histos\n");
 			for (int channel=0;channel<NCsIChannels;channel++) {
 				sprintf(label, "CsI1%02d", channel);
-				sprintf(sig, "CsI1%03d", channel);
-				hCsI1[channel] = new TH1D(label, sig, csiBins, 0, csiBins);
+				hCsI1[channel] = new TH1D(label, label, csiBins, 0, csiBins);
 				printf("Booking TH1D %s \n", label);
 			}
 			for (int channel=0;channel<NCsIChannels;channel++) {
 				sprintf(label, "CsI2%02d", channel);
-				sprintf(sig, "CsI2%03d", channel);
-				hCsI2[channel] = new TH1D(label, sig, csiBins, 0, csiBins);
+				hCsI2[channel] = new TH1D(label, label, csiBins, 0, csiBins);
 				printf("Booking TH1D %s \n", label);
 			}
 		 
@@ -1610,8 +1630,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
        		printf(" in Mesytec BOR... Booking Sd1r histos\n");
        		for (int channel=0;channel<NSd1rChannels;channel++) {
   				sprintf(label, "Sd1r%02d", channel);
-  				sprintf(sig, "Sd1r%03d", channel);
-  				hSd1r[channel] = new TH1D(label, sig, energyBins, 0, energyLimitSd1);
+  				hSd1r[channel] = new TH1D(label, label, energyBins, 0, energyLimitSd1);
   				printf("Booking TH1D %s \n", label);
        		}
  			hSd1rSummary = new TH2D("Sd1rSummary", "Sd1rSummary",32,0,32, energyBins, 0, energyLimitSd1);
@@ -1627,8 +1646,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
        		printf(" in Mesytec BOR... Booking Sd1s histos\n");
        		for (int channel=0;channel<NSd1sChannels;channel++) {
   				sprintf(label, "Sd1s%02d", channel);
-  				sprintf(sig, "Sd1s%03d", channel);
-  				hSd1s[channel] = new TH1D(label, sig, energyBins, 0, energyLimitSd1);
+  				hSd1s[channel] = new TH1D(label, label, energyBins, 0, energyLimitSd1);
   				printf("Booking TH1D %s \n", label);
        		}
  			hSd1sSummary = new TH2D("Sd1sSummary", "Sd1sSummary",32,0,32, energyBins, 0, energyLimitSd1);
@@ -1643,8 +1661,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 			printf(" in Mesytec BOR... Booking Sd2r histos\n");
 		   	for (int channel=0;channel<NSd2rChannels;channel++) {
 				sprintf(label, "Sd2r%02d", channel);
-				sprintf(sig, "Sd2r%03d", channel);
-				hSd2r[channel] = new TH1D(label, sig, energyBins, 0, energyLimitSd2);
+				hSd2r[channel] = new TH1D(label, label, energyBins, 0, energyLimitSd2);
 				printf("Booking TH1D %s \n", label);
 			}
 		   	hSd2rSummary = new TH2D("Sd2rSummary", "Sd2rSummary",32,0,32, energyBins, 0, energyLimitSd2);
@@ -1658,8 +1675,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 		   	printf(" in Mesytec BOR... Booking Sd2s histos\n");
 		   	for (int channel=0;channel<NSd2sChannels;channel++) {
 				sprintf(label, "Sd2s%02d", channel);
-				sprintf(sig, "Sd2s%03d", channel);
-				hSd2s[channel] = new TH1D(label, sig, energyBins, 0, energyLimitSd2);
+				hSd2s[channel] = new TH1D(label, label, energyBins, 0, energyLimitSd2);
 				printf("Booking TH1D %s \n", label);
 			}
 		   	hSd2sSummary = new TH2D("Sd2sSummary", "Sd2sSummary",32,0,32, energyBins, 0, energyLimitSd2);
@@ -1675,8 +1691,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
        		printf(" in Mesytec BOR... Booking Sus histos\n");
        		for (int channel=0;channel<NSusChannels;channel++) {
   				sprintf(label, "Sus%02d", channel);
-  				sprintf(sig, "Sus%03d", channel);
-  				hSus[channel] = new TH1D(label, sig, adcBins, 0, adcBins);
+  				hSus[channel] = new TH1D(label, label, adcBins, 0, adcBins);
   				printf("Booking TH1D %s \n", label);
        		}
        		printf(" in Mesytec BOR... Booking Sus histos Done ....\n");
@@ -1691,8 +1706,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
        		printf(" in Mesytec BOR... Booking Sur histos\n");
        		for (int channel=0;channel<NSurChannels;channel++) {
   				sprintf(label, "Sur%02d", channel);
-  				sprintf(sig, "Sur%03d", channel);
-  				hSur[channel] = new TH1D(label, sig, adcBins, 0, adcBins);
+  				hSur[channel] = new TH1D(label, label, adcBins, 0, adcBins);
   				printf("Booking TH1D %s \n", label);
        		}
        		printf(" in Mesytec BOR... Booking Sur histos Done ....\n");
@@ -1707,8 +1721,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 			printf(" in Mesytec BOR... Booking Yd histos\n");
        		for (int channel=0;channel<NYdChannels;channel++) {
   				sprintf(label, "Yd%02d", channel);
-  				sprintf(sig, "Yd%03d", channel);
-  				hYd[channel] = new TH1D(label, sig, energyBins, 0, energyLimitYd);
+  				hYd[channel] = new TH1D(label, label, energyBins, 0, energyLimitYd);
   				printf("Booking TH1D %s \n", label);
        		}
        		hYdSummary = new TH2D("YdSummary","YdSummary",NYdChannels, 0 ,NYdChannels, energyBins, 0, energyLimitYd);
@@ -1724,8 +1737,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 			printf(" in Mesytec BOR... Booking Yu histos\n");
        		for (int channel=0;channel<NYuChannels;channel++) {
   				sprintf(label, "Yu%02d", channel);
-  				sprintf(sig, "Yu%03d", channel);
-  				hYu[channel] = new TH1D(label, sig, energyBins, 0, energyLimitYu);
+  				hYu[channel] = new TH1D(label, label, energyBins, 0, energyLimitYu);
   				printf("Booking TH1D %s \n", label);
        		}
        		hYuSummary = new TH2D("YuSummary","YuSummary",NYuChannels, 0 ,NYuChannels, energyBins, 0, energyLimitYu);
@@ -1733,8 +1745,7 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
    		}
 		gOutputFile->cd();
 		sprintf(label, "SSB");
-		sprintf(sig, "SSB");
-		hSSB = new TH1D(label, sig, energyBins, 0, energyLimitSSB);
+		hSSB = new TH1D(label, label, energyBins, 0, energyLimitSSB);
 		printf("Booking TH1D %s \n", label);
 			
 		// ====================== //
@@ -1748,176 +1759,197 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
        
 			printf(" in Mesytec BOR... Booking Hits histo\n");
 			sprintf(label, "Sd2rHits");
-			sprintf(sig, "Sd2rHits");
-			hSd2rHits = new TH1D(label, sig, 32, 0, 32);
+			hSd2rHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Sd2sHits");
-			sprintf(sig, "Sd2sHits");
-			hSd2sHits = new TH1D(label, sig, 32, 0, 32);
+			hSd2sHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Sd1rHits");
-			sprintf(sig, "Sd1rHits");
-			hSd1rHits = new TH1D(label, sig, 32, 0, 32);
+			hSd1rHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Sd1sHits");
-			sprintf(sig, "Sd1sHits");
-			hSd1sHits = new TH1D(label, sig, 32, 0, 32);
+			hSd1sHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "SurHits");
-			sprintf(sig, "SurHits");
-			hSurHits = new TH1D(label, sig, 32, 0, 32);
+			hSurHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "SusHits");
-			sprintf(sig, "SusHits");
-			hSusHits = new TH1D(label, sig, 32, 0, 32);
+			hSusHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Sd2rElHits");
-			sprintf(sig, "Sd2rElHits");
-			hSd2rElHits = new TH1D(label, sig, 32, 0, 32);
+			hSd2rElHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Sd2sElHits");
-			sprintf(sig, "Sd2sElHits");
-			hSd2sElHits = new TH1D(label, sig, 32, 0, 32);
+			hSd2sElHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Sd1rElHits");
-			sprintf(sig, "Sd1rElHits");
-			hSd1rElHits = new TH1D(label, sig, 32, 0, 32);
+			hSd1rElHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Sd1sElHits");
-			sprintf(sig, "Sd1sElHits");
-			hSd1sElHits = new TH1D(label, sig, 32, 0, 32);
+			hSd1sElHits = new TH1D(label, label, 32, 0, 32);
 			printf("Booking TH1D %s \n", label);
 				
 			sprintf(label, "CsI1Hits");
-			sprintf(sig, "CsI1Hits");
-			hCsI1Hits = new TH1D(label, sig, 16, 0, 16);
+			hCsI1Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "CsI2Hits");
-			sprintf(sig, "CsI2Hits");
-			hCsI2Hits = new TH1D(label, sig, 16, 0, 16);
+			hCsI2Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 
 			sprintf(label, "Yd1Hits");
-			sprintf(sig, "Yd1Hits");
-			hYd1Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd1Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yd2Hits");
-			sprintf(sig, "Yd2Hits");
-			hYd2Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd2Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yd3Hits");
-			sprintf(sig, "Yd3Hits");
-			hYd3Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd3Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yd4Hits");
-			sprintf(sig, "Yd4Hits");
-			hYd4Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd4Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yd5Hits");
-			sprintf(sig, "Yd5Hits");
-			hYd5Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd5Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yd6Hits");
-			sprintf(sig, "Yd6Hits");
-			hYd6Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd6Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yd7Hits");
-			sprintf(sig, "Yd7Hits");
-			hYd7Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd7Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			  
 			sprintf(label, "Yd8Hits");
-			sprintf(sig, "Yd8Hits");
-			hYd8Hits = new TH1D(label, sig, 16, 0, 16);
+			hYd8Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "YdHits");
-			sprintf(sig, "YdHits");
-			hYdHits = new TH1D(label, sig, 16, 0, 16);
+			hYdHits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			 
 			sprintf(label, "Yu1Hits");
-			sprintf(sig, "Yu1Hits");
-			hYu1Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu1Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yu2Hits");
-			sprintf(sig, "Yu2Hits");
-			hYu2Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu2Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yu3Hits");
-			sprintf(sig, "Yu3Hits");
-			hYu3Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu3Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yu4Hits");
-			sprintf(sig, "Yu4Hits");
-			hYu4Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu4Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yu5Hits");
-			sprintf(sig, "Yu5Hits");
-			hYu5Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu5Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yu6Hits");
-			sprintf(sig, "Yu6Hits");
-			hYu6Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu6Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "Yu7Hits");
-			sprintf(sig, "Yu7Hits");
-			hYu7Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu7Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			  
 			sprintf(label, "Yu8Hits");
-			sprintf(sig, "Yu8Hits");
-			hYu8Hits = new TH1D(label, sig, 16, 0, 16);
+			hYu8Hits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			
 			sprintf(label, "YuHits");
-			sprintf(sig, "YuHits");
-			hYuHits = new TH1D(label, sig, 16, 0, 16);
+			hYuHits = new TH1D(label, label, 16, 0, 16);
 			printf("Booking TH1D %s \n", label);
 			  
 			sprintf(label, "YdHitsProt");
-			sprintf(sig, "YdHitsProt");
-			hYdHitsProt = new TH1D(label, sig, 128, 0, 128);
+			hYdHitsProt = new TH1D(label, label, 128, 0, 128);
 			printf("Booking TH1D %s \n", label);
 			printf(" in Mesytec BOR... Booking  Hits histos Done ....\n");
 		}
 
-		printf(" in Mesytec BOR... Booking ETot histos\n");
+		// ====================== //
+		// ==== Energies     ==== //
+		// ====================== //
 		
-		sprintf(label, "SdETot");
-		sprintf(sig, "SdEtot");
-		hSdETot= new TH1D(label, sig, 2000., 0, 200.);
-		printf("Booking TH1D %s \n", label);
-       
- 		sprintf(label, "YdCsIETot");
-	 	sprintf(sig, "YdCsIEtot");
-	 	hYdCsIETot = new TH1D(label, sig, adcBins, 0, 50);
-	 	printf("Booking TH1D %s \n", label);
+		hYdEnergy = (TH1D*)gDirectory->Get("YdEnergy");
+   		if (hYdEnergy == 0) {
+     		// Make an IC directory and cd to it.
+        	TDirectory* Energy_dir = gOutputFile->mkdir("Energies");      
+        	Energy_dir->cd();
+ 
+			printf(" in Mesytec BOR... Booking Energy histos\n");
+						
+			sprintf(label, "YdEnergy");
+			hYdEnergy = new TH1D(label, label, 1000., 0, 20.);
+			printf("Booking TH1D %s \n", label);
 
-		printf(" in Mesytec BOR... Booking ETot histos Done ....\n");
-   
+			sprintf(label, "YuEnergy");
+			hYuEnergy = new TH1D(label, label, 1000., 0, 20.);
+			printf("Booking TH1D %s \n", label);
+    	    
+ 			sprintf(label, "CsI1Energy");
+		 	hCsI1Energy = new TH1D(label, label, 1000, 0, 100);
+		 	printf("Booking TH1D %s \n", label);
+
+ 			sprintf(label, "CsI2Energy");
+		 	hCsI2Energy = new TH1D(label, label, 1000, 0, 100);
+		 	printf("Booking TH1D %s \n", label);
+
+			sprintf(label, "Sd1rEnergy");
+			hSd1rEnergy = new TH1D(label, label, 1000, 0, 200.);
+			printf("Booking TH1D %s \n", label);
+    	   
+ 			sprintf(label, "Sd1sEnergy");
+		 	hSd1sEnergy = new TH1D(label, label, 1000, 0, 200);
+		 	printf("Booking TH1D %s \n", label);
+
+			sprintf(label, "Sd2rEnergy");
+			hSd2rEnergy = new TH1D(label, label, 1000, 0, 200.);
+			printf("Booking TH1D %s \n", label);
+    	   
+ 			sprintf(label, "Sd2sEnergy");
+		 	hSd2sEnergy = new TH1D(label, label, 1000, 0, 200);
+		 	printf("Booking TH1D %s \n", label);
+
+			sprintf(label, "SurEnergy");
+			hSurEnergy = new TH1D(label, label, 1000, 0, 100.);
+			printf("Booking TH1D %s \n", label);
+    	   
+ 			sprintf(label, "SusEnergy");
+		 	hSusEnergy = new TH1D(label, label, 1000, 0, 100);
+		 	printf("Booking TH1D %s \n", label);
+
+			sprintf(label, "SdETot");
+			hSdETot = new TH1D(label, label, 1000, 0, 200.);
+			printf("Booking TH1D %s \n", label);
+
+			sprintf(label, "SdETotMonitor");
+			hSdETotMonitor = new TH1D(label, label, 100, 105, 115.);
+			printf("Booking TH1D %s \n", label);
+    	   
+ 			sprintf(label, "YdCsIETot");
+		 	hYdCsIETot = new TH1D(label, label, 1000, 0, 100);
+		 	printf("Booking TH1D %s \n", label);
+
+			printf(" in Mesytec BOR... Booking Energy histos Done ....\n");
+   		}
 
 		// ====================== //
 		// ==== PID Spectra  ==== //
@@ -1990,47 +2022,47 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
         	Angle_dir->cd();
 
   			sprintf(label,"YdTheta");
-	 		hYdTheta= new TH1D( "YdTheta", "YdTheta", 360, 0, 90);
+	 		hYdTheta= new TH1D(label, label, 360, 0, 90);
 	 		printf("Booking TH1D %s \n", label);
 
 			sprintf(label,"YdETheta");
- 			hYdETheta = new TH2D(label, "YdETheta",90,0,90,750,0,25);
+ 			hYdETheta = new TH2D(label, label, 90,0,90,750,0,25);
 	 		printf("Booking TH2D %s \n", label);
 
   			sprintf(label,"SdTheta");
-	 		hSdTheta= new TH1D( "SdTheta", "SdTheta", 360, 0, 90);
+	 		hSdTheta= new TH1D(label, label, 360, 0, 90);
 	 		printf("Booking TH1D %s \n", label);
        
  			sprintf(label,"SdPhi");
-	 		hSdPhi = new TH1D(label, "SdPhi", 360, 0, 360);
+	 		hSdPhi = new TH1D(label, label, 360, 0, 360);
 	 		printf("Booking TH1D %s \n", label);
 
  			sprintf(label,"SdPhiTheta");
- 			hSdPhiTheta = new TH2D(label, "SdPhiTheta", 180, 0, 180,180,0,360);
+ 			hSdPhiTheta = new TH2D(label, label, 180, 0, 180,180,0,360);
 	 		printf("Booking TH2D %s \n", label);
 
 			sprintf(label,"SdETheta");
- 			hSdETheta = new TH2D(label, "SdETheta",150,0,15,1000,0,500);
+ 			hSdETheta = new TH2D(label, label,150,0,15,1000,0,500);
 	 		printf("Booking TH2D %s \n", label);
  
   			sprintf(label,"YuTheta");
-	 		hYuTheta= new TH1D( "YuTheta", "YuTheta", 360, 90, 180);
+	 		hYuTheta= new TH1D(label, label, 360, 90, 180);
 	 		printf("Booking TH1D %s \n", label);
 
 			sprintf(label,"YuETheta");
- 			hYuETheta = new TH2D(label, "YuETheta",90,90,180,750,0,25);
+ 			hYuETheta = new TH2D(label, label , 90,90,180,750,0,25);
 	 		printf("Booking TH2D %s \n", label);
 
 			sprintf(label,"SuTheta");
-	 		hSuTheta= new TH1D( "SuTheta", "SuTheta", 360, 90, 180);
+	 		hSuTheta= new TH1D(label, label, 360, 90, 180);
 	 		printf("Booking TH1D %s \n", label);
  
 			sprintf(label,"SuETheta");
- 			hSuETheta = new TH2D(label, "SuETheta",90,90,180,750,0,25);
+ 			hSuETheta = new TH2D(label, label, 90,90,180,750,0,25);
 	 		printf("Booking TH2D %s \n", label);
       
  			sprintf(label,"SuPhi");
-	 		hSuPhi = new TH1D(label, "SuPhi", 360, 0, 360);
+	 		hSuPhi = new TH1D(label, label, 360, 0, 360);
 	 		printf("Booking TH1D %s \n", label);
 		}
        	printf(" in Mesytec BOR... Booking angle histos Done ....\n");
