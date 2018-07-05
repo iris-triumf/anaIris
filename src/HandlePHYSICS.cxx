@@ -243,7 +243,7 @@ void HandleBOR_PHYSICS(int run, int time)
 			printf("Booking TH1D %s \n", label);
       		
 			sprintf(label, "QValueU");
-			hQValueU = new TH1D(label,"QValue2",2000,-20,20);
+			hQValueU = new TH1D(label,label,2000,-20,20);
 			printf("Booking TH1D %s \n", label);
 
 			sprintf(label, "YdCsIEnergyTime");
