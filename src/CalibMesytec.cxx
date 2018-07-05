@@ -44,6 +44,7 @@ void CalibMesytec::ReadFilenames(char* line)
 	if (strcmp(line,"PATH")==0){ 
 		installPath = strval;
 		fileGeometry = strval;
+		fileHistos = strval;
 		fileELoss = strval;
 		fileIC = strval;
 		fileCsI1 = strval;
@@ -60,6 +61,10 @@ void CalibMesytec::ReadFilenames(char* line)
 	if (strcmp(line,"GEOMETRY")==0){
 		fileGeometry += strval;
 		boolGeometry =kTRUE;
+	}
+	if (strcmp(line,"HISTOS")==0){
+		fileHistos += strval;
+		boolHistos =kTRUE;
 	}
 	if (strcmp(line,"ELOSS")==0){
 		fileELoss += strval;
@@ -181,6 +186,7 @@ void CalibMesytec::ReadFilenames(char* line)
 void CalibMesytec::Load(std::string filename){	
 
 	boolGeometry=kFALSE;
+	boolHistos=kFALSE;
 	boolELoss=kFALSE;
 	boolIC=kFALSE;
 	boolCsI1=kFALSE;

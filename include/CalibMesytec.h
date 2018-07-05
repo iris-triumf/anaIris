@@ -15,6 +15,7 @@ class CalibMesytec : public TObject {
 
 		std::string installPath;
 		std::string fileGeometry;
+		std::string fileHistos;
 		std::string fileELoss;
 		std::string fileIC;
 		std::string fileCsI1;
@@ -51,6 +52,7 @@ class CalibMesytec : public TObject {
 		Double_t eldl3;
 
 		Bool_t boolGeometry;
+		Bool_t boolHistos;
 		Bool_t boolELoss;
 		Bool_t boolIC;
 		Bool_t boolCsI1;

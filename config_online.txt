@@ -1,5 +1,6 @@
 PATH=/home/iris/
 GEOMETRY=current/calib/S1506/geometry_s1506.txt
+HISTOS=current/config_histos.txt
 SD1R=current/calib/S1506/sd1r_calib_12Be.txt
 SD1S=current/calib/S1506/sd1s_calib_12Be.txt
 SD2R=current/calib/S1506/Sd2r_calib_HeLi_4193_4200_recalib.txt
