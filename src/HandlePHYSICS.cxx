@@ -25,7 +25,7 @@
 #include "TMidasEvent.h"
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TH1D.h>
+#include <TH1F.h>
 #include <TH2.h>
 #include <TNtuple.h>
 #include <TFolder.h>
@@ -42,15 +42,15 @@
 const int Nchannels = 24;
 const int binlimit = 1900;
 int timeChannel=0; // corresponding time cahnnel for the highest energy adc channel
-TH1D * hQValue1 = NULL; // QValue
-TH1D * hQValue2 = NULL; // QValue
-TH1D * hQValueU = NULL; // QValue
-TH2D *hYdCsIEnergyTime = NULL;
-TH2D *hS3EnergyTime = NULL;
-TH2D *hYdCsI1Theta = NULL;
-TH2D *hYdCsI2Theta = NULL;
-TH2D *hYuEnergyTheta = NULL;
-TH2D *hYdCsIThetaProt = NULL; //kinematics with proton gate
+TH1F * hQValue1 = NULL; // QValue
+TH1F * hQValue2 = NULL; // QValue
+TH1F * hQValueU = NULL; // QValue
+TH2F *hYdCsIEnergyTime = NULL;
+TH2F *hS3EnergyTime = NULL;
+TH2F *hYdCsI1Theta = NULL;
+TH2F *hYdCsI2Theta = NULL;
+TH2F *hYuEnergyTheta = NULL;
+TH2F *hYdCsIThetaProt = NULL; //kinematics with proton gate
 Double_t tRF = 0.;
 double EBAC = 144.; //Beam energy from accelerator
 Double_t a1, a2;
@@ -226,7 +226,7 @@ void HandleBOR_PHYSICS(int run, int time)
  
     if (gOutputFile) {
 		
-		hQValue1 = (TH1D*)gDirectory->Get("QValue1");
+		hQValue1 = (TH1F*)gDirectory->Get("QValue1");
    		if (hQValue1 == 0) {
      		// Make a directory and cd to it.
         	TDirectory* PHYSICS_dir = gOutputFile->mkdir("PHYSICS");      
@@ -235,40 +235,40 @@ void HandleBOR_PHYSICS(int run, int time)
       		printf(" in Physics BOR... Booking histos\n");
  
 			sprintf(label, "QValue1");
-      		hQValue1 = new TH1D(label,label,2000,-20,20);
-			printf("Booking TH1D %s \n", label);
+      		hQValue1 = new TH1F(label,label,2000,-20,20);
+			printf("Booking TH1F %s \n", label);
 
 			sprintf(label, "QValue2");
-      		hQValue2 = new TH1D(label,label,2000,-20,20);
-			printf("Booking TH1D %s \n", label);
+      		hQValue2 = new TH1F(label,label,2000,-20,20);
+			printf("Booking TH1F %s \n", label);
       		
 			sprintf(label, "QValueU");
-			hQValueU = new TH1D(label,label,2000,-20,20);
-			printf("Booking TH1D %s \n", label);
+			hQValueU = new TH1F(label,label,2000,-20,20);
+			printf("Booking TH1F %s \n", label);
 
 			sprintf(label, "YdCsIEnergyTime");
-			hYdCsIEnergyTime = new TH2D(label,label,512,0,1024,512,0,20);
-			printf("Booking TH2D %s \n", label);
+			hYdCsIEnergyTime = new TH2F(label,label,512,0,1024,512,0,20);
+			printf("Booking TH2F %s \n", label);
 
 			sprintf(label, "YdCsI1Theta");
- 			hYdCsI1Theta = new TH2D(label,label,600, 0 ,60, 800, 0, 120);
-			printf("Booking TH2D %s \n", label);
+ 			hYdCsI1Theta = new TH2F(label,label,600, 0 ,60, 800, 0, 120);
+			printf("Booking TH2F %s \n", label);
  			
 			sprintf(label, "YdCsI2Theta");
-			hYdCsI2Theta = new TH2D(label,label,600, 0 ,60, 800, 0, 120);
-			printf("Booking TH2D %s \n", label);
+			hYdCsI2Theta = new TH2F(label,label,600, 0 ,60, 800, 0, 120);
+			printf("Booking TH2F %s \n", label);
  			
 			sprintf(label, "YdCsIThetaProt");
-			hYdCsIThetaProt = new TH2D(label,label,512, 0 ,60, 512, 0, 20);
-			printf("Booking TH2D %s \n", label);
+			hYdCsIThetaProt = new TH2F(label,label,512, 0 ,60, 512, 0, 20);
+			printf("Booking TH2F %s \n", label);
 
 			sprintf(label, "YuEnergyTheta");
- 			hYuEnergyTheta = new TH2D(label,label,512, 0 ,60, 512, 0, 20);
-			printf("Booking TH2D %s \n", label);
+ 			hYuEnergyTheta = new TH2F(label,label,512, 0 ,60, 512, 0, 20);
+			printf("Booking TH2F %s \n", label);
 	
 			sprintf(label, "S3EnergyTime");
-			hS3EnergyTime = new TH2D(label,label,512,0,1024,512,0,200);
-			printf("Booking TH2D %s \n", label);
+			hS3EnergyTime = new TH2F(label,label,512,0,1024,512,0,200);
+			printf("Booking TH2F %s \n", label);
       		
 			printf(" in Physics BOR... Booking histos Done ....\n");
     		}

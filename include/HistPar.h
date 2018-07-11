@@ -22,8 +22,8 @@ class HistPar : public TObject {
 		Double_t ymax;
 
 		virtual void Set(std::string, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t);
-		virtual TH1D* SetupTH1D();
-		virtual TH2D* SetupTH2D();
+		virtual TH1F* SetupTH1F();
+		virtual TH2F* SetupTH2F();
 		virtual void Print();
 		virtual void Clear();
 //		ClassDef(HistPar,1)

@@ -37,7 +37,7 @@
 #include "TMidasEvent.h"
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TH1D.h>
+#include <TH1F.h>
 #include <TH2.h>
 #include <TNtuple.h>
 #include <TFolder.h>
@@ -53,11 +53,11 @@ const double timeSlope = 0.2; // ns/channel
 const uint32_t Nchannels = 64+128+128+64+64+64;
 const int choffset[] = {0,192,384,320,64,128}; 
 const int binlimit = 4196;
-TH1D * hV1190_T[Nchannels] = {NULL}; // Raw T
-TH1D * hTime[Nchannels] = {NULL}; // Time  
-TH1D * hTimeRF[Nchannels] = {NULL}; //  Time wrt RF
-TH1D * hTall = {NULL}; // T
-TH2D * hTall2D = {NULL}; // T
+TH1F * hV1190_T[Nchannels] = {NULL}; // Raw T
+TH1F * hTime[Nchannels] = {NULL}; // Time  
+TH1F * hTimeRF[Nchannels] = {NULL}; //  Time wrt RF
+TH1F * hTall = {NULL}; // T
+TH2F * hTall2D = {NULL}; // T
 
 void HandleV1190(TMidasEvent& event, void* ptr, tdc_t* timeArray, int nitems, int MYLABEL)
 {
@@ -147,7 +147,7 @@ void HandleBOR_V1190(int run, int time, tdc_t *timeArray)
 	printf(" in V1190 BOR... Trying to book\n");
 	gOutputFile->cd();
 	
-	hV1190_T[0] = (TH1D*)gDirectory->Get("Time00");
+	hV1190_T[0] = (TH1F*)gDirectory->Get("Time00");
 	if (hV1190_T[0] == 0)
 	{
 		if (gOutputFile)
@@ -159,8 +159,8 @@ void HandleBOR_V1190(int run, int time, tdc_t *timeArray)
 			printf(" in V1190 BOR... Booking histos\n");
 			for (unsigned int channel=0;channel<Nchannels;channel++) {
 				sprintf(label, "TimeRaw%02d", channel);
-				hV1190_T[channel] = new TH1D(label, label, binlimit, 0, 8*binlimit);
-				//printf("Booking TH1D %s \n", label);
+				hV1190_T[channel] = new TH1F(label, label, binlimit, 0, 8*binlimit);
+				//printf("Booking TH1F %s \n", label);
 			}
 			
 			gOutputFile->cd();
@@ -170,18 +170,18 @@ void HandleBOR_V1190(int run, int time, tdc_t *timeArray)
 			
 			for (unsigned int channel=0;channel<Nchannels;channel++) {
 				sprintf(label, "Time%02d", channel);
-				hTime[channel] = new TH1D(label, label, binlimit, -1000, 1000);
-				//printf("Booking TH1D %s \n", label);
+				hTime[channel] = new TH1F(label, label, binlimit, -1000, 1000);
+				//printf("Booking TH1F %s \n", label);
 			}
 			
 			for (unsigned int channel=0;channel<Nchannels;channel++) {
 				sprintf(label, "TimeRF%02d", channel);
-				hTimeRF[channel] = new TH1D(label, label, binlimit, -1000, 1000);
-				//printf("Booking TH1D %s \n", label);
+				hTimeRF[channel] = new TH1F(label, label, binlimit, -1000, 1000);
+				//printf("Booking TH1F %s \n", label);
 			}
 			
-			hTall = new TH1D("dTall", "dTall", binlimit, -1000, 1000);
-			hTall2D = new TH2D("dTall2D", "dTall2D", Nchannels,0,Nchannels,binlimit, -1000, 1000);
+			hTall = new TH1F("dTall", "dTall", binlimit, -1000, 1000);
+			hTall2D = new TH2F("dTall2D", "dTall2D", Nchannels,0,Nchannels,binlimit, -1000, 1000);
 			
 			printf(" in V1190 BOR... Booking histos Done ....\n");
 		}

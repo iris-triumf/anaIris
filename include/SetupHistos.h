@@ -27,6 +27,28 @@ class SetupHistos : public TObject {
 		HistPar SdETotMonitor;
 		HistPar YdCsI1ETot;
 		HistPar YdCsI2ETot;
+		HistPar YdCsI1PID;
+		HistPar YdCsI2PID;
+		HistPar SdPID;
+		HistPar YdCsI1PID_adc;
+		HistPar YdCsI2PID_adc;
+		HistPar YdCsI1PID_adc2;
+		HistPar YdCsI2PID_adc2;
+		HistPar YdRange;
+		HistPar CsI1Range;
+		HistPar CsI2Range;
+		HistPar YdTheta;
+		HistPar YdETheta;
+		HistPar SdTheta;
+		HistPar SdPhi;
+		HistPar SdPhiTheta;
+		HistPar SdETheta;
+		HistPar YuTheta;
+		HistPar YuETheta;
+		HistPar SuTheta;
+		HistPar SuETheta;
+		HistPar SuPhi;
+		HistPar SuPhiTheta;
 
 		virtual void Read(char* line);
 		virtual void Load(std::string filename);
