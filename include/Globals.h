@@ -7,6 +7,7 @@
 //
 
 // Run parameters
+#include <TFile.h>
 
 extern int  gRunNumber;
 extern bool gIsRunning;
@@ -24,6 +25,5 @@ extern FILE* ASCIIYY1;
 #include "VirtualOdb.h"
 
 extern VirtualOdb* gOdb;
-
 // end
 

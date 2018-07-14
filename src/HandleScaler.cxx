@@ -124,23 +124,23 @@ void HandleBOR_Scaler(int run, int time)
 	sprintf(label, "scalerD%02d", channel);
 	sprintf(sig, "scalerD%03d", channel);
 	hScalerD[channel] = new TH1D(label, sig, 4000, 0, 100000);
-	printf("Booking TH1D %s \n", label);
+	//printf("Booking TH1D %s \n", label);
       }
 
     for (int channel=0;channel<Nchannels;channel++) {
 	sprintf(label, "scalerR%02d", channel);
 	sprintf(sig, "scalerR%03d", channel);
 	hScalerR[channel] = new TH1D(label, sig, 4000, 0, 100000);
-	printf("Booking TH1D %s \n", label);
+	//printf("Booking TH1D %s \n", label);
       }
 
     for (int channel=0;channel<Nchannels;channel++) {
 	sprintf(label, "scalerS%02d", channel);
 	sprintf(sig, "scalerS%03d", channel);
 	hScalerS[channel] = new TH1D(label, sig, 4000, 0, 1000000000);
-	printf("Booking TH1D %s \n", label);
+	//printf("Booking TH1D %s \n", label);
       }
-      printf(" in Mesytec BOR... Booking histos Done ....\n");
+      printf(" in Scaler BOR... Booking histos Done ....\n");
     }
   }
   

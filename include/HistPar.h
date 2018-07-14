@@ -21,7 +21,8 @@ class HistPar : public TObject {
 		Double_t ymin;
 		Double_t ymax;
 
-		virtual void Set(std::string, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t);
+		virtual void Set1D(std::string, Int_t, Double_t, Double_t);
+		virtual void Set2D(std::string, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t);
 		virtual TH1F* SetupTH1F();
 		virtual TH2F* SetupTH2F();
 		virtual void Print();

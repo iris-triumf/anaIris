@@ -3,6 +3,8 @@
 #ifndef HandleMesytec_H
 #define HandleMesytec_H
 
+#include "SetupHistos.h"
+
 //Extern
 extern int gMesytecnitems;
 
@@ -89,8 +91,8 @@ class det_t {
   void Clear();
  };
 
-void  HandleMesytec(TMidasEvent& event, void* ptr, int wsize, int MYLABEL, det_t *pdet);
-void  HandleBOR_Mesytec(int run, int time, det_t *pdet);
+void  HandleMesytec(TMidasEvent& event, void* ptr, int wsize, int MYLABEL, det_t *pdet, hist_t *phist);
+void  HandleBOR_Mesytec(int run, int time, det_t *pdet, hist_t *phist);
 void  HandleEOR_Mesytec(int run, int time);
 
 #endif

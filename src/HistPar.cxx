@@ -6,7 +6,27 @@ HistPar::HistPar(){
   	HistPar::Clear();
 }
 
-void HistPar::Set(std::string t, Int_t nx, Double_t x1, Double_t x2, Int_t ny, Double_t y1, Double_t y2 )
+void HistPar::Set1D(std::string t, Int_t nx, Double_t x1, Double_t x2)
+{
+	title = t;
+	nbinx = nx;
+	if(nbinx<=1){
+		nbinx=1000;
+		printf("%s: Number of bins for x-axis undefined.\n",title.data());
+	}
+	xmin = x1;
+	xmax = x2;
+	if(xmin>=xmax){
+		xmin=0;
+		xmax=4000;
+		printf("%s: Limits for x-axis undefined.\n",title.data());
+	}
+	nbiny = 0;
+	ymin = 0;
+	ymax = 0;
+}
+
+void HistPar::Set2D(std::string t, Int_t nx, Double_t x1, Double_t x2, Int_t ny, Double_t y1, Double_t y2 )
 {
 	title = t;
 	nbinx = nx;

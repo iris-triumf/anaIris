@@ -41,6 +41,7 @@
 #include "HandleSTAT.h"
 #include "HandlePHYSICS.h"
 #include "HandleScaler.h"
+#include "SetupHistos.h"
 
 #include <pthread.h>	// = IRIS WebServer for IC =
 #include "web_server.h"	// = IRIS WebServer for IC =
@@ -71,6 +72,8 @@ det_t detec; // calibrated variables from detectors, to be passed to HandlePhysi
 det_t *pdet = &detec;
 tdc_t timeArray;
 tdc_t *ptdc = &timeArray;
+hist_t histos;
+hist_t *phist = &histos;
 
 double GetTimeSec() {
 	struct timeval tv;
@@ -210,7 +213,7 @@ void startRun(int transition,int run,int time)
 	NetDirectoryExport(gOutputFile, "outputFile");
 #endif
 
-	HandleBOR_Mesytec(run, time, pdet);
+	HandleBOR_Mesytec(run, time, pdet, phist);
 	HandleBOR_V1190(run, time, ptdc);
 	HandleBOR_PHYSICS(run, time);
 	HandleBOR_Scaler(run,time);   
@@ -297,7 +300,7 @@ void HandleMidasEvent(TMidasEvent& event)
 			printf("ADC bank %s: first: %d %d\n", mesbkname[m], mesbkname[m][0], size); 
 			// loop until ascii code for first character of the bank name is empty
 			if (ptr && size) { 
-				HandleMesytec(event, ptr, size, m, pdet); //Calls Handle_mesytec.cxx
+				HandleMesytec(event, ptr, size, m, pdet, phist); //Calls Handle_mesytec.cxx
 			} 
 			m++;
 		}
@@ -309,7 +312,7 @@ void HandleMidasEvent(TMidasEvent& event)
 			int size = event.LocateBank(NULL, tdcbkname[m], &ptr);
 			printf("TDC bank %s:%d m=%d\n", tdcbkname[m], size, m);
 			if (ptr && size) {
-				HandleV1190(event, ptr, ptdc,size, m); 
+				HandleV1190(event, ptr, size, m ,ptdc, phist); 
 			}
 			m++;
 		}
@@ -327,7 +330,7 @@ void HandleMidasEvent(TMidasEvent& event)
 	}
 	// Do physics now
 	printf("Handle Physics\n");
-	HandlePHYSICS(&detec, &timeArray);
+	HandlePHYSICS(&detec, &timeArray, &histos);
 }
 
 //

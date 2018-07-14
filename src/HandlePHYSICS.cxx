@@ -38,19 +38,9 @@
 #include "HandlePHYSICS.h"
 #include "CalibMesytec.h"
 #include "Globals.h"
+#include "SetupHistos.h"
 
-const int Nchannels = 24;
-const int binlimit = 1900;
 int timeChannel=0; // corresponding time cahnnel for the highest energy adc channel
-TH1F * hQValue1 = NULL; // QValue
-TH1F * hQValue2 = NULL; // QValue
-TH1F * hQValueU = NULL; // QValue
-TH2F *hYdCsIEnergyTime = NULL;
-TH2F *hS3EnergyTime = NULL;
-TH2F *hYdCsI1Theta = NULL;
-TH2F *hYdCsI2Theta = NULL;
-TH2F *hYuEnergyTheta = NULL;
-TH2F *hYdCsIThetaProt = NULL; //kinematics with proton gate
 Double_t tRF = 0.;
 double EBAC = 144.; //Beam energy from accelerator
 Double_t a1, a2;
@@ -65,8 +55,7 @@ TCutG* elastic = NULL;
 TCutG* upstream = NULL;
 TCutG* upstream_sd = NULL;
 
-
-void HandlePHYSICS(det_t * det, tdc_t *timeArray)
+void HandlePHYSICS(det_t * det, tdc_t *timeArray, hist_t *hist)
 {
 	if (det->TYdChannel>-1){
 		timeChannel = det->TYdChannel+64;
@@ -76,18 +65,18 @@ void HandlePHYSICS(det_t * det, tdc_t *timeArray)
   		timeChannel = det->TYuChannel+64;
 	}
 
-  	hYdCsIEnergyTime->Fill(timeArray->timeRF[timeChannel],det->TYdEnergy+det->TCsIEnergy);
+  	hist->hYdCsIEnergyTime->Fill(timeArray->timeRF[timeChannel],det->TYdEnergy+det->TCsIEnergy);
   	if (det->TSd1sChannel>-1){
  		timeChannel = det->TSd1sChannel+384;
 	}
-  	hS3EnergyTime->Fill(timeArray->timeRF[timeChannel],det->TSd1sEnergy+det->TSd2sEnergy);
+  	hist->hS3EnergyTime->Fill(timeArray->timeRF[timeChannel],det->TSd1sEnergy+det->TSd2sEnergy);
  
-	hYdCsI1Theta->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
-	hYdCsI2Theta->Fill(det->TYdTheta,det->TCsI2Energy+det->TYdEnergy);
+	hist->hYdCsI1Theta->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
+	hist->hYdCsI2Theta->Fill(det->TYdTheta,det->TCsI2Energy+det->TYdEnergy);
 	if (transfer->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
-		hYdCsIThetaProt->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
+		hist->hYdCsIThetaProt->Fill(det->TYdTheta,det->TCsI1Energy+det->TYdEnergy);
 	}
-	hYuEnergyTheta->Fill(det->TYuTheta,det->TYuEnergy);
+	hist->hYuEnergyTheta->Fill(det->TYuTheta,det->TYuEnergy);
   	if (elastic->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
      	ECsI= det->TCsIEnergy;
    		if( ECsI == -10000){
@@ -112,7 +101,7 @@ void HandlePHYSICS(det_t * det, tdc_t *timeArray)
 		Pb1 = sqrt(Eb1*Eb1+2.*Eb1*mb);
 	 	Q1 = mA+ma-mb- sqrt(mA*mA+mb*mb-ma*ma-2.*(mA+EBeam)*(mb+Eb1)+2.*PA*Pb1*cos(thetaR)+2.*(EBeam+mA+ma-Eb1-mb)*ma);  //Alisher's equation 
 
-  		hQValue1->Fill(Q1,1.);
+  		hist->hQValue1->Fill(Q1,1.);
   	}
    
 	if (transfer->IsInside(det->TCsI1Energy,det->TYdEnergy*cos(det->TYdTheta*0.01745329))){
@@ -140,7 +129,7 @@ void HandlePHYSICS(det_t * det, tdc_t *timeArray)
 		Pb1 = sqrt(Eb1*Eb1+2.*Eb1*mb);
 	 	Q2 = mA+ma-mb- sqrt(mA*mA+mb*mb-ma*ma-2.*(mA+EBeam)*(mb+Eb1)+2.*PA*Pb1*cos(thetaR)+2.*(EBeam+mA+ma-Eb1-mb)*ma);  //Alisher's equation 
  
-  		hQValue2->Fill(Q2,1.);
+  		hist->hQValue2->Fill(Q2,1.);
   	}
 	
 	if (upstream_sd->IsInside(det->TSurEnergy,det->TSuTheta)){
@@ -160,7 +149,7 @@ void HandlePHYSICS(det_t * det, tdc_t *timeArray)
 		Pb1 = sqrt(Eb1*Eb1+2.*Eb1*mb);
 	 	QU = mA+ma-mb- sqrt(mA*mA+mb*mb-ma*ma-2.*(mA+EBeam)*(mb+Eb1)+2.*PA*Pb1*cos(thetaR)+2.*(EBeam+mA+ma-Eb1-mb)*ma);  //Alisher's equation 
  
-  		hQValueU->Fill(QU,1.);
+  		hist->hQValueU->Fill(QU,1.);
   	}
 	
 	if (upstream->IsInside(det->TYuEnergy,det->TYuTheta)){
@@ -180,7 +169,7 @@ void HandlePHYSICS(det_t * det, tdc_t *timeArray)
 		Pb1 = sqrt(Eb1*Eb1+2.*Eb1*mb);
 	 	QU = mA+ma-mb- sqrt(mA*mA+mb*mb-ma*ma-2.*(mA+EBeam)*(mb+Eb1)+2.*PA*Pb1*cos(thetaR)+2.*(EBeam+mA+ma-Eb1-mb)*ma);  //Alisher's equation 
  
-  		hQValueU->Fill(QU,1.);
+  		hist->hQValueU->Fill(QU,1.);
   	}
 }
 
@@ -217,62 +206,6 @@ void HandleBOR_PHYSICS(int run, int time)
   		upstream_sd->SetName(calPhys.nGate4.data()); //protons in Physics file
 	}
 
-  	char label[32];
-
-  	// Booking 
-  	printf(" in Physics BOR... Trying to book\n");
-  	gOutputFile->cd();
-
- 
-    if (gOutputFile) {
-		
-		hQValue1 = (TH1F*)gDirectory->Get("QValue1");
-   		if (hQValue1 == 0) {
-     		// Make a directory and cd to it.
-        	TDirectory* PHYSICS_dir = gOutputFile->mkdir("PHYSICS");      
-        	PHYSICS_dir->cd();
-
-      		printf(" in Physics BOR... Booking histos\n");
- 
-			sprintf(label, "QValue1");
-      		hQValue1 = new TH1F(label,label,2000,-20,20);
-			printf("Booking TH1F %s \n", label);
-
-			sprintf(label, "QValue2");
-      		hQValue2 = new TH1F(label,label,2000,-20,20);
-			printf("Booking TH1F %s \n", label);
-      		
-			sprintf(label, "QValueU");
-			hQValueU = new TH1F(label,label,2000,-20,20);
-			printf("Booking TH1F %s \n", label);
-
-			sprintf(label, "YdCsIEnergyTime");
-			hYdCsIEnergyTime = new TH2F(label,label,512,0,1024,512,0,20);
-			printf("Booking TH2F %s \n", label);
-
-			sprintf(label, "YdCsI1Theta");
- 			hYdCsI1Theta = new TH2F(label,label,600, 0 ,60, 800, 0, 120);
-			printf("Booking TH2F %s \n", label);
- 			
-			sprintf(label, "YdCsI2Theta");
-			hYdCsI2Theta = new TH2F(label,label,600, 0 ,60, 800, 0, 120);
-			printf("Booking TH2F %s \n", label);
- 			
-			sprintf(label, "YdCsIThetaProt");
-			hYdCsIThetaProt = new TH2F(label,label,512, 0 ,60, 512, 0, 20);
-			printf("Booking TH2F %s \n", label);
-
-			sprintf(label, "YuEnergyTheta");
- 			hYuEnergyTheta = new TH2F(label,label,512, 0 ,60, 512, 0, 20);
-			printf("Booking TH2F %s \n", label);
-	
-			sprintf(label, "S3EnergyTime");
-			hS3EnergyTime = new TH2F(label,label,512,0,1024,512,0,200);
-			printf("Booking TH2F %s \n", label);
-      		
-			printf(" in Physics BOR... Booking histos Done ....\n");
-    		}
-	}
 }
 
 void HandleEOR_PHYSICS(int run, int time)

@@ -80,10 +80,8 @@ $(OBJECTDIR)/HistPar.o: $(SOURCEDIR)/HistPar.cxx
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 
-
-
-
 clean::
+	rm -f $(BINARYDIR)/anaIris 
 	rm -f $(OBJECTDIR)/*.o 
 	rm -f $(SOURCEDIR)/*Dict.cxx 
 	rm -f $(SOURCEDIR)/*Dict.cpp 

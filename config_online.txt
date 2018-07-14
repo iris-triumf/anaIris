@@ -11,8 +11,6 @@ YD=current/calib/S1506/12BeYdAlphaCal.txt
 YU=current/calib/S1506/alpha_calib_Yu.txt
 SUR=current/calib/S1506/alphaCalib_Sur.txt
 SUS=current/calib/S1506/alphaCalib_Sus.txt
-//TCORR_IC=/home/iris/current/calib/ICcentroid_scale.dat
-//TCORR_SI=/home/iris/current/calib/Sdcentroid_scale.dat
 
 //DEDX_D=/home/iris/current/calib/dedx_p.txt
 //DEDX_I1=/home/iris/current/calib/dedx_16O.txt

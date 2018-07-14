@@ -45,6 +45,7 @@
 #include <TMath.h>
 #include "HandleV1190.h"
 #include "Globals.h"
+#include "SetupHistos.h"
 
 int gV1190nitems;
 static uint32_t tRef=0, previousSN=0, tRF =0;
@@ -53,13 +54,8 @@ const double timeSlope = 0.2; // ns/channel
 const uint32_t Nchannels = 64+128+128+64+64+64;
 const int choffset[] = {0,192,384,320,64,128}; 
 const int binlimit = 4196;
-TH1F * hV1190_T[Nchannels] = {NULL}; // Raw T
-TH1F * hTime[Nchannels] = {NULL}; // Time  
-TH1F * hTimeRF[Nchannels] = {NULL}; //  Time wrt RF
-TH1F * hTall = {NULL}; // T
-TH2F * hTall2D = {NULL}; // T
 
-void HandleV1190(TMidasEvent& event, void* ptr, tdc_t* timeArray, int nitems, int MYLABEL)
+void HandleV1190(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, tdc_t* timeArray, hist_t* hist)
 {
 	uint32_t *data;
 	int    i, debug = 0, debug1 = 0; 
@@ -95,7 +91,7 @@ void HandleV1190(TMidasEvent& event, void* ptr, tdc_t* timeArray, int nitems, in
 				//modchannel = (tdc * 32) + channel; //original
 				measure = data[i] & 0x7FFFF;
 				if (modchannel<Nchannels) {
-					hV1190_T[modchannel+choffset[MYLABEL]]->Fill((float)measure, 1.);
+					hist->hV1190_T[modchannel+choffset[MYLABEL]]->Fill((float)measure, 1.);
 				  //	    hTime[modchannel+choffset[MYLABEL]]->Fill((float)measure*timeSlope, 1.);
 				}
 				(data[i] & 0x04000000) ? trailer = 1 : trailer = 0;
@@ -111,13 +107,13 @@ void HandleV1190(TMidasEvent& event, void* ptr, tdc_t* timeArray, int nitems, in
 				} 
 				
 				// Build hTime
-				hTime[modchannel+choffset[MYLABEL]]->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
-				hTimeRF[modchannel+choffset[MYLABEL]]->Fill( ((float)measure - (float)tRF)*timeSlope, 1.);
+				hist->hTime[modchannel+choffset[MYLABEL]]->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
+				hist->hTimeRF[modchannel+choffset[MYLABEL]]->Fill( ((float)measure - (float)tRF)*timeSlope, 1.);
 				timeArray->timeRF[modchannel+choffset[MYLABEL]] = ( ((float)measure - (float)tRF)*timeSlope);
 				
 				// Build the overall timing histo
-				hTall->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
-				hTall2D->Fill(modchannel+choffset[MYLABEL],((float)measure - (float)tRef)*timeSlope);
+				hist->hTall->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
+				hist->hTall2D->Fill(modchannel+choffset[MYLABEL],((float)measure - (float)tRef)*timeSlope);
 				
 				if (debug1) {
 					printf("evt#:%d trailer:%d bk:%d tdc:%d channel:%d modch:%d H#:%d measure:%d/0x%x tRef:%d/0x%x dT:%d\n"
@@ -138,54 +134,10 @@ void HandleV1190(TMidasEvent& event, void* ptr, tdc_t* timeArray, int nitems, in
 //---------------------------------------------------------------------------------
 void HandleBOR_V1190(int run, int time, tdc_t *timeArray)
 {
-	char label[32];
-	
 	for (int i=0;i<512;i++){
 		timeArray->timeRF[i]=0.;
 	}
-	// Booking 
-	printf(" in V1190 BOR... Trying to book\n");
-	gOutputFile->cd();
-	
-	hV1190_T[0] = (TH1F*)gDirectory->Get("Time00");
-	if (hV1190_T[0] == 0)
-	{
-		if (gOutputFile)
-		{
-			// Make a Time directory and cd to it.
-			TDirectory* TimeRaw_dir = gOutputFile->mkdir("TimeRaw");
-			TimeRaw_dir->cd();
-			
-			printf(" in V1190 BOR... Booking histos\n");
-			for (unsigned int channel=0;channel<Nchannels;channel++) {
-				sprintf(label, "TimeRaw%02d", channel);
-				hV1190_T[channel] = new TH1F(label, label, binlimit, 0, 8*binlimit);
-				//printf("Booking TH1F %s \n", label);
-			}
-			
-			gOutputFile->cd();
-			
-			TDirectory* Time_dir = gOutputFile->mkdir("Time");
-			Time_dir->cd();
-			
-			for (unsigned int channel=0;channel<Nchannels;channel++) {
-				sprintf(label, "Time%02d", channel);
-				hTime[channel] = new TH1F(label, label, binlimit, -1000, 1000);
-				//printf("Booking TH1F %s \n", label);
-			}
-			
-			for (unsigned int channel=0;channel<Nchannels;channel++) {
-				sprintf(label, "TimeRF%02d", channel);
-				hTimeRF[channel] = new TH1F(label, label, binlimit, -1000, 1000);
-				//printf("Booking TH1F %s \n", label);
-			}
-			
-			hTall = new TH1F("dTall", "dTall", binlimit, -1000, 1000);
-			hTall2D = new TH2F("dTall2D", "dTall2D", Nchannels,0,Nchannels,binlimit, -1000, 1000);
-			
-			printf(" in V1190 BOR... Booking histos Done ....\n");
-		}
-	}  
+	  
 }
 //---------------------------------------------------------------------------------
 void HandleEOR_V1190(int run, int time)

@@ -14,11 +14,8 @@
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TGraph.h>
-#include <TH1.h>
-#include <TH2.h>
 #include <TNtuple.h>
 #include <TFolder.h>
-#include <TFile.h>
 #include <TMath.h>
 #include <TCutG.h>
 #include <TRandom3.h>
@@ -26,16 +23,14 @@
 #include "Globals.h"
 #include "HandleMesytec.h"
 #include "CalibMesytec.h"
-#include "SetupHistos.h"
 #include "geometry.h"
 #include "web_server.h" // = IRIS WebServer =
 
 int gMesytecnitems;
-
-const int Nchannels = 16*32;
+const int Nchannels=512;
 const int NICChannels=32;
-const int NCsI2Group = 16;
-const int NCsI1GroupRing = 16;
+const int NCsI2Group=16;
+const int NCsI1GroupRing=16;
 const int NCsIChannels=16;
 const int NSd1rChannels=32;
 const int NSd1sChannels=32;
@@ -43,9 +38,8 @@ const int NSd2rChannels=32;
 const int NSd2sChannels=32;
 const int NSurChannels=32;
 const int NSusChannels=32;
-const int NYdChannels=4*32;
-const int NYuChannels=4*32;
-
+const int NYdChannels=128;
+const int NYuChannels=128;
 const int adcBins = 4096;
 const int csiBins = 8192;
 const int energyBins = 4096;
@@ -66,7 +60,6 @@ const float energyLimitSd1 = float(energyBins)/scalingSd1;
 const float energyLimitSd2 = float(energyBins)/scalingSd2;
 const float energyLimitSu = float(energyBins)/scalingSu;
 const float energyLimitSSB = float(energyBins)/scalingSSB;
-TH1F * hADC[Nchannels] = {NULL}; // Q
 
 char var[50];
 
@@ -101,14 +94,9 @@ int spec_store_sum_data[NHITS][SPEC_LENGTH];
 
 CalibMesytec calMesy;
 geometry geoM;
-SetupHistos histos;
 
-TCutG *protons = NULL;//proton cut
-TCutG *elasticS3 = NULL;//elastic gate on S3
 int usePeds = 0; //using pedestals instead of offsets for Silicon detectors AS
 //AS Ion Chamber
-TH1F * hIC[NICChannels] = {NULL}; // Q 
-TH1F * hICSum = {NULL}; // Q 
 float IC[16], ICEnergy=0; //Dummy for IC energy
 float ICEnergy1=0, ICEnergy2=0, ICEnergy3=0, ICEnergy4=0; //Dummy for IC energy
 float ICGain[NICChannels]={1.};
@@ -117,10 +105,6 @@ float ICPed[NICChannels]={0.};
 float ICnadc = 0;  
 
 //AS CsI
-TH1F * hCsI1[NCsIChannels] = {NULL}; // Q 
-TH1F * hCsI1Sum = {NULL}; 
-TH1F * hCsI2[NCsIChannels] = {NULL}; // Q 
-TH1F * hCsI2Sum = {NULL};
 float CsI[32]={0}, CsIEnergy, CsIEnergy2; //CsI energy 
 float CsI1[32]={0}, CsI2[32]={0}, CsI1Energy, CsI1Energy2, CsI2Energy, CsI2Energy2; //CsI energy
 int CsI1ADC[32] = {0}, CsI2ADC[32] ={0};
@@ -140,7 +124,6 @@ float CsI2Gain[NCsI2Group][NCsIChannels]={{0.}};
 float CsI2Ped[NCsIChannels]={0.};
 
 //AS S3
-TH1F * hSd2r[NSd2rChannels] = {NULL}; // Q 
 float Sd2r[NSd2rChannels];
 float Sd2rEnergy=0, Sd2rEnergy2= 0; //Dummy for Sd2r energy
 int Sd2rChannel,  Sd2rChannel2; // channel with the greatest value
@@ -148,37 +131,29 @@ float Sd2rGain[NSd2rChannels]={1.};
 float Sd2rOffset[NSd2rChannels]={0.};
 float Sd2rPed[NSd2rChannels]={0.};
 
-TH2F *hSd2rSummary = {NULL}; //summary spectra
 Bool_t S3Hit;
 
-TH1F * hSd2s[NSd2sChannels] = {NULL}; // Q     
 float Sd2s[NSd2sChannels];
 float Sd2sEnergy=0,  Sd2sEnergy2= 0; //Dummy for Sd2s energy  
 int Sd2sChannel, Sd2sChannel2; // channel with the greatest value
 float Sd2sGain[NSd2sChannels]={1.};
 float Sd2sOffset[NSd2sChannels]={0.};
 float Sd2sPed[NSd2sChannels]={0.};
-TH2F *hSd2sSummary = {NULL}; //summary spectra
 
-TH1F * hSd1r[NSd1rChannels] = {NULL}; // Q 
 float Sd1r[NSd1rChannels];
 float Sd1rEnergy=0, Sd1rEnergy2= 0; //Dummy for Sd1r energy
 int Sd1rChannel,  Sd1rChannel2; // channel with the greatest value
 float Sd1rGain[NSd1rChannels]={1.};
 float Sd1rOffset[NSd1rChannels]={0.};
 float Sd1rPed[NSd1rChannels]={0.};
-TH2F *hSd1rSummary = {NULL}; //summary spectra
 
-TH1F * hSd1s[NSd1sChannels] = {NULL}; // Q     
 float Sd1s[NSd1sChannels];
 float Sd1sEnergy=0,  Sd1sEnergy2=0; //Dummy for Sd1s energy      
 int Sd1sChannel, Sd1sChannel2; // channel with the greatest value                                                                                    
 float Sd1sGain[NSd1sChannels]={0.};
 float Sd1sOffset[NSd1sChannels]={0.};
 float Sd1sPed[NSd1sChannels]={0.};
-TH2F *hSd1sSummary = {NULL}; //summary spectra
 
-TH1F * hSur[NSurChannels] = {NULL}; //  Upstream S3 rings 
 float Sur[NSurChannels];
 float SurEnergy=0, SurEnergy2=0; //Dummy for Sur energy
 int SurChannel, SurChannel2; // channel with the greatest value
@@ -186,7 +161,6 @@ float SurGain[NSurChannels]={1.};
 float SurOffset[NSurChannels]={0.};
 float SurPed[NSurChannels]={0.};
 
-TH1F * hSus[NSusChannels] = {NULL}; // Upstream S3 sectors   
 float Sus[NSusChannels];
 int SusChannel, SusChannel2; // channel with the greatest value
 float SusEnergy=0, SusEnergy2=0; //Dummy for Sus energy                                                                                          
@@ -194,9 +168,7 @@ float SusGain[NSusChannels]={1.};
 float SusOffset[NSusChannels]={0.};
 float SusPed[NSusChannels]={0.};
 
-
 //AS YYd
-TH1F * hYd[NYdChannels] = {NULL}; // Q
 float Yd[NYdChannels] ={0}; 
 float YdEnergy=0, YdEnergy2=0; //Dummy for Yd energy
 int YdADC[32] = {0};
@@ -207,11 +179,8 @@ int TYdChannel;
 float YdGain[NYdChannels]={1.};
 float YdOffset[NYdChannels]={0.};
 float YdPed[NYdChannels]={0.};
-TH2F *hYdSummary = {NULL};
-
 
 //SSB
-TH1F * hSSBEnergy = NULL;
 float SSBEnergy = 0;
 float SSBOffset=0;
 float SSBGain=0;
@@ -219,50 +188,17 @@ float SSBGain=0;
 float ScintEnergy = 0;
 
 //YYu  
-TH1F * hYu[NYuChannels] = {NULL}; // Q
 float Yu[NYuChannels] ={0};
 float YuEnergy=0, YuEnergy2=0;//Dummy for Yu energy
-TH2F *hYuSummary = {NULL};                                           
 int YuChannel, YuChannel2; // channel with the greatest value 
 float YuGain[NYuChannels]={1.};
 float YuOffset[NYuChannels]={0.};
 float YuPed[NYuChannels]={0.};
 
 //TRIFIC
-TH1F * hTRIFIC_1 = NULL;
-TH1F * hTRIFIC_2 = NULL;
-TH1F * hTRIFIC_3 = NULL;
-TH2F * hTRIFIC_1v2 = NULL;
-TH2F * hTRIFIC_1v3 = NULL;
-TH2F * hTRIFIC_2v3 = NULL;
-TH2F * hTRIFIC_1v23 = NULL;
-TH2F * hTRIFIC_12v3 = NULL;
 float TRIFICEnergy1 = 0, TRIFICEnergy2 = 0, TRIFICEnergy3 = 0;
 float TRIFICGain=0;
 float TRIFICOffset=0;
-
-//AS  Hit count histos
-TH1F * hSd2rHits = {NULL}; // Downstream S3 2 rings   
-TH1F * hSd2sHits = {NULL}; // Downstream S3 2 sectors 
-TH1F * hSd1rHits = {NULL}; // Downstream S3 1 rings   
-TH1F * hSd1sHits = {NULL}; // Downstream S3 1 sectors 
-TH1F * hSurHits = {NULL}; // Upstream S3 rings   
-TH1F * hSusHits = {NULL}; // Upstream S3 sectors   
-TH1F * hSd2rElHits = {NULL}; // Downstream S3 2 rings with elastic gate                                                                        
-TH1F * hSd2sElHits = {NULL}; // Downstream S3 2 sectors with elastic gate                                                                             
-TH1F * hSd1rElHits = {NULL}; // Downstream S3 1 rings with elastic gate                                                                                 
-TH1F * hSd1sElHits = {NULL}; // Downstream S3 1 sectors with elastic gate
-
-TH1F * hCsI1Hits = {NULL};  // CsI1
-TH1F * hCsI2Hits = {NULL};  // CsI2
-
-TH1F * hYdHits[8] = {NULL};  // Downstream Y11 1
-TH1F * hYdHitsAll = {NULL};  // Downstream Y11 rings
-TH1F * hYdHitsProt = {NULL};  // Downstream Y11 hits with proton gate
-
-TH1F * hYuHits[8] = {NULL};  // Upstream Y11 1
-TH1F * hYuHitsAll = {NULL};  //  Upstream Y11 rings
-TH1F * hYuHitsProt = {NULL};  // Upstream Y11 hits with proton gate
 
 extern FILE* ASCIIYY1;
 extern FILE* ASCIIIC;
@@ -276,53 +212,6 @@ int ascii =0; // bool for writing ascii AS
 
 uint32_t adcThresh = 0;
 int ydnumber, ydnumber2;
-//AS Total energies
-
-TH1F *hSd1rEnergy = {NULL};
-TH1F *hSd1sEnergy = {NULL};
-TH1F *hSd2rEnergy = {NULL};
-TH1F *hSd2sEnergy = {NULL};
-TH1F *hSurEnergy = {NULL};
-TH1F *hSusEnergy = {NULL};
-TH1F *hYdEnergy = {NULL};
-TH1F *hYuEnergy = {NULL};
-TH1F *hCsI1Energy = {NULL};
-TH1F *hCsI2Energy = {NULL};
-TH1F *hSdETot = {NULL};
-TH1F *hSdETotMonitor = {NULL};
-TH1F *hYdCsI1ETot = {NULL};
-TH1F *hYdCsI2ETot = {NULL};
-//AS DE-E spectra
-TH2F *hSdPID = {NULL};
-TH2F *hYdCsI2PID = {NULL};
-TH2F *hYdCsI1PID = {NULL};
-TH2F *hYdCsI1PID_adc = {NULL};
-TH2F *hYdCsI2PID_adc = {NULL};
-TH2F *hYdCsI1PID_adc2 = {NULL};
-TH2F *hYdCsI2PID_adc2 = {NULL};
-TH2F *hYdRange = {NULL};
-TH2F *hCsI1Range = {NULL};
-TH2F *hCsI2Range = {NULL};
-TH2F *hYdCsI1Corr = {NULL};
-TH2F *hYdCsI2Corr = {NULL};
-//TH2F *hYdCsI2PID_forNa = {NULL};
-//TH2F *hYdCsI2PID_forMg = {NULL};
-//TH2F *hYdCsI1PID_uncalibrated = {NULL};
-//TH2F *hYdCsI2PID_uncalibrated = {NULL};
-//AS Angles
-TH1F *hSdTheta = {NULL};
-TH1F *hSdPhi = {NULL};
-TH2F *hSdETheta = {NULL};
-TH2F *hSdPhiTheta = {NULL};
-TH2F *hSuETheta = {NULL};
-TH2F *hSuPhiTheta = {NULL};
-TH2F *hYuETheta = {NULL};
-TH2F *hYdETheta = {NULL};
-TH1F *hYdTheta = {NULL};
-TH1F *hYuTheta = {NULL};
-TH1F *hSuTheta = {NULL};
-TH1F *hSuPhi = {NULL};
-
 // float YdDistance = 0.; // distance from target in mm
 // float YuDistance = 83.; // distance from target in mm
 // float YdInnerRadius= 0., YdOuterRadius = 0. ; // inner and outer radii in mm
@@ -375,7 +264,7 @@ int clearDetectors()
 	return 0;
 }
 
-void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *det)
+void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *det, hist_t *hist)
 {
 	uint32_t *data;
 	int    i, debug = 0, debug1 = 0;
@@ -384,7 +273,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	// clearDetectors();
 	
 	data = (uint32_t *) ptr;
-	if (hADC[0] == NULL) HandleBOR_Mesytec(gRunNumber, 0, det);    
+	if (hist->hADC[0] == NULL) HandleBOR_Mesytec(gRunNumber, 0, det, hist);    
 	
 	// published var for HandlePHYSICS
 	gMesytecnitems = nitems;
@@ -438,7 +327,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	  				if (debug1  && modid==1) printf("Data: ch:%d id:%d val:%f\n", channel, modid, (float) vpeak);
 	  				// RK :  Energy Calibration 
 	  				
-	  				hADC[channel+(modid*32)]->Fill((float)vpeak , 1.);
+	  				hist->hADC[channel+(modid*32)]->Fill((float)vpeak , 1.);
 					spec_store_adcData[channel+(modid*32)][vpeak]++;
 	  				if ((modid==0) && (vpeak > adcThresh) && (vpeak<3840)){
 	    				//printf("IC1\n");
@@ -447,7 +336,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 						IC[channel] = (float)vpeak;
 						ICEnergy = ((float)vpeak-ICPed[channel])*ICGain[channel];
 	    				//printf("IC2: %d %d\n", channel,vpeak);
-	    				hIC[channel]->Fill(IC[channel], 1.); //IC
+	    				hist->hIC[channel]->Fill(IC[channel], 1.); //IC
 	    				//printf("IC3\n");
 						spec_store_eData[15][int(ICEnergy)]++; // = IRIS WebServer =
 	    				//printf("IC4\n");
@@ -478,12 +367,12 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	  				if (modid==1 && vpeak > adcThresh && vpeak<3840){
 	    				if (channel<16){
 	    					CsI1[channel] = (float)vpeak;
-							hCsI1[channel]->Fill(CsI1[channel],1.);
+							hist->hCsI1[channel]->Fill(CsI1[channel],1.);
 							spec_store_eData[channel+32][int(CsI1[channel])]++; // = IRIS WebServer =
 	    	    		}	    
 		  				else if (channel>=16){
 	    					CsI2[channel-16] = (float)vpeak;
-							hCsI2[channel-16]->Fill(CsI2[channel-16],1.);
+							hist->hCsI2[channel-16]->Fill(CsI2[channel-16],1.);
 							spec_store_eData[channel+32][int(CsI2[channel-16])]++; // = IRIS WebServer =
 	    	    		}	    
 	  				}
@@ -496,7 +385,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	 					else if (usePeds){
 	   						Sd2r[channel] = Sd2rGain[channel]*(((float)vpeak)-Sd2rPed[channel]);
 							} 
-						hSd2r[channel]->Fill(Sd2r[channel],1.);
+						hist->hSd2r[channel]->Fill(Sd2r[channel],1.);
 						spec_store_eData[channel+64][int(Sd2r[channel]*scalingSd2)]++; // = IRIS WebServer =
 	  				}
 	  
@@ -508,7 +397,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	 					else if (usePeds){
 	   						Sd2s[channel] = Sd2sGain[channel]*(((float)vpeak)-Sd2sPed[channel]);
 							}
-						hSd2s[channel]->Fill(Sd2s[channel],1.);
+						hist->hSd2s[channel]->Fill(Sd2s[channel],1.);
 						spec_store_eData[channel+96][int(Sd2s[channel]*scalingSd2)]++; // = IRIS WebServer =
 	   				}
 	
@@ -520,7 +409,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 						else if (usePeds){
 	   						Sd1r[channel] = Sd1rGain[channel]*(((float)vpeak)-Sd1rPed[channel]);
 							}
-						hSd1r[channel]->Fill(Sd1r[channel],1.);
+						hist->hSd1r[channel]->Fill(Sd1r[channel],1.);
 						spec_store_eData[channel+128][int(Sd1r[channel]*scalingSd1)]++; // = IRIS WebServer =
 					}	
 	  				if (modid==5 && vpeak > adcThresh  && vpeak<3840){
@@ -531,7 +420,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 						else if (usePeds){
 	   						Sd1s[channel] = Sd1sGain[channel]*(((float)vpeak)-Sd1sPed[channel]);
 						}
-						hSd1s[channel]->Fill(Sd1s[channel],1.);
+						hist->hSd1s[channel]->Fill(Sd1s[channel],1.);
 						spec_store_eData[channel+160][int(Sd1s[channel]*scalingSd1)]++; // = IRIS WebServer =
 					}
 	
@@ -543,7 +432,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 						else if (usePeds){
 	   						Sur[channel] = SurGain[channel]*(((float)vpeak)-SurPed[channel]);
 						}
-						hSur[channel]->Fill(Sur[channel],1.);
+						hist->hSur[channel]->Fill(Sur[channel],1.);
 						spec_store_eData[channel+320][int(Sur[channel]*scalingSu)]++; // = IRIS WebServer =
 	  				}
 	  				    
@@ -554,7 +443,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 						else if (usePeds){
 	   						Sus[channel] = SusGain[channel]*(((float)vpeak)-SusPed[channel]);
 						}
-						hSus[channel]->Fill(Sus[channel],1.);
+						hist->hSus[channel]->Fill(Sus[channel],1.);
 						spec_store_eData[channel+352][int(Sus[channel]*scalingSu)]++; // = IRIS WebServer =
 	  				}
 	  
@@ -563,7 +452,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 						YdADC[channel+(modid-6)*32]=vpeak;
 	    				if (channel<16) ydnumber = (modid-6)*2+1; //Yd number
 	    				if (channel>15) ydnumber = (modid-6)*2+2;
-						hYd[channel]->Fill(Yd[channel+(modid-6)*32],1.);
+						hist->hYd[channel]->Fill(Yd[channel+(modid-6)*32],1.);
 						spec_store_eData[channel+(modid-6)*32+192][int(Yd[channel+(modid-6)*32]*scalingYd)]++; // = IRIS WebServer =
 	  				} //modid
 	  
@@ -571,7 +460,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	 				// Upstream YY detector. Has to be properly implemented! 
 	  				if (modid>11 && modid<16 && vpeak >adcThresh  && vpeak<3840){  
 	 					Yu[channel+(modid-12)*32]=YuOffset[channel+(modid-12)*32]+YuGain[channel+(modid-12)*32]*(float)vpeak;
-						hYu[channel]->Fill(Yu[channel+(modid-12)*32],1.);
+						hist->hYu[channel]->Fill(Yu[channel+(modid-12)*32],1.);
 						spec_store_eData[channel+(modid-12)*32+384][int(Yu[channel+(modid-12)*32]*scalingYu)]++; // = IRIS WebServer =
 	  				}
 	
@@ -599,121 +488,121 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	
 	    			//hits 
 	    			if (modid==1 && vpeak>adcThresh&&channel<16){	 
-	    				hCsI1Hits->Fill(channel, 1.); // CsI hit  
+	    				hist->hCsI1Hits->Fill(channel, 1.); // CsI hit  
 						spec_store_hitData[0][channel]++;	
 					}
 	    			if (modid==1 && vpeak>adcThresh&&channel>15){	 
-	    				hCsI2Hits->Fill(channel-16, 1.); //CsI hits  
+	    				hist->hCsI2Hits->Fill(channel-16, 1.); //CsI hits  
 						spec_store_hitData[1][channel-16]++;	
 					}
 
 	    			if (modid==2 && vpeak>adcThresh){	 
-	    				hSd2rHits->Fill(channel, 1.); //Sd2r hits  
+	    				hist->hSd2rHits->Fill(channel, 1.); //Sd2r hits  
 						spec_store_hitData[4][channel]++;	
 					}
 	    			if (modid==3 && vpeak>adcThresh)	 {
-	    				hSd2sHits->Fill(channel, 1.); //Sd2s hits
+	    				hist->hSd2sHits->Fill(channel, 1.); //Sd2s hits
 		   				spec_store_hitData[5][channel]++;
 	  				}
 
  					if (modid==4 && vpeak>adcThresh)	 {
-	    				hSd1rHits->Fill(channel, 1.); //Sd1r hits
+	    				hist->hSd1rHits->Fill(channel, 1.); //Sd1r hits
 		   				spec_store_hitData[2][channel]++;
 					}	  
  					if (modid==5 && vpeak>adcThresh)	{	     
-	    				hSd1sHits->Fill(channel, 1.); //Sd1s hits 
+	    				hist->hSd1sHits->Fill(channel, 1.); //Sd1s hits 
 		   				spec_store_hitData[3][channel]++;
  					}
 
 	  				if (modid==10 && vpeak>adcThresh){	 
-	    				hSurHits->Fill(channel, 1.); //Sur hits 
+	    				hist->hSurHits->Fill(channel, 1.); //Sur hits 
 		   				spec_store_hitData[15][channel]++;
 	 				}
 	  				if (modid==11 && vpeak>adcThresh){	 
-	    				hSusHits->Fill(channel, 1.); //Sus hits
+	    				hist->hSusHits->Fill(channel, 1.); //Sus hits
 		   				spec_store_hitData[16][channel]++;
 					}
 
 					if (modid==6 && vpeak>adcThresh && channel<16){
-					  	hYdHits[0]->Fill(channel,1.);
+					  	hist->hYdHits[0]->Fill(channel,1.);
 						spec_store_hitData[6][channel]++;	
 					}
 					if (modid==6 && vpeak>adcThresh  && channel>15){
-					  	hYdHits[1]->Fill(channel-16,1.);
+					  	hist->hYdHits[1]->Fill(channel-16,1.);
 						spec_store_hitData[7][channel-16]++;	
 					}
 					if (modid==7 && vpeak>adcThresh && channel<16){
-					  	hYdHits[2]->Fill(channel,1.);
+					  	hist->hYdHits[2]->Fill(channel,1.);
 						spec_store_hitData[8][channel]++;	
 					}
 					if (modid==7 && vpeak>adcThresh && channel>15){
-					  	hYdHits[3]->Fill(channel-16,1.);
+					  	hist->hYdHits[3]->Fill(channel-16,1.);
 						spec_store_hitData[9][channel-16]++;	
 					}
 					if (modid==8 && vpeak>adcThresh && channel<16){
-					  	hYdHits[4]->Fill(channel,1.);
+					  	hist->hYdHits[4]->Fill(channel,1.);
 						spec_store_hitData[10][channel]++;	
 					}
 					if (modid==8 && vpeak>adcThresh && channel>15){
-					  	hYdHits[5]->Fill(channel-16,1.);
+					  	hist->hYdHits[5]->Fill(channel-16,1.);
 						spec_store_hitData[11][channel-16]++;	
 					}
 					if (modid==9 && vpeak>adcThresh && channel<16){
-					  	hYdHits[6]->Fill(channel,1.);
+					  	hist->hYdHits[6]->Fill(channel,1.);
 						spec_store_hitData[12][channel]++;	
 					}
 					if (modid==9 && vpeak>adcThresh && channel>15){
-					  	hYdHits[7]->Fill(channel-16,1.);
+					  	hist->hYdHits[7]->Fill(channel-16,1.);
 						spec_store_hitData[13][channel-16]++;	
 					}
 					if (modid>5 && modid<10 && vpeak>adcThresh && channel<16){
-					  	hYdHitsAll->Fill(channel,1.);
+					  	hist->hYdHitsAll->Fill(channel,1.);
 						spec_store_hitData[14][channel]++;	
 					}
 					if (modid>5 && modid<10 && vpeak>adcThresh && channel>15){
-  						hYdHitsAll->Fill(channel-16,1.);
+  						hist->hYdHitsAll->Fill(channel-16,1.);
 						spec_store_hitData[14][channel-16]++;	
 					}
 					
 					if (modid==12 && vpeak>adcThresh && channel<16){
-					  	hYuHits[0]->Fill(channel,1.);
+					  	hist->hYuHits[0]->Fill(channel,1.);
 						spec_store_hitData[17][channel]++;	
 					}
 					if (modid==12 && vpeak>adcThresh  && channel>15){
-					  	hYuHits[1]->Fill(channel-16,1.);
+					  	hist->hYuHits[1]->Fill(channel-16,1.);
 						spec_store_hitData[18][channel-16]++;	
 					}
 					if (modid==13 && vpeak>adcThresh && channel<16){
-					  	hYuHits[2]->Fill(channel,1.);
+					  	hist->hYuHits[2]->Fill(channel,1.);
 						spec_store_hitData[19][channel]++;	
 					}
 					if (modid==13 && vpeak>adcThresh && channel>15){
-					  	hYuHits[3]->Fill(channel-16,1.);
+					  	hist->hYuHits[3]->Fill(channel-16,1.);
 						spec_store_hitData[20][channel-16]++;	
 					}
 					if (modid==14 && vpeak>adcThresh && channel<16){
-					  	hYuHits[4]->Fill(channel,1.);
+					  	hist->hYuHits[4]->Fill(channel,1.);
 						spec_store_hitData[21][channel]++;	
 					}
 					if (modid==14 && vpeak>adcThresh && channel>15){
-					  	hYuHits[5]->Fill(channel-16,1.);
+					  	hist->hYuHits[5]->Fill(channel-16,1.);
 						spec_store_hitData[22][channel-16]++;	
 					}
 					if (modid==15 && vpeak>adcThresh && channel<16){
-					  	hYuHits[6]->Fill(channel,1.);
+					  	hist->hYuHits[6]->Fill(channel,1.);
 						spec_store_hitData[23][channel]++;	
 					}
 					if (modid==15 && vpeak>adcThresh && channel>15){
-					  	hYuHits[7]->Fill(channel-16,1.);
+					  	hist->hYuHits[7]->Fill(channel-16,1.);
 						spec_store_hitData[24][channel-16]++;	
 					}
 
 					if (modid>11 && modid<16 && vpeak>adcThresh && channel<16){
-					  	hYuHitsAll->Fill(channel,1.);
+					  	hist->hYuHitsAll->Fill(channel,1.);
 						spec_store_hitData[25][channel]++;	
 					}
 					if (modid>11 && modid<16 && vpeak>adcThresh && channel>15){
-  						hYuHitsAll->Fill(channel-16,1.);
+  						hist->hYuHitsAll->Fill(channel-16,1.);
 						spec_store_hitData[25][channel-16]++;	
 					}
 
@@ -728,7 +617,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
     if (bank==5) {// check last bank
       	det->EventNumber = event.GetSerialNumber();
    
-		if(IC[3]>0.&&IC[7]>0.&&IC[11]>0.&&IC[15]>0.) hICSum->Fill(IC[3]+IC[7]+IC[11]+IC[15]);	
+		if(IC[3]>0.&&IC[7]>0.&&IC[11]>0.&&IC[15]>0.) hist->hICSum->Fill(IC[3]+IC[7]+IC[11]+IC[15]);	
  		Sd2rEnergy=0; Sd2rEnergy2 =0; Sd2rChannel = -1; Sd2rChannel2 =-1;
  		for (int i =0; i< NSd2rChannels;i++){
       		if (Sd2rEnergy<Sd2r[i]){
@@ -742,7 +631,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			}
  		} //for
 		if(Sd2rEnergy>0){
-			hSd2rEnergy -> Fill(Sd2rEnergy);
+			hist->hSd2rEnergy -> Fill(Sd2rEnergy);
 		}
 
      	Sd2sEnergy=0; Sd2sEnergy2 =0; Sd2sChannel = -1; Sd2sChannel2 =-1;
@@ -758,7 +647,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				}
       	} //for
 		if(Sd2sEnergy>0){
-			hSd2sEnergy -> Fill(Sd2sEnergy);
+			hist->hSd2sEnergy -> Fill(Sd2sEnergy);
 		}
 
 
@@ -784,9 +673,9 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 		theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(24.-Sd1rChannel-0.5)+geoM.SdOuterRadius*(Sd1rChannel+0.5))/24./geoM.Sd1Distance);
 		det->TSdTheta= theta;
 		if(Sd1rEnergy>0){
-			hSd1rEnergy -> Fill(Sd1rEnergy);
-			hSdTheta -> Fill(theta);
-	   		hSdETheta -> Fill(theta,Sd1rEnergy);
+			hist->hSd1rEnergy -> Fill(Sd1rEnergy);
+			hist->hSdTheta -> Fill(theta);
+	   		hist->hSdETheta -> Fill(theta,Sd1rEnergy);
 		}
 
  		Sd1sEnergy=0; Sd1sEnergy2 =0; Sd1sChannel = -1; Sd1sChannel2 =-1;
@@ -802,7 +691,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			}
       	} //for
 		if(Sd1sEnergy>0){
-			hSd1sEnergy -> Fill(Sd1sEnergy);
+			hist->hSd1sEnergy -> Fill(Sd1sEnergy);
 		}
 
 
@@ -822,9 +711,9 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 		if(SurEnergy>0&&SurChannel>-1){
 			theta = TMath::RadToDeg()*atan((geoM.SdInnerRadius*(SurChannel+0.5)+geoM.SdOuterRadius*(24.-SurChannel-0.5))/24./geoM.SuDistance)+180.;
 			det->TSuTheta= theta;
-			hSurEnergy -> Fill(SurEnergy);
-			hSuTheta -> Fill(theta);
-			hSuETheta -> Fill(theta,SurEnergy);
+			hist->hSurEnergy -> Fill(SurEnergy);
+			hist->hSuTheta -> Fill(theta);
+			hist->hSuETheta -> Fill(theta,SurEnergy);
 		}
  		SusEnergy=0; SusEnergy2 =0; SusChannel = -1; SusChannel2 =-1;
     	for (int i =0; i< NSusChannels;i++){
@@ -839,7 +728,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			}
       	} //for
 		if(SusEnergy>0){
-			hSusEnergy -> Fill(SusEnergy);
+			hist->hSusEnergy -> Fill(SusEnergy);
 		}
 
   		if (ascii) 
@@ -896,9 +785,9 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance);
 			det->TYdTheta= theta;
 			length = geoM.YdDistance/cos(atan((geoM.YdInnerRadius*(16.-YdChannel%16-0.5)+geoM.YdOuterRadius*(YdChannel%16+0.5))/16./geoM.YdDistance));
-			hYdEnergy -> Fill(YdEnergy);
-			hYdTheta -> Fill(theta);
-			hYdETheta -> Fill(theta,YdEnergy);
+			hist->hYdEnergy -> Fill(YdEnergy);
+			hist->hYdTheta -> Fill(theta);
+			hist->hYdETheta -> Fill(theta,YdEnergy);
 		}
 	 
 		//YYu
@@ -924,9 +813,9 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 		if(YuEnergy>0&&YuChannel%16>-1){
 			theta = TMath::RadToDeg()*atan((geoM.YdInnerRadius*(16.-YuChannel%16-0.5)+geoM.YdOuterRadius*(YuChannel%16+0.5))/16./geoM.YuDistance)+180.;
 			det->TYuTheta= theta;
-			hYuEnergy -> Fill(YuEnergy);
-			hYuTheta -> Fill(theta);
-			hYuETheta -> Fill(theta,YuEnergy);
+			hist->hYuEnergy -> Fill(YuEnergy);
+			hist->hYuTheta -> Fill(theta);
+			hist->hYuETheta -> Fill(theta,YuEnergy);
 		}
   		
 		CsIEnergy=0; CsIEnergy2 =0; CsIChannel = -100; CsIChannel2 =-100;
@@ -967,7 +856,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				}
 			}//for
     	} //Yd
-		if(CsI1Energy>0) hCsI1Energy->Fill(CsI1Energy);
+		if(CsI1Energy>0) hist->hCsI1Energy->Fill(CsI1Energy);
 
 		CsI2Energy=0; CsI2Energy2 =0; CsI2Channel = -100; CsI2Channel2 =-100;
 		if(YdChannel>=0){
@@ -987,35 +876,35 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 				}
 			}//for
 		} // if 
-		if(CsI2Energy>0) hCsI2Energy->Fill(CsI2Energy);
+		if(CsI2Energy>0) hist->hCsI2Energy->Fill(CsI2Energy);
 	    
 		spec_store_energyData[2][int(CsI1Energy*scalingCsI)]++; // = IRIS WebServer =
 	    spec_store_energyData[3][int(CsI2Energy*scalingCsI)]++; // = IRIS WebServer =
     	
 		if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
 
-		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsI1PID_adc->Fill(CsI1nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
-		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsI1PID_adc2->Fill(CsI1nadc,Ydnadc);
+		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI1PID_adc->Fill(CsI1nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
+		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI1PID_adc2->Fill(CsI1nadc,Ydnadc);
 		
-		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsI1PID->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
-		if(YdChannel>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo||CsI1Channel2==2*YdNo+1)) hYdCsI1PID->Fill(CsI1Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
-		if(YdChannel2>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo2||CsI1Channel==2*YdNo2+1)) hYdCsI1PID->Fill(CsI1Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
-		if(YdChannel2>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo2||CsI1Channel==2*YdNo2+1)) hYdCsI1PID->Fill(CsI1Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
+		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI1PID->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+		if(YdChannel>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo||CsI1Channel2==2*YdNo+1)) hist->hYdCsI1PID->Fill(CsI1Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
+		if(YdChannel2>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo2||CsI1Channel==2*YdNo2+1)) hist->hYdCsI1PID->Fill(CsI1Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
+		if(YdChannel2>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo2||CsI1Channel==2*YdNo2+1)) hist->hYdCsI1PID->Fill(CsI1Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
 
-     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsI2PID_adc->Fill(CsI2nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hYdCsI2PID_adc2->Fill(CsI2nadc,Ydnadc);
+     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI2PID_adc->Fill(CsI2nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI2PID_adc2->Fill(CsI2nadc,Ydnadc);
      	
-		if(YdChannel>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo||CsI2Channel==2*YdNo+1)) hYdCsI2PID->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo||CsI2Channel2==2*YdNo+1)) hYdCsI2PID->Fill(CsI2Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel2>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo2||CsI2Channel==2*YdNo2+1)) hYdCsI2PID->Fill(CsI2Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel2>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo2||CsI2Channel2==2*YdNo2+1)) hYdCsI2PID->Fill(CsI2Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
+		if(YdChannel>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo||CsI2Channel==2*YdNo+1)) hist->hYdCsI2PID->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo||CsI2Channel2==2*YdNo+1)) hist->hYdCsI2PID->Fill(CsI2Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel2>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo2||CsI2Channel==2*YdNo2+1)) hist->hYdCsI2PID->Fill(CsI2Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
+     	if(YdChannel2>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo2||CsI2Channel2==2*YdNo2+1)) hist->hYdCsI2PID->Fill(CsI2Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
 
-		if(YdChannel>=0&&YdEnergy>0.) hYdRange->Fill(Ydnadc,YdEnergy);
-		if(CsI1Channel>=0&&CsI1Energy>0.) hCsI1Range->Fill(CsI1nadc,CsI1Energy);
-		if(CsI2Channel>=0&&CsI2Energy>0.) hCsI2Range->Fill(CsI2nadc,CsI2Energy);
+		if(YdChannel>=0&&YdEnergy>0.) hist->hYdRange->Fill(Ydnadc,YdEnergy);
+		if(CsI1Channel>=0&&CsI1Energy>0.) hist->hCsI1Range->Fill(CsI1nadc,CsI1Energy);
+		if(CsI2Channel>=0&&CsI2Energy>0.) hist->hCsI2Range->Fill(CsI2nadc,CsI2Energy);
 
-		if(YdChannel>=0&&CsI1Channel>=0) hYdCsI1Corr->Fill(YdNo,CsI1Channel);
-		if(YdChannel>=0&&CsI2Channel>=0) hYdCsI2Corr->Fill(YdNo,CsI2Channel);
+		if(YdChannel>=0&&CsI1Channel>=0) hist->hYdCsI1Corr->Fill(YdNo,CsI1Channel);
+		if(YdChannel>=0&&CsI2Channel>=0) hist->hYdCsI2Corr->Fill(YdNo,CsI2Channel);
     	
 		det->TCsIEnergy = CsI1Energy; //for filling the tree
     	det->TCsIChannel = CsI1Channel;
@@ -1036,69 +925,54 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 
 	  	if (Sd1rEnergy>0){
 	    	Sdtheta = TMath::RadToDeg()*(geoM.SdInnerRadius*(24.-Sd1rChannel-0.5)+geoM.SdOuterRadius*(Sd1rChannel+0.5))/24./geoM.Sd1Distance; //AS theta angle for Sd (24 - number of rings)
-	    	hSdTheta->Fill(Sdtheta);
+	    	hist->hSdTheta->Fill(Sdtheta);
 	  	}
 	   	if (Sd1rEnergy>0){
 	    	Sdphi = (Sd1sChannel*180./32.); //AS phi angle for Sd (32 - number of sectors)
-	    	hSdPhi->Fill(Sdphi);
+	    	hist->hSdPhi->Fill(Sdphi);
 	   	}
 
   		//Fill phitheta and E-theta histogram	  
 	  	if (Sdtheta>0){
-	    	hSdPhiTheta->Fill(theta,phi);
-	    	hSdETheta->Fill(Sdtheta,Sd2sEnergy+Sd1sEnergy);
+	    	hist->hSdPhiTheta->Fill(theta,phi);
+	    	hist->hSdETheta->Fill(Sdtheta,Sd2sEnergy+Sd1sEnergy);
 	  	}
 	  
-	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hSdPID->Fill(Sd2rEnergy,Sd1rEnergy);
-	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hSdETot->Fill(Sd1rEnergy+Sd2rEnergy);
-	  	if (IC[15]>700.&&IC[15]<1000. && Sd1rChannel==2 && Sd2rChannel==3) hSdETotMonitor->Fill(Sd1rEnergy+Sd2rEnergy);
-
-		if (elasticS3->IsInside(Sd2sEnergy,Sd1sEnergy)) hSd2rElHits->Fill(Sd2rChannel, 1.); //Sd2r hits with elastic gat
- 		if (elasticS3->IsInside(Sd2sEnergy,Sd1sEnergy)) hSd2sElHits->Fill(Sd2sChannel, 1.); //Sd2r hits with elastic gate
- 		if (elasticS3->IsInside(Sd2sEnergy,Sd1sEnergy)) hSd1rElHits->Fill(Sd1rChannel, 1.); //Sd2r hits with elastic gate
- 		if (elasticS3->IsInside(Sd2sEnergy,Sd1sEnergy)) hSd1sElHits->Fill(Sd1sChannel, 1.); //Sd2r hits with elastic gate
-      
-		if (YdEnergy!=0) hYdCsI1ETot->Fill(YdEnergy); // AS Note: Add cos theta after calculation of angles is added
+	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hist->hSdPID->Fill(Sd2rEnergy,Sd1rEnergy);
+	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hist->hSdETot->Fill(Sd1rEnergy+Sd2rEnergy);
+	  	if (IC[15]>700.&&IC[15]<1000. && Sd1rChannel==2 && Sd2rChannel==3) hist->hSdETotMonitor->Fill(Sd1rEnergy+Sd2rEnergy);
+		
+		if (YdEnergy!=0) hist->hYdCsI1ETot->Fill(YdEnergy); // AS Note: Add cos theta after calculation of angles is added
  		
-		if (protons->IsInside(CsI1Energy,YdEnergy*cos(det->TYdTheta*1.74532925199432955e-02))){
-       		hYdHitsProt->Fill(YdChannel,1.);
-       	}
-
 		// TRIFIC histos
-		if(TRIFICEnergy1>0) hTRIFIC_1->Fill(TRIFICEnergy1); 
-		if(TRIFICEnergy2>0) hTRIFIC_2->Fill(TRIFICEnergy2); 
-		if(TRIFICEnergy3>0) hTRIFIC_3->Fill(TRIFICEnergy3); 
-		if(TRIFICEnergy1>0&&TRIFICEnergy2>0) hTRIFIC_1v2->Fill(TRIFICEnergy2,TRIFICEnergy1); 
-		if(TRIFICEnergy1>0&&TRIFICEnergy3>0) hTRIFIC_1v3->Fill(TRIFICEnergy3,TRIFICEnergy1); 
-		if(TRIFICEnergy2>0&&TRIFICEnergy3>0) hTRIFIC_2v3->Fill(TRIFICEnergy3,TRIFICEnergy2); 
-		if(TRIFICEnergy1>0&&TRIFICEnergy2>0&&TRIFICEnergy3>0) hTRIFIC_12v3->Fill(TRIFICEnergy3,TRIFICEnergy1+TRIFICEnergy2);
-		if(TRIFICEnergy1>0&&TRIFICEnergy2>0) hTRIFIC_1v23->Fill(TRIFICEnergy2+TRIFICEnergy3,TRIFICEnergy1);
+		if(TRIFICEnergy1>0) hist->hTRIFIC_1->Fill(TRIFICEnergy1); 
+		if(TRIFICEnergy2>0) hist->hTRIFIC_2->Fill(TRIFICEnergy2); 
+		if(TRIFICEnergy3>0) hist->hTRIFIC_3->Fill(TRIFICEnergy3); 
+		if(TRIFICEnergy1>0&&TRIFICEnergy2>0) hist->hTRIFIC_1v2->Fill(TRIFICEnergy2,TRIFICEnergy1); 
+		if(TRIFICEnergy1>0&&TRIFICEnergy3>0) hist->hTRIFIC_1v3->Fill(TRIFICEnergy3,TRIFICEnergy1); 
+		if(TRIFICEnergy2>0&&TRIFICEnergy3>0) hist->hTRIFIC_2v3->Fill(TRIFICEnergy3,TRIFICEnergy2); 
+		if(TRIFICEnergy1>0&&TRIFICEnergy2>0&&TRIFICEnergy3>0) hist->hTRIFIC_12v3->Fill(TRIFICEnergy3,TRIFICEnergy1+TRIFICEnergy2);
+		if(TRIFICEnergy1>0&&TRIFICEnergy2>0) hist->hTRIFIC_1v23->Fill(TRIFICEnergy2+TRIFICEnergy3,TRIFICEnergy1);
 
 	} //last bank
 }
 
 //---------------------------------------------------------------------------------
-void HandleBOR_Mesytec(int run, int time, det_t* pdet)
+void HandleBOR_Mesytec(int run, int time, det_t* pdet, hist_t* hist)
 {
 	std::string CalibFile = "config_online.txt";
 	calMesy.Load(CalibFile);
 	calMesy.Print(0);
-
- 	//proton gate
-   	TFile *fgate = new TFile("/home/iris/current/anaIris/online_gate_18O.root");
-	if(fgate->IsZombie()) protons = new TCutG();
-	else{
-  		protons = (TCutG*)fgate->FindObjectAny("18O");
-  		protons->SetName("18O"); //protons in Physics file
-	}
-  	elasticS3 = new TCutG();
 
 	ascii = calMesy.boolASCII;
 	
 	char label[32];
 	
 	geoM.ReadGeometry(calMesy.fileGeometry.data());
-	histos.Load(calMesy.fileHistos.data());
+	
+	// Load binning parameters for histograms, then create histograms
+	hist->LoadParams(calMesy.fileHistos.data());
+	hist->Book();
 // ************************************************************************************
 
 	//ASCII output file
@@ -1518,337 +1392,8 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
   	}
 
 //************************************************************************
-    if (gOutputFile) {
-		hADC[0] = (TH1F*)gDirectory->Get("adc00");
-  		if (hADC[0] == 0) {
-
-      		// Make an ADC directory and cd to it.
-      		TDirectory* adc_dir = gOutputFile->mkdir("adc");      
-      		adc_dir->cd();
-
-      		TDirectory* adcIC_dir = adc_dir->mkdir("adcIC");
-      		TDirectory* adcCsI_dir = adc_dir->mkdir("adcCsI");
-      		TDirectory* adcSd2_dir = adc_dir->mkdir("adcSd2");
-      		TDirectory* adcSd1_dir = adc_dir->mkdir("adcSd1");
-      		TDirectory* adcYYd_dir = adc_dir->mkdir("adcYYd");
-      		TDirectory* adcSu_dir = adc_dir->mkdir("adcSu");
-      		TDirectory* adcYYu_dir = adc_dir->mkdir("adcYYU");
-
-      		printf(" in Mesytec BOR... Booking histos\n");
-      		for (int channel=0;channel<Nchannels;channel++) {
-			if (channel<32) adcIC_dir->cd();
-				else if (channel>=32 && channel <64) adcCsI_dir->cd();
-				else if (channel>=64 && channel <128) adcSd2_dir->cd();
-				else if (channel>=128 && channel <192) adcSd1_dir->cd();
-				else if(channel>=192 && channel < 320) adcYYd_dir->cd();
-				else if(channel>=320 && channel < 384) adcSu_dir->cd();
-        		else if(channel>=384 && channel < 512) adcYYu_dir->cd();
-
-				sprintf(label, "adc%02d", channel);
-				hADC[channel] = new TH1F(label, label, adcBins, 0, adcBins);
-      		}
-      		printf(" in Mesytec BOR... Booking ADC histos Done ....\n");
-		}
-			
-		hIC[0] = (TH1F*)gDirectory->Get("IC00");
-   		if (hIC[0] == 0) {
-     		// Make an IC directory and cd to it.
-        	TDirectory* IC_dir = gOutputFile->mkdir("IC");      
-        	IC_dir->cd();
-       
-			printf(" in Mesytec BOR... Booking IC histos\n");
-       		for (int channel=0;channel<NICChannels;channel++) {
-  				sprintf(label, "IC%02d", channel);
-  				hIC[channel] = new TH1F(label, label, adcBins, 0, adcBins);
-       		}
-  			hICSum = new TH1F("ICSum", "ICSum", adcBins*4, 0, adcBins*4);
-       		printf(" in Mesytec BOR... Booking IC histos Done ....\n");
-   		}
-		
-		hCsI1[0] = (TH1F*)gDirectory->Get("CsI00");
-		if (hCsI1[0] == 0) {
-			 // Make a CSI directory and cd to it.
-			TDirectory* CsI_dir = gOutputFile->mkdir("CsI");      
-			CsI_dir->cd();
-			
-			printf(" in Mesytec BOR... Booking CsI1 histos\n");
-			for (int channel=0;channel<NCsIChannels;channel++) {
-				sprintf(label, "CsI1%02d", channel);
-				hCsI1[channel] = new TH1F(label, label, csiBins, 0, csiBins);
-			}
-			for (int channel=0;channel<NCsIChannels;channel++) {
-				sprintf(label, "CsI2%02d", channel);
-				hCsI2[channel] = new TH1F(label, label, csiBins, 0, csiBins);
-			}
-		 
-			hCsI1Sum = new TH1F("CsI1Sum", "CsI1Sum", csiBins, 0, csiBins);
-			hCsI2Sum = new TH1F("CsI2Sum", "CsI2Sum", csiBins, 0, csiBins);
-		   	
-			printf(" in Mesytec BOR... Booking CsI histos Done ....\n");
-   		}
-	 
- 		hSd1r[0] = (TH1F*)gDirectory->Get("Sd1r00");
-		if (hSd1r[0] == 0) {
-     		// Make an SD1R directory and cd to it.
-     		TDirectory* Sd1r_dir = gOutputFile->mkdir("Sd1r");      
-     		Sd1r_dir->cd();
-
-       		printf(" in Mesytec BOR... Booking Sd1r histos\n");
-       		for (int channel=0;channel<NSd1rChannels;channel++) {
-  				sprintf(label, "Sd1r%02d", channel);
-  				hSd1r[channel] = new TH1F(label, label, energyBins, 0, energyLimitSd1);
-       		}
- 			hSd1rSummary = new TH2F("Sd1rSummary", "Sd1rSummary",32,0,32, energyBins, 0, energyLimitSd1);
-			printf(" in Mesytec BOR... Booking Sd1r histos Done ....\n");
-   		}
-
- 		hSd1s[0] = (TH1F*)gDirectory->Get("Sd1s00");
-   		if (hSd1s[0] == 0) {
-     		// Make an SD1S directory and cd to it.
-     		TDirectory* Sd1s_dir = gOutputFile->mkdir("Sd1s");      
-     		Sd1s_dir->cd();
-
-       		printf(" in Mesytec BOR... Booking Sd1s histos\n");
-       		for (int channel=0;channel<NSd1sChannels;channel++) {
-  				sprintf(label, "Sd1s%02d", channel);
-  				hSd1s[channel] = new TH1F(label, label, energyBins, 0, energyLimitSd1);
-       		}
- 			hSd1sSummary = new TH2F("Sd1sSummary", "Sd1sSummary",32,0,32, energyBins, 0, energyLimitSd1);
-       		printf(" in Mesytec BOR... Booking Sd1s histos Done ....\n");
-   		}	
- 
-		// Make an SD2R directory and cd to it.
-		hSd2r[0] = (TH1F*)gDirectory->Get("Sd2r00");
-		if (hSd2r[0] == 0) {
-		   	TDirectory* Sd2r_dir = gOutputFile->mkdir("Sd2r");      
-     		Sd2r_dir->cd();
-			printf(" in Mesytec BOR... Booking Sd2r histos\n");
-		   	for (int channel=0;channel<NSd2rChannels;channel++) {
-				sprintf(label, "Sd2r%02d", channel);
-				hSd2r[channel] = new TH1F(label, label, energyBins, 0, energyLimitSd2);
-			}
-		   	hSd2rSummary = new TH2F("Sd2rSummary", "Sd2rSummary",32,0,32, energyBins, 0, energyLimitSd2);
-		   	printf(" in Mesytec BOR... Booking Sd2r histos Done ....\n");
-		}
-
-		hSd2s[0] = (TH1F*)gDirectory->Get("Sd2s00");
-		if (hSd2s[0] == 0) {
-		   	TDirectory* Sd2s_dir = gOutputFile->mkdir("Sd2s");      
-     		Sd2s_dir->cd();
-		   	printf(" in Mesytec BOR... Booking Sd2s histos\n");
-		   	for (int channel=0;channel<NSd2sChannels;channel++) {
-				sprintf(label, "Sd2s%02d", channel);
-				hSd2s[channel] = new TH1F(label, label, energyBins, 0, energyLimitSd2);
-			}
-		   	hSd2sSummary = new TH2F("Sd2sSummary", "Sd2sSummary",32,0,32, energyBins, 0, energyLimitSd2);
-		   	printf(" in Mesytec BOR... Booking Sd2s histos Done ....\n");
-		}
- 			
-		hSus[0] = (TH1F*)gDirectory->Get("Sus00");
-   		if (hSus[0] == 0) {
-     		// Make an SUS directory and cd to it.
-         	TDirectory* Sus_dir = gOutputFile->mkdir("Sus");      
-         	Sus_dir->cd();
-
-       		printf(" in Mesytec BOR... Booking Sus histos\n");
-       		for (int channel=0;channel<NSusChannels;channel++) {
-  				sprintf(label, "Sus%02d", channel);
-  				hSus[channel] = new TH1F(label, label, adcBins, 0, adcBins);
-       		}
-       		printf(" in Mesytec BOR... Booking Sus histos Done ....\n");
-   		}
- 
-		hSur[0] = (TH1F*)gDirectory->Get("Sur00");
-   		if (hSur[0] == 0) {
-     		// Make an SUS directory and cd to it.
-         	TDirectory* Sur_dir = gOutputFile->mkdir("Sur");      
-         	Sur_dir->cd();
-
-       		printf(" in Mesytec BOR... Booking Sur histos\n");
-       		for (int channel=0;channel<NSurChannels;channel++) {
-  				sprintf(label, "Sur%02d", channel);
-  				hSur[channel] = new TH1F(label, label, adcBins, 0, adcBins);
-       		}
-       		printf(" in Mesytec BOR... Booking Sur histos Done ....\n");
-   		}
-  
-		hYd[0] = (TH1F*)gDirectory->Get("Yd00");
-   		if (hYd[0] == 0) {
-    		// Make a YD directory and cd to it.
-           	TDirectory* Yd_dir = gOutputFile->mkdir("Yd");      
-           	Yd_dir->cd();       
-
-			printf(" in Mesytec BOR... Booking Yd histos\n");
-       		for (int channel=0;channel<NYdChannels;channel++) {
-  				sprintf(label, "Yd%02d", channel);
-  				hYd[channel] = new TH1F(label, label, energyBins, 0, energyLimitYd);
-       		}
-       		hYdSummary = new TH2F("YdSummary","YdSummary",NYdChannels, 0 ,NYdChannels, energyBins, 0, energyLimitYd);
-       		printf(" in Mesytec BOR... Booking Yd histos Done ....\n");
-   		}
-
-		hYu[0] = (TH1F*)gDirectory->Get("Yu00");
-   		if (hYu[0] == 0) {
-    		// Make a YU directory and cd to it.
-           	TDirectory* Yu_dir = gOutputFile->mkdir("Yu");      
-           	Yu_dir->cd();       
-
-			printf(" in Mesytec BOR... Booking Yu histos\n");
-       		for (int channel=0;channel<NYuChannels;channel++) {
-  				sprintf(label, "Yu%02d", channel);
-  				hYu[channel] = new TH1F(label, label, energyBins, 0, energyLimitYu);
-       		}
-       		hYuSummary = new TH2F("YuSummary", "YuSummary",NYuChannels, 0 ,NYuChannels, energyBins, 0, energyLimitYu);
-       		printf(" in Mesytec BOR... Booking Yu histos Done ....\n");
-   		}
-		gOutputFile->cd();
-		
-		// ====================== //
-		// ==== Hit Patterns ==== //
-		// ====================== //
-			
-		printf(" in Mesytec BOR... Booking Hits histo\n");
-		hSd2rHits = (TH1F*)gDirectory->Get("Sd2rHits");
-   		if (hSd2rHits == 0) {
-     		// Make a hit pattern directory and cd to it.
-        	TDirectory* hitPattern_dir = gOutputFile->mkdir("Hit Patterns");      
-        	hitPattern_dir->cd();
-			
-			hSd2rHits = new TH1F("Sd2rHits", "Sd2rHits", 32, 0, 32);
-			hSd2sHits = new TH1F("Sd2sHits", "Sd2sHits", 32, 0, 32);
-			hSd1rHits = new TH1F("Sd1rHits", "Sd1rHits", 32, 0, 32);
-			hSd1sHits = new TH1F("Sd1sHits", "Sd1sHits", 32, 0, 32);
-			hSurHits = new TH1F("SurHits", "SurHits", 32, 0, 32);
-			hSusHits = new TH1F("SusHits", "SusHits", 32, 0, 32);
-			hSd2rElHits = new TH1F("Sd2rElHits", "Sd2rElHits", 32, 0, 32);
-			hSd2sElHits = new TH1F("Sd2sElHits", "Sd2sElHits", 32, 0, 32);
-			hSd1rElHits = new TH1F("Sd1rElHits", "Sd1rElHits", 32, 0, 32);
-			hSd1sElHits = new TH1F("Sd1sElHits", "Sd1sElHits", 32, 0, 32);
-			hCsI1Hits = new TH1F("CsI1Hits", "CsI1Hits", 16, 0, 16);
-			hCsI2Hits = new TH1F("CsI2Hits", "CsI2Hits", 16, 0, 16);
-  			for(int i=0; i<8; i++){	
-				sprintf(label, "Yd%dHits", i+1);
-				hYdHits[i] = new TH1F(label, label, 16, 0, 16);
-			}
-			hYdHitsAll = new TH1F("YdHits", "YdHits", 16, 0, 16);
-			hYdHitsProt = new TH1F("YdHitsProt", "YdHitsProt", 128, 0, 128);
-			for(int i=0; i<8; i++){	
-				sprintf(label, "Yu%dHits", i+1);
-				hYuHits[i] = new TH1F(label, label, 16, 0, 16);
-			}
-			hYuHitsAll = new TH1F("YuHits", "YuHits", 16, 0, 16);
-			hYuHitsProt = new TH1F("YuHitsProt", "YuHitsProt", 128, 0, 128);
-			hYdCsI1Corr = new TH2F("YdCsI1Corr", "YdCsI1Corr", 8, 0, 8, 16, 0., 16.);
-			hYdCsI2Corr = new TH2F("YdCsI2Corr", "YdCsI2Corr", 8, 0, 8, 16, 0., 16.);
-		}
-		printf(" in Mesytec BOR... Booking Hit Pattern histos Done ....\n");
-
-		// ====================== //
-		// ==== Energies     ==== //
-		// ====================== //
-		
-		printf(" in Mesytec BOR... Booking Energy histos\n");
-		hYdEnergy = (TH1F*)gDirectory->Get("YdEnergy");
-   		if (hYdEnergy == 0) {
-     		// Make an energy directory and cd to it.
-        	TDirectory* Energy_dir = gOutputFile->mkdir("Energies");      
-        	Energy_dir->cd();
- 
-		 	hYdEnergy = histos.YdEnergy.SetupTH1F();
-		 	hYuEnergy = histos.YuEnergy.SetupTH1F();
-		 	hCsI1Energy = histos.CsI1Energy.SetupTH1F();
-		 	hCsI2Energy = histos.CsI2Energy.SetupTH1F();
-		 	hSd1rEnergy = histos.Sd1rEnergy.SetupTH1F();
-		 	hSd1sEnergy = histos.Sd1sEnergy.SetupTH1F();
-		 	hSd2rEnergy = histos.Sd2rEnergy.SetupTH1F();
-		 	hSd2sEnergy = histos.Sd2sEnergy.SetupTH1F();
-		 	hSurEnergy = histos.SurEnergy.SetupTH1F();
-		 	hSusEnergy = histos.SusEnergy.SetupTH1F();
-		 	hSSBEnergy = histos.SSBEnergy.SetupTH1F();
-		 	hSdETot = histos.SdETot.SetupTH1F();
-		 	hSdETotMonitor = histos.SdETotMonitor.SetupTH1F();
-		 	hYdCsI1ETot = histos.YdCsI1ETot.SetupTH1F();
-		 	hYdCsI2ETot = histos.YdCsI2ETot.SetupTH1F();
-					}
-		printf(" in Mesytec BOR... Booking Energy histos Done ....\n");
-
-		// ====================== //
-		// ==== PID Spectra  ==== //
-		// ====================== //
-		
-       	printf(" in Mesytec BOR... Booking PID histos\n");
-		hYdCsI1PID = (TH2F*)gDirectory->Get("YdCsI1PID");
-   		if (hYdCsI1PID == 0) {
-     		// Make a PID directory and cd to it.
-        	TDirectory* PID_dir = gOutputFile->mkdir("PID");      
-        	PID_dir->cd();
-    
-		 	hYdCsI1PID = histos.YdCsI1PID.SetupTH2F();
-		 	hYdCsI2PID = histos.YdCsI2PID.SetupTH2F();
-		 	hSdPID = histos.SdPID.SetupTH2F();
-		 	hYdCsI1PID_adc = histos.YdCsI1PID_adc.SetupTH2F();
-		 	hYdCsI2PID_adc = histos.YdCsI2PID_adc.SetupTH2F();
-		 	hYdCsI1PID_adc2 = histos.YdCsI1PID_adc2.SetupTH2F();
-		 	hYdCsI2PID_adc2 = histos.YdCsI2PID_adc2.SetupTH2F();
-		 	hYdRange = histos.YdRange.SetupTH2F();
-		 	hCsI1Range = histos.CsI1Range.SetupTH2F();
-		 	hCsI2Range = histos.CsI2Range.SetupTH2F();
-		}
-       	printf(" in Mesytec BOR... Booking PID histos Done ....\n");
-
-
-		// ====================== //
-		// ====    Angles    ==== //
-		// ====================== //
-
- 		printf(" in Mesytec BOR... Booking angle histos\n");
-		hYdTheta = (TH1F*)gDirectory->Get("YdTheta");
-		if (hYdTheta == 0) {
-     		// Make an angle directory and cd to it.
-        	TDirectory* Angle_dir = gOutputFile->mkdir("Angles");      
-        	Angle_dir->cd();
-
-		 	hYdTheta = histos.YdTheta.SetupTH1F();
-		 	hYdETheta = histos.YdETheta.SetupTH2F();
-		 	hSdTheta = histos.SdTheta.SetupTH1F();
-		 	hSdPhi = histos.SdPhi.SetupTH1F();
-		 	hSdPhiTheta = histos.SdPhiTheta.SetupTH2F();
-		 	hSdETheta = histos.SdETheta.SetupTH2F();
-		 	hYuTheta = histos.YuTheta.SetupTH1F();
-		 	hYuETheta = histos.YuETheta.SetupTH2F();
-		 	hSuTheta = histos.SuTheta.SetupTH1F();
-		 	hSuETheta = histos.SuETheta.SetupTH2F();
-		 	hSuPhi = histos.SuPhi.SetupTH1F();
-		 	hSuPhiTheta = histos.SuPhiTheta.SetupTH2F();
-	 	}
-       	printf(" in Mesytec BOR... Booking angle histos Done ....\n");
-
-
-		// ====================== //
-		// ====    TRIFIC    ==== //
-		// ====================== //
-
- 		printf(" in Mesytec BOR... Booking TRIFIC histos\n");
-		hTRIFIC_1 = (TH1F*)gDirectory->Get("TRIFIC_1");
-		if (hTRIFIC_1 == 0) {
-     		// Make a TRIFIC directory and cd to it.
-        	TDirectory* TRIFIC_dir = gOutputFile->mkdir("TRIFIC");      
-        	TRIFIC_dir->cd();
-
-	 		hTRIFIC_1= new TH1F("TRIFIC_1", "TRIFIC_1" , 4096, 0, 4096);
-	 		hTRIFIC_2= new TH1F("TRIFIC_2", "TRIFIC_2" , 4096, 0, 4096);
-	 		hTRIFIC_3= new TH1F("TRIFIC_3", "TRIFIC_3" , 4096, 0, 4096);
- 			hTRIFIC_1v2 = new TH2F("TRIFIC_1v2", "TRIFIC_1v2", 384, 0, 3840, 384, 0, 3840);
- 			hTRIFIC_1v3 = new TH2F("TRIFIC_1v3", "TRIFIC_1v3", 384, 0, 3840, 384, 0, 3840);
- 			hTRIFIC_2v3 = new TH2F("TRIFIC_2v3", "TRIFIC_2v3", 384, 0, 3840, 384, 0, 3840);
- 			hTRIFIC_1v23 = new TH2F("TRIFIC_1v23", "TRIFIC_1v23", 768, 0, 7680, 384, 0, 3840);
- 			hTRIFIC_12v3 = new TH2F("TRIFIC_12v3", "TRIFIC_12v3", 384, 0, 3840, 768, 0, 7680);
-		}
-       	printf(" in Mesytec BOR... Booking TRIFIC histos Done ....\n");
-
-  	} // if(gOutputFile)
-
-	calMesy.Print(0);
+ 	calMesy.Print(0);
+	
 	// = IRIS WebServer =
 	// Zero the web spectra at BOR
 	memset(spec_store_address,0,sizeof(spec_store_address));
@@ -1967,8 +1512,5 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet)
 
 void HandleEOR_Mesytec(int run, int time)
 {
-  	printf("%s,%d,%lf,%lf\n,",histos.CsI1Energy.title.data(),histos.CsI1Energy.nbinx,histos.CsI1Energy.xmin,histos.CsI1Energy.xmax);
-  	printf("%s,%d,%lf,%lf,%d,%lf,%lf\n,",histos.YdCsI1PID.title.data(),histos.YdCsI1PID.nbinx,histos.YdCsI1PID.xmin,histos.YdCsI1PID.xmax,histos.YdCsI1PID.nbiny,histos.YdCsI1PID.ymin,histos.YdCsI1PID.ymax);
-  	printf("%s,%d,%lf,%lf,%d,%lf,%lf\n,",histos.YdTheta.title.data(),histos.YdTheta.nbinx,histos.YdTheta.xmin,histos.YdTheta.xmax,histos.YdTheta.nbiny,histos.YdTheta.ymin,histos.YdTheta.ymax);
 	printf(" in Mesytec EOR\n");
 }
