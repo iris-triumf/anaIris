@@ -14,12 +14,17 @@ class det_t {
 	Int_t EventNumber;
 	Double_t TYdEnergy;
 	Double_t TYdEnergy2;
+	Double_t TYdNo;
+	Double_t TYdNo2;
+	Double_t TYdnadc;
 	Double_t TCsI1Energy;
 	Double_t TCsI2Energy;
 	Double_t TCsIEnergy;
 	Double_t TCsI1Energy2;
 	Double_t TCsI2Energy2;
 	Double_t TCsIEnergy2;
+	Double_t TCsI1nadc;
+	Double_t TCsI2nadc;
 	Double_t TICEnergy;
 	Double_t TSd2rEnergy;
 	Double_t TSd2sEnergy;

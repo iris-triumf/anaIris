@@ -125,6 +125,19 @@ class MyPeriodic : public TTimer
 		}
 };
 
+std::string GetBinDir()
+{
+	std::string path;
+	char buff[256];
+    ssize_t len = ::readlink("/proc/self/exe", buff, sizeof(buff)-1);
+	if (len != -1) {
+			buff[len] = '\0';
+		path = std::string(buff);
+	}
+	std::string BinDir = path.substr(0,path.rfind('/'));
+	return BinDir;
+}
+
 //
 //--------------------------------------------------------------
 void runlogAddEntry(int run)
@@ -213,9 +226,13 @@ void startRun(int transition,int run,int time)
 	NetDirectoryExport(gOutputFile, "outputFile");
 #endif
 
+	std::string gBinDir = GetBinDir();
+	if(gBinDir.empty()){
+		printf("Can't determine path of executable");
+	}
 	HandleBOR_Mesytec(run, time, pdet, phist);
 	HandleBOR_V1190(run, time, ptdc);
-	HandleBOR_PHYSICS(run, time);
+	HandleBOR_PHYSICS(gBinDir,run, time);
 	HandleBOR_Scaler(run,time);   
 	HandleBOR_STAT(run, time);
 }

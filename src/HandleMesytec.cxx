@@ -335,7 +335,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
  						ICnadc = (float)vpeak; 
 						IC[channel] = (float)vpeak;
 						ICEnergy = ((float)vpeak-ICPed[channel])*ICGain[channel];
-	    				//printf("IC2: %d %d\n", channel,vpeak);
+						//printf("IC2: %d %d\n", channel,vpeak);
 	    				hist->hIC[channel]->Fill(IC[channel], 1.); //IC
 	    				//printf("IC3\n");
 						spec_store_eData[15][int(ICEnergy)]++; // = IRIS WebServer =
@@ -347,6 +347,9 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 						}
 	    				//printf("IC5\n");
 
+	        			if (channel==15){
+	    					det->TICEnergy = IC[15];
+						}
 	        			if (channel==31){
 	          				SSBEnergy = float(vpeak);// *SSBGain + SSBOffset;
 							spec_store_energyData[8][int(SSBEnergy)]++; // = IRIS WebServer =
@@ -777,8 +780,14 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
   
 	    spec_store_energyData[1][int(YdEnergy*scalingYd)]++; // = IRIS WebServer =
 		det->TYdEnergy = YdEnergy;
+		det->TYdnadc = Ydnadc;
 		if(YdChannel>-1){
 			det->TYdChannel = YdChannel;
+			det->TYdNo = YdNo;
+		}
+  		if(YdChannel2>-1){
+			det->TYdChannel2 = YdChannel2;
+			det->TYdNo2 = YdNo2;
 		}
   		
 		if(YdEnergy>0&&YdChannel%16>-1){
@@ -882,23 +891,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	    spec_store_energyData[3][int(CsI2Energy*scalingCsI)]++; // = IRIS WebServer =
     	
 		if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
-
-		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI1PID_adc->Fill(CsI1nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
-		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI1PID_adc2->Fill(CsI1nadc,Ydnadc);
 		
-		if(YdChannel>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI1PID->Fill(CsI1Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
-		if(YdChannel>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo||CsI1Channel2==2*YdNo+1)) hist->hYdCsI1PID->Fill(CsI1Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
-		if(YdChannel2>=0&&CsI1Channel>=0&&(CsI1Channel==2*YdNo2||CsI1Channel==2*YdNo2+1)) hist->hYdCsI1PID->Fill(CsI1Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
-		if(YdChannel2>=0&&CsI1Channel2>=0&&(CsI1Channel2==2*YdNo2||CsI1Channel==2*YdNo2+1)) hist->hYdCsI1PID->Fill(CsI1Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
-
-     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI2PID_adc->Fill(CsI2nadc,YdEnergy*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel>=0&&CsI2Channel>=0&&(CsI1Channel==2*YdNo||CsI1Channel==2*YdNo+1)) hist->hYdCsI2PID_adc2->Fill(CsI2nadc,Ydnadc);
-     	
-		if(YdChannel>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo||CsI2Channel==2*YdNo+1)) hist->hYdCsI2PID->Fill(CsI2Energy,YdEnergy*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo||CsI2Channel2==2*YdNo+1)) hist->hYdCsI2PID->Fill(CsI2Energy2,YdEnergy*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel2>=0&&CsI2Channel>=0&&(CsI2Channel==2*YdNo2||CsI2Channel==2*YdNo2+1)) hist->hYdCsI2PID->Fill(CsI2Energy,YdEnergy2*cos(det->TYdTheta*0.01745329));
-     	if(YdChannel2>=0&&CsI2Channel2>=0&&(CsI2Channel2==2*YdNo2||CsI2Channel2==2*YdNo2+1)) hist->hYdCsI2PID->Fill(CsI2Energy2,YdEnergy2*cos(det->TYdTheta*0.01745329));
-
 		if(YdChannel>=0&&YdEnergy>0.) hist->hYdRange->Fill(Ydnadc,YdEnergy);
 		if(CsI1Channel>=0&&CsI1Energy>0.) hist->hCsI1Range->Fill(CsI1nadc,CsI1Energy);
 		if(CsI2Channel>=0&&CsI2Energy>0.) hist->hCsI2Range->Fill(CsI2nadc,CsI2Energy);
@@ -913,11 +906,13 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
      	if (1){// if((CsIChannel-16)/2==ydnumber){
     		det->TCsI1Energy = CsI1Energy; //for filling the tree
     		det->TCsI1Channel = CsI1Channel;
+    		det->TCsI1nadc = CsI1nadc;
     	}
 
    		if (1){// if((CsIChannel-16)/2==ydnumber){
     		det->TCsI2Energy = CsI2Energy; //for filling the tree
     		det->TCsI2Channel = CsI2Channel;
+    		det->TCsI2nadc = CsI2nadc;
     	}
     	//printf("modid: %d , CsIEnergy: %f \n",modid, CsIEnergy);
 
@@ -937,13 +932,7 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	    	hist->hSdPhiTheta->Fill(theta,phi);
 	    	hist->hSdETheta->Fill(Sdtheta,Sd2sEnergy+Sd1sEnergy);
 	  	}
-	  
-	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hist->hSdPID->Fill(Sd2rEnergy,Sd1rEnergy);
-	  	if ((fabs(Sd1sEnergy-Sd1rEnergy)<2.) && (fabs(Sd2sEnergy-Sd2rEnergy)<2.)) hist->hSdETot->Fill(Sd1rEnergy+Sd2rEnergy);
-	  	if (IC[15]>700.&&IC[15]<1000. && Sd1rChannel==2 && Sd2rChannel==3) hist->hSdETotMonitor->Fill(Sd1rEnergy+Sd2rEnergy);
-		
-		if (YdEnergy!=0) hist->hYdCsI1ETot->Fill(YdEnergy); // AS Note: Add cos theta after calculation of angles is added
- 		
+	 		
 		// TRIFIC histos
 		if(TRIFICEnergy1>0) hist->hTRIFIC_1->Fill(TRIFICEnergy1); 
 		if(TRIFICEnergy2>0) hist->hTRIFIC_2->Fill(TRIFICEnergy2); 

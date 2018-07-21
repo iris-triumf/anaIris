@@ -117,7 +117,7 @@ void CalibMesytec::ReadFilenames(char* line)
 	if (strcmp(line,"ASCII")==0){
 		boolASCII =kTRUE;
 	}
-	if (strcmp(line,"GATEFIlE1")==0){
+	if (strcmp(line,"GATEFILE1")==0){
 		fGate1 = strval;
 		boolFGate1 =kTRUE;
 	}
@@ -142,45 +142,26 @@ void CalibMesytec::ReadFilenames(char* line)
 	if (strcmp(line,"GATENAME3")==0){
 		nGate3 = strval;
 	}
-	if (strcmp(line,"GATENAME3")==0){
+	if (strcmp(line,"GATENAME4")==0){
 		nGate4 = strval;
 	}
-	if (strcmp(line,"EBAC")==0){
-		EBAC = v;
+	if (strcmp(line,"RUNDEPPAR")==0){
+		fileRunDepPar += strval;
+		boolRunDepPar = kTRUE;
 	}
-	if (strcmp(line,"mA")==0){
-		mA = v;
+	if (strcmp(line,"DEDX_I")==0){
+		fileIdedx += strval;
+		boolIdedx = kTRUE;
 	}
-	if (strcmp(line,"ma")==0){
-		ma = v;
+	if (strcmp(line,"DEDX_L")==0){
+		fileLdedx += strval;
+		boolLdedx = kTRUE;
 	}
-	if (strcmp(line,"mB1")==0){
-		mB1 = v;
+	if (strcmp(line,"DEDX_H")==0){
+		fileHdedx += strval;
+		boolHdedx = kTRUE;
 	}
-	if (strcmp(line,"mB2")==0){
-		mB2 = v;
-	}
-	if (strcmp(line,"mB3")==0){
-		mB3 = v;
-	}
-	if (strcmp(line,"mb1")==0){
-		mb1 = v;
-	}
-	if (strcmp(line,"mb2")==0){
-		mb2 = v;
-	}
-	if (strcmp(line,"mb3")==0){
-		mb3 = v;
-	}
-	if (strcmp(line,"ELDL1")==0){
-		eldl1 = v;
-	}
-	if (strcmp(line,"ELDL2")==0){
-		eldl2 = v;
-	}
-	if (strcmp(line,"ELDL3")==0){
-		eldl3 = v;
-	}
+
 }
 
 void CalibMesytec::Load(std::string filename){	
@@ -188,7 +169,7 @@ void CalibMesytec::Load(std::string filename){
 	boolGeometry=kFALSE;
 	boolHistos=kFALSE;
 	boolELoss=kFALSE;
-	boolIC=kFALSE;
+	boolIC=kTRUE;
 	boolCsI1=kFALSE;
 	boolCsI2=kFALSE;
 	boolSd1r=kFALSE;
@@ -200,22 +181,15 @@ void CalibMesytec::Load(std::string filename){
 	boolYd=kFALSE;
 	boolYu=kFALSE;
 	boolASCII=kFALSE;
+	boolRunDepPar=kFALSE;
 	boolFGate1=kFALSE;
 	boolFGate2=kFALSE;
 	boolFGate3=kFALSE;
-	EBAC = 0.;
-	mA = 0.;
-	ma = 0.;
-	mB1 = 0.;
-	mB2 = 0.;
-	mB3 = 0.;
-	mb1 = 0.;
-	mb2 = 0.;
-	mb3 = 0.;
-	eldl1 = 0.;
-	eldl2 = 0.;
-	eldl3 = 0.;
-
+	boolFGate4=kFALSE;
+	boolIdedx=kFALSE;
+	boolLdedx=kFALSE;
+	boolHdedx=kFALSE;
+	
 	char line[256];
 	FILE* file=fopen(filename.data(),"rb");
 	if (!file)
@@ -303,35 +277,8 @@ void CalibMesytec::Print(Int_t calledfrom){
 			printf("Name: %s\n",nGate4.data());
 		}
 		else	printf("No Gate4 specified.\n");
-
-
-		printf("EBAC = %.1lf\n",EBAC);
-		printf("mA = %.1lf\n",mA);
-		printf("ma = %.1lf\n",ma);
-		printf("mB1 = %.1lf\n",mB1);
-		printf("mB2 = %.1lf\n",mB2);
-		printf("mB3 = %.1lf\n",mB3);
-		printf("mb1 = %.1lf\n",mb1);
-		printf("mb2 = %.1lf\n",mb2);
-		printf("mb3 = %.1lf\n",mb3);
-		printf("Estimated dead layer energy loss 1 = %.1lf\n",eldl1);
-		printf("Estimated dead layer energy loss 2 = %.1lf\n",eldl2);
-		printf("Estimated dead layer energy loss 3 = %.1lf\n",eldl3);
 	}
 }
 
 void CalibMesytec::Clear(){
-
-	EBAC = 0.;
-	mA = 0.;
-	ma = 0.;
-	mB1 = 0.;
-	mB2 = 0.;
-	mB3 = 0.;
-	mb1 = 0.;
-	mb2 = 0.;
-	mb3 = 0.;
-	eldl1 = 0.;
-	eldl2 = 0.;
-	eldl3 = 0.;
 }

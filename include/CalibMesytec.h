@@ -29,6 +29,7 @@ class CalibMesytec : public TObject {
 		std::string fileYd;
 		std::string fileYu;
 
+		std::string fileRunDepPar;
 		std::string fGate1;
 		std::string fGate2;
 		std::string fGate3;
@@ -37,19 +38,9 @@ class CalibMesytec : public TObject {
 		std::string nGate2;
 		std::string nGate3;
 		std::string nGate4;
-
-		Double_t EBAC;
-		Double_t mA;
-		Double_t ma;
-		Double_t mB1;
-		Double_t mB2;
-		Double_t mB3;
-		Double_t mb1;
-		Double_t mb2;
-		Double_t mb3;
-		Double_t eldl1;
-		Double_t eldl2;
-		Double_t eldl3;
+		std::string fileIdedx;
+		std::string fileLdedx;
+		std::string fileHdedx;
 
 		Bool_t boolGeometry;
 		Bool_t boolHistos;
@@ -66,10 +57,14 @@ class CalibMesytec : public TObject {
 		Bool_t boolYd;
 		Bool_t boolYu;
 		Bool_t boolASCII;
+		Bool_t boolRunDepPar;
 		Bool_t boolFGate1;
 		Bool_t boolFGate2;
 		Bool_t boolFGate3;
 		Bool_t boolFGate4;
+		Bool_t boolIdedx;
+		Bool_t boolLdedx;
+		Bool_t boolHdedx;
 
 		virtual void ReadFilenames(char* line);
 		virtual void Load(std::string filename);
