@@ -247,8 +247,11 @@ void endRun(int transition,int run,int time)
 	HandleEOR_Mesytec(run, time);
 	HandleEOR_V1190(run, time);
 	HandleEOR_PHYSICS(run, time); 
+	printf("End of run %d\n",run);
 	HandleEOR_Scaler(run, time);
+	printf("End of run %d\n",run);
 	HandleEOR_STAT(run, time);
+	printf("End of run %d\n",run);
 	
 	// Fill runlog monster sheet
 	if(!gIsOffline) runlogAddEntry(run);//if it is online mode, add a runlog entry. AS
@@ -346,8 +349,10 @@ void HandleMidasEvent(TMidasEvent& event)
 		}
 	}
 	// Do physics now
-	printf("Handle Physics\n");
-	HandlePHYSICS(&detec, &timeArray, &histos);
+	if((eventId != 18)) { // Ignore events from IonTemp
+		printf("Handle Physics\n");
+		HandlePHYSICS(&detec, &timeArray, &histos);
+	}
 }
 
 //
