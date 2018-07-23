@@ -146,19 +146,19 @@ void CalibMesytec::ReadFilenames(char* line)
 		nGate4 = strval;
 	}
 	if (strcmp(line,"RUNDEPPAR")==0){
-		fileRunDepPar += strval;
+		fileRunDepPar = strval;
 		boolRunDepPar = kTRUE;
 	}
 	if (strcmp(line,"DEDX_I")==0){
-		fileIdedx += strval;
+		fileIdedx = strval;
 		boolIdedx = kTRUE;
 	}
 	if (strcmp(line,"DEDX_L")==0){
-		fileLdedx += strval;
+		fileLdedx = strval;
 		boolLdedx = kTRUE;
 	}
 	if (strcmp(line,"DEDX_H")==0){
-		fileHdedx += strval;
+		fileHdedx = strval;
 		boolHdedx = kTRUE;
 	}
 
