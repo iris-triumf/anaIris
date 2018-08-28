@@ -24,6 +24,11 @@ hist_t::hist_t(){
 		pYd[i].Set1D(Form("Yd%02d",i),4000,0,4000);
 		pYu[i].Set1D(Form("Yu%02d",i),4000,0,4000);
 	}
+	for(Int_t i=0; i<16; i++){
+		pZdx[i].Set1D(Form("Zdx%02d",i),4000,0,4000);
+		pZdy[i].Set1D(Form("Zdy%02d",i),4000,0,4000);
+	}
+
 
 	pCsI1Summary.Set2D("CsI1Summary",16,0,16,4000,0,4000);
 	pCsI2Summary.Set2D("CsI2Summary",16,0,16,4000,0,4000);
@@ -35,6 +40,8 @@ hist_t::hist_t(){
 	pSusSummary.Set2D("SusSummary",32,0,32,4000,0,4000);
 	pYdSummary.Set2D("YdSummary",128,0,128,4000,0,4000);
 	pYuSummary.Set2D("YuSummary",128,0,128,4000,0,4000);
+	pZdxSummary.Set2D("ZdxSummary",16,0,16,4000,0,4000);
+	pZdySummary.Set2D("ZdySummary",16,0,16,4000,0,4000);
 	
 	pCsI1Hits.Set1D("CsI1Hits",16,0,16);
 	pCsI2Hits.Set1D("CsI2Hits",16,0,16);
@@ -60,6 +67,9 @@ hist_t::hist_t(){
 	pYuHitsProt.Set1D("YuHitsProt",128,0,128);
 	pYdCsI1Corr.Set2D("YdCsI1Corr",8,0,8,16,0,16);
 	pYdCsI2Corr.Set2D("YdCsI2Corr",8,0,8,16,0,16);
+	pZdxHits.Set1D("ZdxHits",16,0,16);
+	pZdyHits.Set1D("ZdyHits",16,0,16);
+	pZdHits.Set2D("ZdHits",16,0,16,16,0,16);
 
 	pCsI1Energy.Set1D("CsI1Energy",4000,0,4000);
 	pCsI2Energy.Set1D("CsI2Energy",4000,0,4000);
@@ -76,6 +86,8 @@ hist_t::hist_t(){
 	pSdETotMonitor.Set1D("SdETotMonitor",4000,0,4000);
 	pYdCsI1ETot.Set1D("YdCsI1ETot",4000,0,4000);
 	pYdCsI2ETot.Set1D("YdCsI2ETot",4000,0,4000);
+	pZdxEnergy.Set1D("ZdxEnergy",4000,0,4000);
+	pZdyEnergy.Set1D("ZdyEnergy",4000,0,4000);
 	
 	pYdCsI1PID.Set2D("YdCsI1PID",4000,0,4000,4000,0,4000);
 	pYdCsI2PID.Set2D("YdCsI2PID",4000,0,4000,4000,0,4000);
@@ -100,6 +112,9 @@ hist_t::hist_t(){
 	pYdETheta.Set2D("YdETheta",360,0,360,360,0,360);
 	pYuTheta.Set1D("YuTheta",360,0,360);
 	pYuETheta.Set2D("YuETheta",360,0,360,360,0,360);
+	pZdPhi.Set1D("ZdPhi",360,0,360);
+	pZdTheta.Set1D("ZdTheta",360,0,360);
+	pZdETheta.Set2D("ZdETheta",360,0,360,360,0,360);
 	
 	pTRIFIC_1.Set1D("TRIFIC_1",4000,0,4000);
 	pTRIFIC_2.Set1D("TRIFIC_2",4000,0,4000);
@@ -216,6 +231,16 @@ void hist_t::ReadParams(char* line)
 			pYu[i].Set1D(Form("Yu%02d",i),nbinx,xmin,xmax);
 		}
 	}
+	if (strcmp(line,"Zdx")==0){
+		for(Int_t i=0; i<16; i++){
+			pZdx[i].Set1D(Form("Zdx%02d",i),nbinx,xmin,xmax);
+		}
+	}
+	if (strcmp(line,"Zdy")==0){
+		for(Int_t i=0; i<16; i++){
+			pZdy[i].Set1D(Form("Zdy%02d",i),nbinx,xmin,xmax);
+		}
+	}
 	if (strcmp(line,"CsI1Summary")==0){
 		pCsI1Summary.Set2D("CsI1Summary",nbinx,xmin,xmax,nbiny,ymin,ymax);
 	}
@@ -246,6 +271,12 @@ void hist_t::ReadParams(char* line)
 	if (strcmp(line,"YuSummary")==0){
 		pYuSummary.Set2D("YuSummary",nbinx,xmin,xmax,nbiny,ymin,ymax);
 	}
+	if (strcmp(line,"ZdxSummary")==0){
+		pZdxSummary.Set2D("ZdxSummary",nbinx,xmin,xmax,nbiny,ymin,ymax);
+	}
+	if (strcmp(line,"ZdySummary")==0){
+		pZdySummary.Set2D("ZdySummary",nbinx,xmin,xmax,nbiny,ymin,ymax);
+	}
 	if (strcmp(line,"CsI1Energy")==0){
 		pCsI1Energy.Set1D("CsI1Energy",nbinx,xmin,xmax);
 	}
@@ -275,6 +306,12 @@ void hist_t::ReadParams(char* line)
 	}
 	if (strcmp(line,"YuEnergy")==0){
 		pYuEnergy.Set1D("YuEnergy",nbinx,xmin,xmax);
+	}
+	if (strcmp(line,"ZdxEnergy")==0){
+		pZdxEnergy.Set1D("ZdxEnergy",nbinx,xmin,xmax);
+	}
+	if (strcmp(line,"ZdyEnergy")==0){
+		pZdyEnergy.Set1D("ZdyEnergy",nbinx,xmin,xmax);
 	}
 	if (strcmp(line,"SSBEnergy")==0){
 		pSSBEnergy.Set1D("SSBEnergy",nbinx,xmin,xmax);
@@ -356,6 +393,15 @@ void hist_t::ReadParams(char* line)
 	}
 	if (strcmp(line,"SuPhiTheta")==0){
 		pSuPhiTheta.Set2D("SuPhiTheta",nbinx,xmin,xmax,nbiny,ymin,ymax);
+	}
+	if (strcmp(line,"ZdPhi")==0){
+		pZdPhi.Set1D("ZdPhi",nbinx,xmin,xmax);
+	}
+	if (strcmp(line,"ZdTheta")==0){
+		pZdTheta.Set1D("ZdTheta",nbinx,xmin,xmax);
+	}
+	if (strcmp(line,"ZdETheta")==0){
+		pZdETheta.Set2D("ZdETheta",nbinx,xmin,xmax,nbiny,ymin,ymax);
 	}
 	if (strcmp(line,"Time")==0){
 		for(Int_t i=0; i<512; i++){
@@ -571,6 +617,26 @@ void hist_t::Book()
 	 		hYu[i] = pYu[i].SetupTH1F();
    		}
 	}
+	
+	hZdx[0] = (TH1F*)gDirectory->Get("Zdx00");
+	if (hZdx[0] == 0) {
+       	TDirectory* Zdx_dir = gOutputFile->mkdir("Zdx");      
+       	Zdx_dir->cd();       
+		printf("Booking Zdx histograms.\n");
+   		for (int i=0;i<16;i++) {
+	 		hZdx[i] = pZdx[i].SetupTH1F();
+   		}
+	}
+	
+	hZdy[0] = (TH1F*)gDirectory->Get("Zdy00");
+	if (hZdy[0] == 0) {
+       	TDirectory* Zdy_dir = gOutputFile->mkdir("Zdy");      
+       	Zdy_dir->cd();       
+		printf("Booking Zdy histograms.\n");
+   		for (int i=0;i<16;i++) {
+	 		hZdy[i] = pZdy[i].SetupTH1F();
+   		}
+	}
 	gOutputFile->cd();
 		
 	// == Summary spectra === //
@@ -590,6 +656,8 @@ void hist_t::Book()
 	 	hSusSummary = pSusSummary.SetupTH2F();
 	 	hYdSummary = pYdSummary.SetupTH2F();
 	 	hYuSummary = pYuSummary.SetupTH2F();
+	 	hZdxSummary = pZdxSummary.SetupTH2F();
+	 	hZdySummary = pZdySummary.SetupTH2F();
 	}
 
 	// ==== Hit Patterns ==== //
@@ -623,6 +691,9 @@ void hist_t::Book()
 	 	hYuHitsProt = pYuHitsProt.SetupTH1F();
 	 	hYdCsI1Corr = pYdCsI1Corr.SetupTH2F();
 	 	hYdCsI2Corr = pYdCsI2Corr.SetupTH2F();
+	 	hZdxHits = pZdxHits.SetupTH1F();
+	 	hZdyHits = pZdyHits.SetupTH1F();
+	 	hZdHits = pZdHits.SetupTH2F();
 	}
 
 	// ==== Energies     ==== //
@@ -647,6 +718,8 @@ void hist_t::Book()
 	 	hSdETotMonitor = pSdETotMonitor.SetupTH1F();
 	 	hYdCsI1ETot = pYdCsI1ETot.SetupTH1F();
 	 	hYdCsI2ETot = pYdCsI2ETot.SetupTH1F();
+	 	hZdxEnergy = pZdxEnergy.SetupTH1F();
+	 	hZdyEnergy = pZdyEnergy.SetupTH1F();
 	}
 
 	// ==== PID Spectra  ==== //
@@ -687,6 +760,9 @@ void hist_t::Book()
 	 	hSuETheta = pSuETheta.SetupTH2F();
 	 	hSuPhi = pSuPhi.SetupTH1F();
 	 	hSuPhiTheta = pSuPhiTheta.SetupTH2F();
+	 	hZdPhi = pZdPhi.SetupTH1F();
+	 	hZdTheta = pZdTheta.SetupTH1F();
+	 	hZdETheta = pZdETheta.SetupTH2F();
  	}
 
 	// ====    TRIFIC    ==== //

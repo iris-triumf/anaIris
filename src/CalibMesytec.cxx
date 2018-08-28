@@ -110,9 +110,17 @@ void CalibMesytec::ReadFilenames(char* line)
 		fileYd += strval;
 		boolYd =kTRUE;
 	}
-	if (strcmp(line,"YS")==0){
+	if (strcmp(line,"YU")==0){
 		fileYu += strval;
 		boolYu =kTRUE;
+	}
+	if (strcmp(line,"ZDX")==0){
+		fileZdx += strval;
+		boolZdx =kTRUE;
+	}
+	if (strcmp(line,"ZDY")==0){
+		fileZdy += strval;
+		boolZdy =kTRUE;
 	}
 	if (strcmp(line,"ASCII")==0){
 		boolASCII =kTRUE;
@@ -250,6 +258,10 @@ void CalibMesytec::Print(Int_t calledfrom){
 		else	printf("No Yd calibration specified.\n");
 		if(boolYu)	printf("Yu calibration: %s\n",fileYu.data());
 		else	printf("No Yu calibration specified.\n");
+		if(boolZdx)	printf("Zdx calibration: %s\n",fileZdx.data());
+		else	printf("No Zdx calibration specified.\n");
+		if(boolZdy)	printf("Zdy calibration: %s\n",fileZdy.data());
+		else	printf("No Zdy calibration specified.\n");
 		printf("********************************\n\n");
 	}
 	else{	

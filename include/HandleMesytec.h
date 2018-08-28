@@ -76,7 +76,7 @@ class det_t {
 	Int_t    TSd2sChannel2;
 	Int_t    TSd1rChannel2;
 	Int_t    TSd1sChannel2;
-		
+	
 	Double_t TSurEnergy;
 	Double_t TSurEnergy2;
 	Int_t    TSurChannel;
@@ -92,6 +92,16 @@ class det_t {
 	Int_t    TYuChannel2;
 	Double_t TYuTheta;// Yd theta angle
 
+	Double_t TZdxEnergy;
+	Double_t TZdyEnergy;
+	Double_t TZdxEnergy2;
+	Double_t TZdyEnergy2;
+	Int_t    TZdxChannel;
+	Int_t    TZdyChannel;
+	Int_t    TZdxChannel2;
+	Int_t    TZdyChannel2;
+	Double_t TZdPhi;
+	Double_t TZdTheta;
 
   void Clear();
  };

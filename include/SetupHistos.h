@@ -32,6 +32,8 @@ class hist_t : public TObject {
 		TH1F *hSus[32]; // Upstream S3 sectors   
 		TH1F *hYd[128]; 
 		TH1F *hYu[128]; 
+		TH1F *hZdx[16]; 
+		TH1F *hZdy[16]; 
 		HistPar pIC[16];  
 		HistPar pICSum;  
 		HistPar pCsI1[16];  
@@ -44,6 +46,8 @@ class hist_t : public TObject {
 		HistPar pSus[32]; // Upstream S3 sectors   
 		HistPar pYd[128]; 
 		HistPar pYu[128]; 
+		HistPar pZdx[16]; 
+		HistPar pZdy[16]; 
 		
 		// Summary spectra
 		TH2F *hCsI1Summary; 
@@ -56,6 +60,8 @@ class hist_t : public TObject {
 		TH2F *hSusSummary;
 		TH2F *hYdSummary;
 		TH2F *hYuSummary;   
+		TH2F *hZdxSummary;   
+		TH2F *hZdySummary;   
 		HistPar pCsI1Summary; 
 		HistPar pCsI2Summary;
 		HistPar pSd1rSummary;
@@ -66,6 +72,8 @@ class hist_t : public TObject {
 		HistPar pSusSummary;
 		HistPar pYdSummary;
 		HistPar pYuSummary;                                           
+		HistPar pZdxSummary;                                           
+		HistPar pZdySummary;                                           
 		
 		// Hit pattern histos
 		TH1F *hSd2rHits; // Downstream S3 2 rings   
@@ -88,6 +96,9 @@ class hist_t : public TObject {
 		TH1F *hYuHitsProt;  // Upstream Y11 hits with proton gate
 		TH2F *hYdCsI1Corr;
 		TH2F *hYdCsI2Corr;
+		TH1F *hZdxHits;  // Zdx
+		TH1F *hZdyHits;  // Zdy
+		TH2F *hZdHits;
 		HistPar pSd2rHits;
 		HistPar pSd2sHits;
 		HistPar pSd1rHits;
@@ -108,6 +119,9 @@ class hist_t : public TObject {
 		HistPar pYuHitsProt;
 		HistPar pYdCsI1Corr;
 		HistPar pYdCsI2Corr;
+		HistPar pZdxHits;
+		HistPar pZdyHits;
+		HistPar pZdHits;
 	
 		// Energies
 		TH1F *hCsI1Energy;
@@ -125,6 +139,8 @@ class hist_t : public TObject {
 		TH1F *hYdCsI1ETot;
 		TH1F *hYdCsI2ETot;
 		TH1F *hYuEnergy;
+		TH1F *hZdxEnergy;
+		TH1F *hZdyEnergy;
 		HistPar pCsI1Energy;
 		HistPar pCsI2Energy;
 		HistPar pSd1rEnergy;
@@ -140,6 +156,8 @@ class hist_t : public TObject {
 		HistPar pYdCsI1ETot;
 		HistPar pYdCsI2ETot;
 		HistPar pYuEnergy;
+		HistPar pZdxEnergy;
+		HistPar pZdyEnergy;
 			
 		// PID
 		TH2F *hCsI1Range;
@@ -176,6 +194,9 @@ class hist_t : public TObject {
 		TH2F *hYdETheta;
 		TH1F *hYuTheta;
 		TH2F *hYuETheta;
+		TH1F *hZdPhi;
+		TH1F *hZdTheta;
+		TH2F *hZdETheta;
 		HistPar pSdTheta;
 		HistPar pSdPhi;
 		HistPar pSdETheta;
@@ -188,6 +209,9 @@ class hist_t : public TObject {
 		HistPar pYdETheta;
 		HistPar pYuTheta;
 		HistPar pYuETheta;
+		HistPar pZdPhi;
+		HistPar pZdTheta;
+		HistPar pZdETheta;
 		
 		// TRIFIC
 		TH1F *hTRIFIC_1;

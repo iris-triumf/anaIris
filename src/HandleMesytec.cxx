@@ -40,6 +40,8 @@ const int NSurChannels=32;
 const int NSusChannels=32;
 const int NYdChannels=128;
 const int NYuChannels=128;
+const int NZdxChannels = 16;
+const int NZdyChannels = 16;
 const int adcBins = 4096;
 const int csiBins = 8192;
 const int energyBins = 4096;
@@ -195,6 +197,23 @@ float YuGain[NYuChannels]={1.};
 float YuOffset[NYuChannels]={0.};
 float YuPed[NYuChannels]={0.};
 
+int ZdxADC[NZdxChannels];
+float Zdx[NZdxChannels];
+float ZdxEnergy, ZdxEnergy2;
+int ZdxChannel, ZdxChannel2;
+float ZdxGain[NZdxChannels]={1.};
+float ZdxOffset[NZdxChannels]={0.};
+float ZdxPed[NZdxChannels]={0.};
+
+int ZdyADC[NZdyChannels];
+float Zdy[NZdyChannels];
+float ZdyEnergy, ZdyEnergy2;
+int ZdyChannel, ZdyChannel2;
+float ZdyGain[NZdyChannels]={1.};
+float ZdyOffset[NZdyChannels]={0.};
+float ZdyPed[NZdyChannels]={0.};
+
+
 //TRIFIC
 float TRIFICEnergy1 = 0, TRIFICEnergy2 = 0, TRIFICEnergy3 = 0;
 float TRIFICGain=0;
@@ -250,6 +269,9 @@ int clearDetectors()
 	
 	for (int j=0; j<NYdChannels; j++) Yd[j] = 0;
 	for (int j=0; j<NYuChannels; j++) Yu[j] = 0;
+	
+	for (int j=0; j<NZdxChannels; j++) Zdx[j] = 0;
+	for (int j=0; j<NZdyChannels; j++) Zdy[j] = 0;
 
 	theta = 0; 
 	length = 0;
@@ -384,23 +406,31 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 	 					S3Hit = 1; 	    
 	 					if (!usePeds){
 	    					Sd2r[channel] = Sd2rOffset[channel]+Sd2rGain[channel]*(float)vpeak;
+							if(channel<16) Zdy[channel] = ZdyOffset[channel]+ZdyGain[channel]*(float)vpeak;
 						}
 	 					else if (usePeds){
 	   						Sd2r[channel] = Sd2rGain[channel]*(((float)vpeak)-Sd2rPed[channel]);
+							if(channel<16) Zdy[channel] = ZdyGain[channel]*(((float)vpeak)-ZdyPed[channel]);
 							} 
 						hist->hSd2r[channel]->Fill(Sd2r[channel],1.);
+						if(channel<16) hist->hZdy[channel]->Fill(Zdy[channel],1.);
 						spec_store_eData[channel+64][int(Sd2r[channel]*scalingSd2)]++; // = IRIS WebServer =
-	  				}
+					}
 	  
 	  				if (modid==3 && vpeak > adcThresh && vpeak<3840){
 	    				S3Hit = 1;
 	    				if (!usePeds){	
 	    					Sd2s[channel] = Sd2sOffset[channel]+Sd2sGain[channel]*(float)vpeak;
+							if(channel<8) Zdx[7-channel] = ZdxOffset[7-channel]+ZdxGain[7-channel]*(float)vpeak;
+							if(channel>7 && channel<16) Zdx[channel] = ZdxOffset[channel]+ZdxGain[channel]*(float)vpeak;
 						}
 	 					else if (usePeds){
 	   						Sd2s[channel] = Sd2sGain[channel]*(((float)vpeak)-Sd2sPed[channel]);
+							if(channel<8) Zdx[7-channel] = ZdxGain[7-channel]*(((float)vpeak)-ZdxPed[7-channel]);
+							if(channel>7 && channel<16) Zdx[channel] = ZdxGain[channel]*(((float)vpeak)-ZdxPed[channel]);
 							}
 						hist->hSd2s[channel]->Fill(Sd2s[channel],1.);
+						if(channel<16) hist->hZdx[channel]->Fill(Zdx[channel],1.);
 						spec_store_eData[channel+96][int(Sd2s[channel]*scalingSd2)]++; // = IRIS WebServer =
 	   				}
 	
@@ -501,10 +531,13 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 
 	    			if (modid==2 && vpeak>adcThresh){	 
 	    				hist->hSd2rHits->Fill(channel, 1.); //Sd2r hits  
+						if(channel<16) hist->hZdyHits->Fill(channel,1.);
 						spec_store_hitData[4][channel]++;	
 					}
 	    			if (modid==3 && vpeak>adcThresh)	 {
 	    				hist->hSd2sHits->Fill(channel, 1.); //Sd2s hits
+						if(channel<8) hist->hZdxHits->Fill(7-channel,1.);
+						if(channel>7&&channel<16) hist->hZdxHits->Fill(channel,1.);
 		   				spec_store_hitData[5][channel]++;
 	  				}
 
@@ -886,11 +919,65 @@ void HandleMesytec(TMidasEvent& event, void* ptr, int nitems, int bank, det_t *d
 			}//for
 		} // if 
 		if(CsI2Energy>0) hist->hCsI2Energy->Fill(CsI2Energy);
-	    
+	 
 		spec_store_energyData[2][int(CsI1Energy*scalingCsI)]++; // = IRIS WebServer =
 	    spec_store_energyData[3][int(CsI2Energy*scalingCsI)]++; // = IRIS WebServer =
+
+    		if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
+
+		//Zdx
+    	ZdxEnergy=0; ZdxChannel = -1; ZdxEnergy2=0; ZdxChannel2 =-1;
+    	for (int i =0; i< NZdxChannels;i++){
+          	if(Zdx[i]>ZdxEnergy){
+  				ZdxEnergy2= ZdxEnergy;
+           		ZdxChannel2 = ZdxChannel;
+          		ZdxEnergy=Zdx[i];
+          		ZdxChannel = i;
+			}
+ 			else if (Zdx[i]>ZdxEnergy2){//if Zdx[i] is between ZdxEnergy and ZdxEnergy2
+            	ZdxEnergy2=Zdx[i];
+          		ZdxChannel2 = i;
+			} //if
+      	} //for      
+
+		det->TZdxEnergy = ZdxEnergy;
+		det->TZdxChannel = ZdxChannel;
+		if(ZdxEnergy>0&&ZdxChannel<16){
+			hist->hZdxEnergy -> Fill(ZdxEnergy);
+		}
+ 	
+		//Zdy
+    	ZdyEnergy=0; ZdyChannel = -1; ZdyEnergy2=0; ZdyChannel2 =-1;
+    	for (int i =0; i< NZdyChannels;i++){
+          	if(Zdy[i]>ZdyEnergy){
+  				ZdyEnergy2= ZdyEnergy;
+           		ZdyChannel2 = ZdyChannel;
+          		ZdyEnergy=Zdy[i];
+          		ZdyChannel = i;
+			}
+ 			else if (Zdy[i]>ZdyEnergy2){//if Zdy[i] is between ZdyEnergy and ZdyEnergy2
+            	ZdyEnergy2=Zdy[i];
+          		ZdyChannel2 = i;
+			} //if
+      	} //for      
+
+		det->TZdyEnergy = ZdyEnergy;
+		det->TZdyChannel = ZdyChannel;
+		if(ZdyEnergy>0&&ZdyChannel<16){
+			hist->hZdyEnergy -> Fill(ZdyEnergy);
+		}
     	
-		if (ascii)  fprintf(ASCIICsI," %d  %d %d %d %d \n",event.GetSerialNumber(), CsIChannel+32, (int)CsIEnergy,  CsIChannel2+32, (int)CsIEnergy2);
+		if(ZdxEnergy>0&&ZdxChannel<16&&ZdyEnergy>0&&ZdyChannel<16){
+			hist->hZdHits -> Fill(ZdxChannel,ZdyChannel);
+			float xpos = (ZdxChannel-8)*3.+1.5;
+			float ypos = (ZdyChannel-8)*3.+1.5;
+			float radius = TMath::Sqrt(xpos*xpos+ypos*ypos);
+			phi = TMath::ATan2(ypos,xpos)*TMath::RadToDeg();
+			theta = TMath::ATan2(radius,(geoM.Sd1Distance+29.3))*TMath::RadToDeg();
+			hist->hZdPhi -> Fill(phi);
+			hist->hZdTheta -> Fill(theta);
+			hist->hZdETheta -> Fill(theta,ZdxEnergy);
+		}
 		
 		if(YdChannel>=0&&YdEnergy>0.) hist->hYdRange->Fill(Ydnadc,YdEnergy);
 		if(CsI1Channel>=0&&CsI1Energy>0.) hist->hCsI1Range->Fill(CsI1nadc,CsI1Energy);
@@ -1381,7 +1468,86 @@ void HandleBOR_Mesytec(int run, int time, det_t* pdet, hist_t* hist)
   	}
 
 //************************************************************************
- 	calMesy.Print(0);
+ 
+//**************** Calibrate Zd horizontal strips ****************************************
+	Chan=-1;
+
+	pFile = fopen (calMesy.fileZdy.data(), "r");
+
+   	if (pFile == NULL || calMesy.boolZdy==false) {
+		fprintf(logFile,"No calibration file for Zd horizontal strips. Skipping Zdy calibration.\n");
+		printf("No calibration file for Zd horizontal strips. Skipping Zdy calibration.\n");
+   		for (int i =0;i<16;i++  ){
+			ZdyPed[i] = 0.;
+			ZdyOffset[i] = 0.;
+			ZdyGain[i] = 1.;  
+		}
+	}  
+ 	else {
+		printf("Reading Zdy config file '%s'\n",calMesy.fileZdy.data());
+		// Skip first line
+  		fscanf(pFile,"%s",buffer);
+  		fscanf(pFile,"%s",buffer);
+ 		fscanf(pFile,"%s",buffer);
+
+		for (int i =0;i<16;i++  ){
+       		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
+       		if(!usePeds){
+				ZdyOffset[Chan-64] = a;
+				ZdyGain[Chan-64] =  b;  
+				printf("ZdyOffset %lf Zdygain %lf\n",ZdyOffset[Chan-64],ZdyGain[Chan-64]);
+			}
+       		else if (usePeds){
+				ZdyPed[Chan-64] = a;
+				ZdyGain[Chan-64] =  b;  
+				printf("ZdyPed %lf Zdygain %lf\n",ZdyPed[Chan-64],ZdyGain[Chan-64]);
+     		}
+		}
+     	fclose (pFile);
+		printf("\n");
+ 	}
+//************************************************************************
+
+//**************** Calibrate Zd vertical strips ****************************************
+	Chan=-1;
+   	pFile = fopen (calMesy.fileZdx.data(), "r");
+
+ 	if (pFile == NULL || calMesy.boolZdx==false) {
+		fprintf(logFile,"No calibration file for Zd vertical strips. Skipping Zdx calibration.\n");
+		printf("No calibration file for Zd vertical strips. Skipping Zdx calibration.\n");
+   		for (int i =0;i<16;i++  ){
+			ZdxPed[i] = 0.;
+			ZdxOffset[i] = 0.;
+			ZdxGain[i] = 1.;  
+		}
+	}  
+ 	else  {
+		printf("Reading Zdx config file '%s'\n",calMesy.fileZdx.data());
+		// Skip first line
+	  	fscanf(pFile,"%s",buffer);
+	  	fscanf(pFile,"%s",buffer);
+	 	fscanf(pFile,"%s",buffer);
+
+		for (int i =0;i<16;i++  ){
+       		fscanf(pFile,"%d%lf%lf",&Chan,&a,&b);
+       		if (!usePeds){
+				ZdxOffset[Chan-96] = a;
+				ZdxGain[Chan-96] = b;   
+				printf("ZdxOffset %lf Zdxgain %lf\n",ZdxOffset[Chan-96],ZdxGain[Chan-96]);
+			}
+       		else if (usePeds){
+				ZdxPed[Chan-96] = a;
+				ZdxGain[Chan-96] = b;   
+				printf("ZdxPed %lf Zdxgain %lf\n",ZdxPed[Chan-96],ZdxGain[Chan-96]);
+			}
+     	}
+     	fclose (pFile);
+		printf("\n");
+ 	}
+
+//************************************************************************
+
+	calMesy.Print(0);
 	
 	// = IRIS WebServer =
 	// Zero the web spectra at BOR
