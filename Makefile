@@ -10,8 +10,8 @@ DATASTRUCTDIR = $(BASEDIR)/DataStructure
 
 CXX = g++
 # ROOT library
-ROOTLIBS  = $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
-ROOTGLIBS = $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
+ROOTLIBS  = $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread -lRHTTP -Wl,-rpath,$(ROOTSYS)/lib
+ROOTGLIBS = $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread -lRHTTP -Wl,-rpath,$(ROOTSYS)/lib
 
 ifdef ROOTSYS
 CXXFLAGS += -DHAVE_LIBNETDIRECTORY

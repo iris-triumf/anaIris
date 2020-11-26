@@ -23,6 +23,8 @@
 #include "libNetDirectory/netDirectoryServer.h"
 #endif
 
+#include "THttpServer.h"
+
 #include <TSystem.h>
 #include <TROOT.h>
 #include <TApplication.h>
@@ -72,6 +74,7 @@ det_t detec; // calibrated variables from detectors, to be passed to HandlePhysi
 det_t *pdet = &detec;
 tdc_t timeArray;
 tdc_t *ptdc = &timeArray;
+
 hist_t histos;
 hist_t *phist = &histos;
 
@@ -596,7 +599,10 @@ int main(int argc, char *argv[])
 #else
 	if(tcpPort) fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
 #endif
-	 
+	
+	THttpServer *fRoot_http_serv = new THttpServer("http:8088");
+
+    	
 	gIsOffline = false;
 	
 	for(unsigned int i=1; i<args.size(); i++)
