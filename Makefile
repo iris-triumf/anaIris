@@ -30,7 +30,7 @@ ROOTCFLAGS    = $(shell root-config --cflags)
 CXXFLAGS      += -g -Wall -ansi -Df2cFortran -fPIC $(ROOTCFLAGS) 
 CXXFLAGS      += -I$(DATASTRUCTDIR)/include -I$(RECDIR)/include -L$(LIBDIR) 
 
-ANAOBJECTS  =  $(OBJECTDIR)/HistPar.o $(OBJECTDIR)/SetupHistos.o $(OBJECTDIR)/eloss.o $(OBJECTDIR)/Graphsdedx.o $(OBJECTDIR)/nucleus.o $(OBJECTDIR)/runDepPar.o $(OBJECTDIR)/CalibMesytec.o $(OBJECTDIR)/geometry.o $(OBJECTDIR)/HandleMesytec.o $(OBJECTDIR)/HandleV1190.o $(OBJECTDIR)/HandleSTAT.o $(OBJECTDIR)/HandlePHYSICS.o $(OBJECTDIR)/HandleScaler.o    
+ANAOBJECTS  =  $(OBJECTDIR)/HistPar.o $(OBJECTDIR)/SetupHistos.o $(OBJECTDIR)/eloss.o $(OBJECTDIR)/Graphsdedx.o $(OBJECTDIR)/nucleus.o $(OBJECTDIR)/runDepPar.o $(OBJECTDIR)/CalibMesytec.o $(OBJECTDIR)/geometry.o $(OBJECTDIR)/HandleMesytec.o $(OBJECTDIR)/HandleV1190.o $(OBJECTDIR)/HandleV1740.o   $(OBJECTDIR)/HandleSTAT.o $(OBJECTDIR)/HandlePHYSICS.o $(OBJECTDIR)/HandleScaler.o    
 
 ifdef MIDASSYS
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
@@ -53,6 +53,10 @@ $(OBJECTDIR)/HandleMesytec.o: $(SOURCEDIR)/HandleMesytec.cxx
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJECTDIR)/HandleV1190.o: $(SOURCEDIR)/HandleV1190.cxx 
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+
+$(OBJECTDIR)/HandleV1740.o: $(SOURCEDIR)/HandleV1740.cxx 
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJECTDIR)/HandleSTAT.o: $(SOURCEDIR)/HandleSTAT.cxx 

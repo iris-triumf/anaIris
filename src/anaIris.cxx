@@ -40,6 +40,7 @@
 
 #include "HandleMesytec.h"
 #include "HandleV1190.h"
+#include "HandleV1740.h"
 #include "HandleSTAT.h"
 #include "HandlePHYSICS.h"
 #include "HandleScaler.h"
@@ -238,6 +239,7 @@ void startRun(int transition,int run,int time)
 	HandleBOR_PHYSICS(gBinDir,run, time);
 	HandleBOR_Scaler(run,time);   
 	HandleBOR_STAT(run, time);
+	HandleBOR_V1740(run, time);
 }
 
 //
@@ -329,6 +331,14 @@ void HandleMidasEvent(TMidasEvent& event)
 		}
 	}
 	
+	if((eventId == 1)) { // V1740 modules 
+	  int size = event.LocateBank(NULL, "D740", &ptr);
+	  printf("V1740 bank %s:%d\n", "D740", size);
+	  if (ptr && size) {
+	    HandleV1740(event, ptr, size,  phist); 
+	  }
+
+	}
 	if((eventId == 1)) { // V1190 modules 
 		m=0;
 		while (tdcbkname[m][0]) {
