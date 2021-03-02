@@ -37,12 +37,17 @@ CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a
 endif
 
+#DPP tools, added 2021-03-01 (Jonas Refsgaard)
+IRISDIR = /home/iris/packages/iris-daqtools
+IRISLIB = $(IRISDIR)/build/libdaqtools.a
+CXXFLAGS += -I$(IRISDIR)/include
+
 SOFLAGS       = -g -shared
 
 all: $(BINARYDIR)/anaIris
 
 $(BINARYDIR)/anaIris: $(ANAOBJECTS) $(OBJECTDIR)/anaIris.o $(OBJECTDIR)/web_server.o $(MIDASLIBS) $(ROOTANA)/lib/librootana.a 
-	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(NETDIRLIB) $(ROOTGLIBS) -lm -lz -lutil -lnsl -lpthread -lrt
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(NETDIRLIB) $(ROOTGLIBS) $(IRISLIB) -lm -lz -lutil -lnsl -lpthread -lrt
 
 #___ALL THE OBJECT FILES____
 

@@ -47,6 +47,13 @@
 #include "Globals.h"
 #include "SetupHistos.h"
 
+//Pulse processing tools from the iris-daqtools library
+#include <cmath>
+#include "TrapezoidShaper.h"
+#include "LeadingEdgeDiscriminator.h"
+#include "AmplitudeAnalyser.h"
+#include "ConstantFractionAnalyser.h"
+
 int gV1740nitems;
 
 const double timeSlope = 0.2; // ns/channel 
@@ -56,6 +63,12 @@ const int binlimit = 4196;
 
 // histogram for first V1740 channel
 TH1D* V1730Channel0 = 0;
+
+// Shaped signal from first V1740 channel
+TH1D *V1730Shaped0 = 0;
+// Energy and time spectra derived from the shaped pulse.
+TH1D *V1730Energy0 = 0;
+TH1D *V1730Time0 = 0;
 
 void HandleV1740(TMidasEvent& event, void* ptr, int nitems, hist_t* hist)
 {
@@ -136,6 +149,46 @@ void HandleV1740(TMidasEvent& event, void* ptr, int nitems, hist_t* hist)
     V1730Channel0->SetBinContent(j+1,samples[0][j]);
   }
 
+  //Analysis parameters (eventually they have to come from the ODB).
+  //Shaping parameters:
+  int m = 10;   //Top width
+  int M = 937; //Decay time
+  int k = 20;   //Rise time
+  int N = samples[0].size(); //Length of recorded trace.
+  //CFD parameters:
+  double att_factor = 0.3;
+  int delay = 25;
+  //Edge detection parameters:
+  int gate = 2*k+m;        //Analysis gate (= dead time).
+  double threshold = 1000; //Triggering threshold.
+  bool negative = false;   //Polarity (false <-> positive polarity).
+
+  //Shape the signal
+  TrapezoidShaper shaper(M,k,m);
+  double *shaped = shaper.Shape(samples[0].data(),N);  
+  for(int j = 0; j < N; j++){
+    V1730Shaped0->SetBinContent(j+1,shaped[j]);
+  }
+
+  //Identify edges in the shaped signal.
+  LeadingEdgeDiscriminator discriminator(threshold,negative);
+  discriminator.SetDeadTime(gate);
+  int hits = discriminator.Analyse(shaped,N);
+  std::vector<double> & triggers =  discriminator.GetTriggers();
+  
+  //We loop over the hits and fill the spectra.
+  for(int j=0; j<hits; j++){
+    int start_bin = std::floor(triggers.at(j));
+    double *ptr = shaped + start_bin;
+    //Extract pulse heights.
+    AmplitudeAnalyser e_analyser(negative);
+    double E = e_analyser.Analyse(ptr,gate);
+    V1730Energy0->Fill(E);
+    //Extract pulse timings.
+    ConstantFractionAnalyser t_analyser(att_factor,delay,negative);
+    double t = t_analyser.Analyse(ptr,gate);
+    V1730Time0->Fill((start_bin + t)*16.0);
+  }
 
 }
 //---------------------------------------------------------------------------------
@@ -150,6 +203,15 @@ void HandleBOR_V1740(int run, int time)
 
   V1730Channel0 = new TH1D("V1740Channel0","V1740Channel0",nbins,0,((float)nbins)*16.0);
   V1730Channel0->SetXTitle("Time (ns)");
+
+  
+  V1730Shaped0 =  new TH1D("V1740Shaped0","V1740Shaped0",nbins,0,((float)nbins)*16.0);
+  V1730Shaped0->SetXTitle("Time (ns)");
+  V1730Energy0 = new TH1D("V1730Energy0","Energy spectrum",4096,-0.5,4095.5);
+  V1730Energy0->SetXTitle("Pulse height (raw adc value)");
+  V1730Time0 = new TH1D("V1730Time0","Time spectrum",nbins,0,((float)nbins)*16.0);
+  V1730Time0->SetXTitle("Time (ns)");
+
   printf("V1740 BOR\n");
 	  
 }
