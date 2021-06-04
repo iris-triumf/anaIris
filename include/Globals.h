@@ -20,10 +20,12 @@ extern bool gIsOffline;
 
 extern TFile* gOutputFile;
 extern FILE* ASCIIYY1;
+
 // ODB access
+//#include "VirtualOdb.h"
+//extern VirtualOdb* gOdb;
+#include "mvodb.h"
+extern MVOdb *gOdb;
 
-#include "VirtualOdb.h"
-
-extern VirtualOdb* gOdb;
 // end
 

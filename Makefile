@@ -39,7 +39,7 @@ endif
 
 #DPP tools, added 2021-03-01 (Jonas Refsgaard)
 IRISDIR = /home/iris/packages/iris-daqtools
-IRISLIB = $(IRISDIR)/build/libdaqtools.a
+IRISLIB = $(IRISDIR)/build/libdaqtools_static.a
 CXXFLAGS += -I$(IRISDIR)/include
 
 SOFLAGS       = -g -shared

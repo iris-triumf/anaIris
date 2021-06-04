@@ -14,8 +14,10 @@
 
 #include "TMidasOnline.h"
 #include "TMidasEvent.h"
-#include "TMidasFile.h"
-#include "XmlOdb.h"
+//#include "TMidasFile.h"
+//#include "XmlOdb.h"
+#include "midasio.h"
+#include "mvodb.h"
 #ifdef OLD_SERVER
 #include "midasServer.h"
 #endif
@@ -63,7 +65,8 @@ char scalbkname[][5] = {"SCAD", "SCAR", "SCAS",""}; //scalers
 
 TDirectory* gOnlineHistDir = NULL;
 TFile* gOutputFile = NULL;
-VirtualOdb* gOdb = NULL;
+//VirtualOdb* gOdb = NULL;
+MVOdb *gOdb = NULL;
 FILE* ASCIIYY1 = NULL;
 FILE* ASCIIIC = NULL;
 FILE* ASCIICsI = NULL;
@@ -149,19 +152,21 @@ void runlogAddEntry(int run)
 	FILE *f;
 	time_t now;
 	char lstr[256];
-	const char *str;
-	
+	//const char *str;
+  std::string str;	
+
 	/* update run log if run was written and running online */
-	bool flag = gOdb->odbReadBool("Logger/Write data");
-	bool flag1 = gOdb->odbReadBool("Logger/Channels/0/Settings/Active");
-	int  mode = gOdb->odbReadInt ("Runinfo/Online Mode");
+  bool flag, flag1; int mode;
+	gOdb->RB("Logger/Write data",&flag);
+	gOdb->RB("Logger/Channels/0/Settings/Active",&flag1);
+	gOdb->RI("Runinfo/Online Mode",&mode);
 	
 	if (flag && flag1 && mode) {
 		/* update run log */
 		printf("Running runlogAddEntry()\n");
 		lstr[0] = 0;
-		str = gOdb->odbReadString("/Logger/Data Dir");
-		strcpy (lstr, str);
+		gOdb->RS("/Logger/Data Dir",&str);
+		strcpy (lstr, str.c_str());
 		if (lstr[0] != 0)
 			if (lstr[strlen(lstr) - 1] != '/')
 				strcat(lstr, "/");
@@ -174,11 +179,12 @@ void runlogAddEntry(int run)
 		strcpy(lstr, ctime(&now));
 		lstr[10] = 0;
 		
-		int rn = gOdb->odbReadInt("/Runinfo/Run number");
+		int rn;
+    gOdb->RI("/Runinfo/Run number",&rn);
 		fprintf(f, "%s\t%3d\t", lstr, rn);
 		
-		str = gOdb->odbReadString("/Runinfo/Start time");
-		strcpy(lstr, str);
+		gOdb->RS("/Runinfo/Start time",&str);
+		strcpy(lstr, str.c_str());
 		lstr[19] = 0;
 		fprintf(f, "%s\t", lstr + 11);
 		
@@ -186,19 +192,21 @@ void runlogAddEntry(int run)
 		lstr[19] = 0;
 		fprintf(f, "%s\t", lstr + 11);
 		
-		double n = gOdb->odbReadDouble("/Equipment/AdcTrig/Statistics/Events sent");
+		double n;
+    gOdb->RD("/Equipment/AdcTrig/Statistics/Events sent",&n);
 		fprintf(f, "%5.1lfk\t", n / 1000);
 		
-		float m = gOdb->odbReadFloat("/Equipment/Beamline/variables/Measured", 11);
+		float m;
+    gOdb->RFAI("/Equipment/Beamline/variables/Measured",11,&m);
 		//      printf(" meas:%f\n", m);
 		fprintf(f, "%7.2fk\t", m);
 		
-		str = gOdb->odbReadString("/Experiment/Run Parameters/Comment");
-		if (strlen(str) != 0) fprintf(f, "%s\t", str);
+		gOdb->RS("/Experiment/Run Parameters/Comment",&str);
+		if (strlen(str.c_str()) != 0) fprintf(f, "%s\t", str.c_str());
 		
 		// Last element of the MonsterSheet
-		str = gOdb->odbReadString("/Experiment/Run Parameters/Run Description");
-		fprintf(f, "%s\n", str);
+		gOdb->RS("/Experiment/Run Parameters/Run Description",&str);
+		fprintf(f, "%s\n", str.c_str());
 		
 		fclose(f);
 	}
@@ -385,12 +393,15 @@ int ProcessMidasFile(TApplication*app,const char*fname)
 {
 	char dcfname[100] = "dccp://";
 	strcat(dcfname,fname); // added dccp:// in front of fname, there is seg fault
-	TMidasFile f;
-	bool tryOpen = f.Open(dcfname);
-	
-	if (!tryOpen)
-	{
+	//TMidasFile f;
+	TMReaderInterface *reader = TMNewReader(fname);
+  //bool tryOpen = f.Open(dcfname);  	
+
+	//if (!tryOpen)
+	if(reader->fError)
+  {
 		printf("Cannot open input file \"%s\"\n",dcfname);
+    delete reader;
 		return -1;
 	}
 	
@@ -398,8 +409,9 @@ int ProcessMidasFile(TApplication*app,const char*fname)
 	while (1)
 	{
 		TMidasEvent event;
-		if (!f.Read(&event)) break;
-		
+		//if (!f.Read(&event)) break;
+    if(!TMReadEvent(reader, &event)) break;
+
 		int eventId = event.GetEventId();
 		
 		if ((eventId & 0xFFFF) == 0x8000)
@@ -411,8 +423,9 @@ int ProcessMidasFile(TApplication*app,const char*fname)
 			// Load ODB contents from the ODB XML file
 			//
 			if (gOdb) delete gOdb;
-			gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-			
+			//gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
+      gOdb = MakeXmlBufferOdb(event.GetData(),event.GetDataSize());
+
 			startRun(0,event.GetSerialNumber(),0);
 		}
 		else if ((eventId & 0xFFFF) == 0x8001)
@@ -438,8 +451,11 @@ int ProcessMidasFile(TApplication*app,const char*fname)
 		}
 	}
 	
-	f.Close();
-	
+	//f.Close();
+  reader->Close();
+  delete reader;
+  reader = NULL;	
+
 	endRun(0,gRunNumber,0);
 	return 0;
 }
@@ -462,7 +478,7 @@ int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptn
 		return -1;
 	}
 	
-	gOdb = midas;
+	gOdb = MakeMidasOdb(midas->fDB);
 	
 	midas->setTransitionHandlers(startRun,endRun,NULL,NULL);
 	midas->registerTransitions();
@@ -473,9 +489,10 @@ int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptn
 	midas->eventRequest("SYSTEM",-1,-1,(1<<1));
 	
 	/* fill present run parameters */
-	
-	gRunNumber = gOdb->odbReadInt("/runinfo/Run number");
-	if ((gOdb->odbReadInt("/runinfo/State") == 3)) startRun(0,gRunNumber,0);
+	gOdb->RI("runinfo/Run number",&gRunNumber);
+  int eval;
+  gOdb->RI("runinfo/State",&eval);
+	if ((eval == 3)) startRun(0,gRunNumber,0);
 	printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
 	 
 	MyPeriodic tm(100,MidasPollHandler);
