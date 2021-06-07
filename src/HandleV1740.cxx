@@ -33,6 +33,7 @@
 #include <iostream>
 #include <assert.h>
 #include <signal.h>
+#include <string>
 //#include "midasServer.h"
 #include "TMidasEvent.h"
 #include <TApplication.h>
@@ -91,6 +92,14 @@ PsaTools psaTools[4];
 
 //Channels to analyse;
 unsigned int channels[4];
+//'Output' channels (EPICS via ODB).
+unsigned int epics_channels[4];
+
+//Array to store 'triggers'.
+unsigned long long int scalers[4];
+static uint32_t old_ts = 0;
+
+void UpdateOdbRates(uint32_t,uint32_t);
 
 void HandleV1740(TMidasEvent& event, void* ptr, int nitems, hist_t* hist)
 {
@@ -264,6 +273,7 @@ void HandleV1740(TMidasEvent& event, void* ptr, int nitems, hist_t* hist)
       hShaped[i]->SetBinContent(j+1,shaped[j]);
     }
     int hits = psaTools[i].trigger->Analyse(shaped,N);
+    scalers[i] += hits;
     //printf("Block:%d, triggers:%d\n",i,hits);
     std::vector<double> & triggers =  psaTools[i].trigger->GetTriggers();
     std::vector<double> times(hits);
@@ -290,7 +300,20 @@ void HandleV1740(TMidasEvent& event, void* ptr, int nitems, hist_t* hist)
     //pm->SetMarkerStyle(20);
     //pm->SetMarkerColor(kRed);
     //pm->SetMarkerSize(1.3);
-  }   
+  }
+
+  //printf("Time stamp : %u\n",event.GetTimeStamp());
+  uint32_t current_ts = event.GetTimeStamp(); //Time stamp measured in seconds.
+  //printf("HELLO THERE!!!, line 307\n");
+  //printf("current_ts = %u, old_ts = %u\n",current_ts,old_ts);
+  if(current_ts > old_ts){
+    //At least 1 second since last time.
+    //printf("HELLO THERE!!!, line 309\n");
+    static uint32_t old_time = timeTag;
+    UpdateOdbRates(timeTag,old_time);
+    old_ts = current_ts;
+    old_time = timeTag;
+  }
 }
 //---------------------------------------------------------------------------------
 void HandleBOR_V1740(int run, int time)
@@ -320,8 +343,14 @@ void HandleBOR_V1740(int run, int time)
   }
 
   //Initialisation of pulse shape analysis tools.
+  old_ts = 0;
   for(int i=0; i<4; i++){
+    scalers[i] = 0;
     gOdb->RU32AI("Analysis/WFD/WFD channel",i,channels+i);
+    gOdb->RU32AI("Analysis/WFD/EPICS channel",i,epics_channels+i);
+    std::string label;
+    gOdb->RSAI("Analysis/WFD/Label",i,&label);
+    gOdb->WSAI("Equipment/Beamline/Settings/Names",epics_channels[i],label.c_str());
     unsigned int M,k,m;
     gOdb->RU32AI("Analysis/WFD/Decay time",i,&M);
     gOdb->RU32AI("Analysis/WFD/Rise time",i,&k);
@@ -337,6 +366,13 @@ void HandleBOR_V1740(int run, int time)
     double attenuation = 0.3;
     unsigned int delay = k+1;
     psaTools[i].time_analyser = new ConstantFractionAnalyser(attenuation,delay,negative);
+    printf("Analysis block %d:\n",i);
+    printf("\tDecay time = %u samples.\n",M);
+    printf("\tRise time  = %u samples.\n",k);
+    printf("\tTop width  = %u samples.\n",m);
+    if(negative) printf("\tNegative polarity.\n");
+    else printf("\tPositive polarity.\n");
+    printf("\tTrigger threshold = %lf.\n",threshold);
   }
     
   /*
@@ -358,6 +394,59 @@ void HandleBOR_V1740(int run, int time)
 void HandleEOR_V1740(int run, int time)
 {
   //Need to delete the histograms created in BOR?
-
+  for(int i=4; i<4; i++){
+    delete psaTools[i].shaper;
+    delete psaTools[i].trigger;
+    delete psaTools[i].energy_analyser;
+    delete psaTools[i].time_analyser;
+  }
 	printf(" in V1740 EOR\n");
+}
+
+#include <chrono>
+using namespace std::chrono;
+unsigned long long int prev_scalers[4];
+
+//Function that calculates the 'trigger' rates from the psa and sends the
+//results to the ODB (EPICS variables.
+void UpdateOdbRates(uint32_t current_time, uint32_t old_time)
+{
+  //printf("HELLO THERE!!!\n");
+  //Calculate time since last call;
+  //static auto prev_time = system_clock::now();
+  //auto current_time = system_clock::now();
+  //duration<double> delta_time = current_time - prev_time;
+  //prev_time = current_time;
+
+  double delta_time = (double)current_time - (double)old_time;
+  delta_time /= 125e6; //Convert to seconds.
+  if(delta_time < 0) delta_time += 17.1799; //time tag rolled over.
+
+  //Calculate 'scaler' increment
+  unsigned long long int diffs[4];
+  for(int i=0; i<4; i++){
+    if(scalers[i] < prev_scalers[i]) prev_scalers[i] = scalers[i];
+    diffs[i] = scalers[i] - prev_scalers[i];
+    prev_scalers[i] = scalers[i];
+  }
+  
+  //If negative time diff (i.e. first event) return.
+  //if(delta_time.count() < 0) return;
+
+  //Calculate rates
+  double rates[4];
+  for(int i=0; i<4; i++){
+    //rates[i] = (double)diffs[i]/delta_time.count();
+    rates[i] = (double)diffs[i]/delta_time;
+    //printf("Block %d:\n",i);
+    //printf("\tScaler increment: %lf\n",(double)diffs[i]);
+    //printf("\tTime increment: %lf\n",delta_time.count());
+    //printf("\tTime increment: %lf\n",delta_time);
+    //printf("\tDerived rate: %lf\n",rates[i]);
+  }
+
+  //Write to ODB
+  for(int i=0; i<4; i++){
+    gOdb->WFAI("Equipment/Beamline/Variables/Demand",epics_channels[i],rates[i]);
+  }
 }
