@@ -408,11 +408,18 @@ void hist_t::ReadParams(char* line)
 			pTime[i].Set1D(Form("Time%02d",i),nbinx,xmin,xmax);
 		}
 	}
+  if (strcmp(line,"TimeRaw")==0){
+		for(Int_t i=0; i<512; i++){
+			pV1190_T[i].Set1D(Form("TimeRaw%02d",i),nbinx,xmin,xmax);
+		}
+	}
+  /*
 	if (strcmp(line,"TimeRF")==0){
 		for(Int_t i=0; i<512; i++){
 			pTimeRF[i].Set1D(Form("TimeRF%02d",i),nbinx,xmin,xmax);
 		}
 	}
+  */
 	if (strcmp(line,"Tall")==0){
 		pTall.Set1D("dTall",nbinx,xmin,xmax);
 	}
@@ -789,7 +796,7 @@ void hist_t::Book()
 	{
 		TDirectory* TimeRaw_dir = gOutputFile->mkdir("TimeRaw");
 		TimeRaw_dir->cd();
-	
+	  /*
   		TDirectory* TimeRawIC_dir = TimeRaw_dir->mkdir("TimeRawIC");
   		TDirectory* TimeRawCsI_dir = TimeRaw_dir->mkdir("TimeRawCsI");
   		TDirectory* TimeRawSd2_dir = TimeRaw_dir->mkdir("TimeRawSd2");
@@ -797,15 +804,17 @@ void hist_t::Book()
   		TDirectory* TimeRawYYd_dir = TimeRaw_dir->mkdir("TimeRawYYd");
   		TDirectory* TimeRawSu_dir = TimeRaw_dir->mkdir("TimeRawSu");
   		TDirectory* TimeRawYYu_dir = TimeRaw_dir->mkdir("TimeRawYYU");
-		for (int i=0;i<512;i++) {
-			if (i<32) TimeRawIC_dir->cd();
+		*/
+    for (int i=0;i<512;i++) {
+			/*
+      if (i<32) TimeRawIC_dir->cd();
 			else if (i>=32 && i <64) TimeRawCsI_dir->cd();
 			else if (i>=64 && i <128) TimeRawSd2_dir->cd();
 			else if (i>=128 && i <192) TimeRawSd1_dir->cd();
 			else if(i>=192 && i < 320) TimeRawYYd_dir->cd();
 			else if(i>=320 && i < 384) TimeRawSu_dir->cd();
     		else if(i>=384 && i < 512) TimeRawYYu_dir->cd();
-
+      */
 	 		hV1190_T[i] = pV1190_T[i].SetupTH1F();
   		}
   	}
@@ -814,7 +823,7 @@ void hist_t::Book()
 	{	
 		TDirectory* Time_dir = gOutputFile->mkdir("Time");
 		Time_dir->cd();
-	
+	  /*
   		TDirectory* TimeIC_dir = Time_dir->mkdir("TimeIC");
   		TDirectory* TimeCsI_dir = Time_dir->mkdir("TimeCsI");
   		TDirectory* TimeSd2_dir = Time_dir->mkdir("TimeSd2");
@@ -822,16 +831,17 @@ void hist_t::Book()
   		TDirectory* TimeYYd_dir = Time_dir->mkdir("TimeYYd");
   		TDirectory* TimeSu_dir = Time_dir->mkdir("TimeSu");
   		TDirectory* TimeYYu_dir = Time_dir->mkdir("TimeYYU");
-	
+	  */
 		for (int i=0;i<512;i++) {
-			if (i<32) TimeIC_dir->cd();
+			/*
+      if (i<32) TimeIC_dir->cd();
 			else if (i>=32 && i <64) TimeCsI_dir->cd();
 			else if (i>=64 && i <128) TimeSd2_dir->cd();
 			else if (i>=128 && i <192) TimeSd1_dir->cd();
 			else if(i>=192 && i < 320) TimeYYd_dir->cd();
 			else if(i>=320 && i < 384) TimeSu_dir->cd();
     		else if(i>=384 && i < 512) TimeYYu_dir->cd();
-
+      */
 	 		hTime[i] = pTime[i].SetupTH1F();
   		}
   			
@@ -840,7 +850,7 @@ void hist_t::Book()
 		hTall2D = pTall2D.SetupTH2F();
 
 	}
-	
+	/*
 	hTimeRF[0] = (TH1F*)gDirectory->Get("TimeRF00");
 	if (hTimeRF[0] == 0)
 	{
@@ -867,7 +877,7 @@ void hist_t::Book()
 	 		hTimeRF[i] = pTimeRF[i].SetupTH1F();
   		}
   	}
-	
+	*/
 	// ==== PHYSICS ==== //
     printf("Booking PHYSICS histograms.\n");
 	hQValue1 = (TH1F*)gDirectory->Get("QValue1");

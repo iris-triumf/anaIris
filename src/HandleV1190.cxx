@@ -117,12 +117,12 @@ void HandleV1190(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, tdc_t* 
 				
 				// Build hTime
 				hist->hTime[globCh]->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
-				hist->hTimeRF[globCh]->Fill( ((float)measure - (float)tRF)*timeSlope, 1.);
-				timeArray->timeRF[globCh] = ( ((float)measure - (float)tRF)*timeSlope);
+				//hist->hTimeRF[globCh]->Fill( ((float)measure - (float)tRF)*timeSlope, 1.);
+				//timeArray->timeRF[globCh] = ( ((float)measure - (float)tRF)*timeSlope);
 				
 				// Build the overall timing histo
 				hist->hTall->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
-				hist->hTall2D->Fill(globCh,((float)measure - (float)tRef)*timeSlope);
+				hist->hTall2D->Fill(((float)measure - (float)tRef)*timeSlope,globCh);
 				
 				if (debug1) {
 					printf("evt#:%d trailer:%d bk:%d tdc:%d channel:%d modch:%d H#:%d measure:%d/0x%x tRef:%d/0x%x dT:%d\n"
