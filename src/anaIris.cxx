@@ -59,7 +59,8 @@ bool gIsOffline = false;
 int  gEventCutoff = 0;
 
 char mesbkname[][5] = {"ICA_", "SD2A", "SD1A", "YDA_","SUA_","YUA_"};
-char tdcbkname[][5] = {"ICT_", "YDT_", "YUT_", "SUT_" ,"SD2T" ,"SD1T"};
+//char tdcbkname[][5] = {"ICT_", "YDT_", "YUT_", "SUT_" ,"SD2T" ,"SD1T"};
+char tdcbkname[][5] = {"ICT_", "SD2T", "SD1T", "YDT_", "SUT_", "YUT_"}; //From treeIris 2021
 char stabkname[][5] = {"VTST", "VTSA", "VTRT", "VTRA"};
 char scalbkname[][5] = {"SCAD", "SCAR", "SCAS",""}; //scalers
 

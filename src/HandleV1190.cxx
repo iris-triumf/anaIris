@@ -50,9 +50,10 @@
 int gV1190nitems;
 static uint32_t tRef=0, previousSN=0, tRF =0;
 
-const double timeSlope = 0.2; // ns/channel 
+const double timeSlope = 0.195; // ns/channel 
 const uint32_t Nchannels = 64+128+128+64+64+64;
-const int choffset[] = {0,192,384,320,64,128}; 
+//const int choffset[] = {0,192,384,320,64,128}; 
+const uint32_t choffset[] = {0, 64, 128, 192, 320, 384};
 const int binlimit = 4196;
 
 void HandleV1190(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, tdc_t* timeArray, hist_t* hist)
@@ -74,6 +75,7 @@ void HandleV1190(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, tdc_t* 
 		for (i=0 ; i<nitems ; i++)
 		{
 			if (debug) printf("items:%d - data[%d]: %d / 0x%x\n", Nchannels, i, data[i], data[i]);
+      uint16_t globCh;
 			switch (data[i] & 0xF8000000) {
 			case 0x40000000: // Global Header
 				geo = data[i] & 0x1F;
@@ -86,38 +88,45 @@ void HandleV1190(TMidasEvent& event, void* ptr, int nitems, int MYLABEL, tdc_t* 
 				break;  
 			case 0x00000000:  // TDC measurement
 				channel = 0x3F & (data[i] >> 19); 
-				channel = (channel/16)*16+15-channel%16; //Flipping channels 0->15; 1->14;...;15->0; 31->16; 47->32; 63;48.
-				modchannel = (tdc/2 * 64) + channel;  // changed AS May 15,2013
+        globCh = channel + (tdc/2 * 64) + choffset[MYLABEL];
+				//channel = (channel/16)*16+15-channel%16; //Flipping channels 0->15; 1->14;...;15->0; 31->16; 47->32; 63;48.
+				//modchannel = (tdc/2 * 64) + channel;  // changed AS May 15,2013
 				//modchannel = (tdc * 32) + channel; //original
 				measure = data[i] & 0x7FFFF;
-				if (modchannel<Nchannels) {
-					hist->hV1190_T[modchannel+choffset[MYLABEL]]->Fill((float)measure, 1.);
+				if (globCh<Nchannels) {
+					hist->hV1190_T[globCh]->Fill((float)measure, 1.);
 				  //	    hTime[modchannel+choffset[MYLABEL]]->Fill((float)measure*timeSlope, 1.);
 				}
 				(data[i] & 0x04000000) ? trailer = 1 : trailer = 0;
 				
 				// Deal with delta time in reference to the STOP (tRef)
-				if (modchannel+choffset[MYLABEL] == 14 && event.GetSerialNumber() != previousSN) {
-					previousSN = event.GetSerialNumber();
+        if (globCh==1 && event.GetSerialNumber() != previousSN){
+          previousSN = event.GetSerialNumber();
+          // Extract tRef (ICT_@0 (1))
+          tRef = measure;
+          if(debug) printf("\n    Tref = %d\n",measure);
+        }  
+				//if (modchannel+choffset[MYLABEL] == 14 && event.GetSerialNumber() != previousSN) {
+				//	previousSN = event.GetSerialNumber();
 				  // Extract tRef (ICT_@0 (1))
-					tRef = measure;
-				}  
-				if (modchannel+choffset[MYLABEL] == 12) {
+				//	tRef = measure;
+				//}  
+				if (globCh == 3) {
 				 	    tRF = measure; //RF signal
 				} 
 				
 				// Build hTime
-				hist->hTime[modchannel+choffset[MYLABEL]]->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
-				hist->hTimeRF[modchannel+choffset[MYLABEL]]->Fill( ((float)measure - (float)tRF)*timeSlope, 1.);
-				timeArray->timeRF[modchannel+choffset[MYLABEL]] = ( ((float)measure - (float)tRF)*timeSlope);
+				hist->hTime[globCh]->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
+				hist->hTimeRF[globCh]->Fill( ((float)measure - (float)tRF)*timeSlope, 1.);
+				timeArray->timeRF[globCh] = ( ((float)measure - (float)tRF)*timeSlope);
 				
 				// Build the overall timing histo
 				hist->hTall->Fill( ((float)measure - (float)tRef)*timeSlope, 1.);
-				hist->hTall2D->Fill(modchannel+choffset[MYLABEL],((float)measure - (float)tRef)*timeSlope);
+				hist->hTall2D->Fill(globCh,((float)measure - (float)tRef)*timeSlope);
 				
 				if (debug1) {
 					printf("evt#:%d trailer:%d bk:%d tdc:%d channel:%d modch:%d H#:%d measure:%d/0x%x tRef:%d/0x%x dT:%d\n"
-					,evtcnt, trailer, MYLABEL, tdc, channel, modchannel, modchannel+choffset[MYLABEL], measure, measure, tRef, tRef, measure-tRef);
+					,evtcnt, trailer, MYLABEL, tdc, channel, globCh, globCh, measure, measure, tRef, tRef, measure-tRef);
 				}
 				break;
 			case 0x18000000: // TDC Trailer
